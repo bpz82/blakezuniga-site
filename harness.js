@@ -60,7 +60,7 @@ let seq = 0;
 // cached viewport geometry (updated on resize only)
 let vw = 1280;
 let vh = 800;
-let size = 92;
+let size = 129;
 let cx = 640;
 let cy = 368;
 let Rx = 420;
@@ -551,7 +551,7 @@ function layout() {
   vw = window.innerWidth || 1;
   vh = window.innerHeight || 1;
   const touch = window.matchMedia('(pointer: coarse)').matches;
-  size = Math.round(Math.min(92, Math.max(76, vw * 0.12))); // mirrors CSS clamp
+  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp (~1.4x the Nov 16 sizes)
   root.style.setProperty('--zg-size', size + 'px');
   Rx = Math.max(0, Math.min(vw * 0.38, 420, vw / 2 - size / 2 - 6));
   Ry = Math.min(vh * 0.14, 120);
@@ -566,6 +566,33 @@ function layout() {
     cy = hi >= lo ? Math.min(hi, Math.max(lo, cy)) : (top + vh - bottom) / 2;
   }
   render();
+  fitTileLabels();
+}
+
+function fitTileLabels() {
+  // Keep each label fully visible (no ellipsis). Shrink tracking, then type size, until the text fits.
+  try {
+    for (const e of order) {
+      const label = e.el && e.el.querySelector('.zg-label');
+      if (!label) continue;
+      label.style.fontSize = '';
+      label.style.letterSpacing = '';
+      let fs = parseFloat(getComputedStyle(label).fontSize) || 10;
+      let ls = parseFloat(getComputedStyle(label).letterSpacing);
+      if (!isFinite(ls)) ls = fs * 0.03;
+      for (let i = 0; i < 24 && label.scrollWidth > label.clientWidth; i++) {
+        if (ls > fs * 0.01) {
+          ls = Math.max(fs * 0.01, ls - fs * 0.005);
+          label.style.letterSpacing = ls + 'px';
+        } else {
+          fs = Math.max(7, fs - 0.5);
+          label.style.fontSize = fs + 'px';
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[zg] fitTileLabels failed', err);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -618,6 +645,13 @@ function boot() {
   layout();
   if (!walking) writeAngle();
   sync();
+  try {
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { try { layout(); } catch (err) { console.warn('[zg] layout after fonts failed', err); } });
+    }
+  } catch (err) {
+    console.warn('[zg] fonts.ready hook failed', err);
+  }
 
   // Show the ring only after the scene has finished loading.
   const t0 = Date.now();

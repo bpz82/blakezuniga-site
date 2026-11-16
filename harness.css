@@ -9,7 +9,7 @@
 }
 
 #zg-root {
-  --zg-size: clamp(76px, 12vw, 92px);
+  --zg-size: clamp(106px, 16.8vw, 129px);
   --zg-font-title: 'Zuniga Mission', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
   --zg-accent: #ff6b5a;
   --zg-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
@@ -128,15 +128,20 @@
 }
 .zg-label {
   position: relative;
-  max-width: 88%;
+  box-sizing: border-box;
+  width: 94%;
+  max-width: 94%;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
   line-height: 1.15;
   text-align: center;
   font-family: var(--zg-font-title);
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  font-size: calc(var(--zg-size) * 0.095);
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: rgba(244, 236, 234, 0.85);
 }
