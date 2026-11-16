@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Blake Zuniga</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#000;overscroll-behavior:none;touch-action:none}
+  body{font:13px/1.35 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#eee;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+  #hud{position:fixed;left:calc(14px + env(safe-area-inset-left));top:calc(12px + env(safe-area-inset-top));right:14px;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+  #title{font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;opacity:.85}
+  #hint{margin-top:6px;font-size:12px;opacity:.75;transition:opacity 1.2s;max-width:30em;letter-spacing:.02em}
+  #hint.gone{opacity:0}
+  #load{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:9;transition:opacity 1s}
+  #load.done{opacity:0;pointer-events:none}
+  #load .t{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:#bbb}
+  #load .bar{width:140px;height:1px;background:#222;overflow:hidden}
+  #load .bar i{display:block;height:100%;width:0;background:#ddd;transition:width .3s}
+  /* Grok v2 controls: analog joystick (left) + look pad (rest of screen) + jump (right) */
+  #joy{position:fixed;left:calc(18px + env(safe-area-inset-left));bottom:calc(26px + env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;display:none;z-index:3;touch-action:none;background:radial-gradient(circle,rgba(255,255,255,.05),rgba(255,255,255,.12));border:1px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  #joy i{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.5);pointer-events:none;will-change:transform}
+  #joy.on i{background:rgba(255,255,255,.42)}
+  #right{position:fixed;right:calc(18px + env(safe-area-inset-right));bottom:calc(34px + env(safe-area-inset-bottom));display:none;z-index:3;touch-action:none}
+  body.touch #joy,body.touch #right{display:block}
+  .b{box-sizing:border-box;width:64px;height:64px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.22);border-radius:50%;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);touch-action:none}
+  .b.down{background:rgba(255,255,255,.28)}
+  .b svg{width:24px;height:24px;fill:#fff;opacity:.85;pointer-events:none}
+  #joy,#right,#mode,#hud{-webkit-user-select:none;user-select:none}
+  #flip{position:fixed;top:calc(52px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:3;font:600 11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#ddd;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:9px 14px;cursor:pointer;min-width:84px}
+  #mode{position:fixed;top:calc(10px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:3;font:600 11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#ddd;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.22);border-radius:16px;padding:9px 14px;cursor:pointer}
+  @media (max-height:420px){#joy{width:112px;height:112px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<link rel="preload" href="assets/fonts/ZunigaMission-Regular-v3.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="harness.css">
+</head>
+<body>
+<div id="load"><div class="t">Loading guitar</div><div class="bar"><i id="lbar"></i></div></div>
+<div id="hud"><div id="title">Guitar Explorer</div><div id="hint"></div></div>
+<button id="mode" type="button">Photo view</button>
+<button id="flip" type="button">Back</button>
+<div id="joy"><i></i></div>
+<div id="right">
+  <div class="b" id="jump"><svg viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z"/></svg></div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';   // head4 (Grok Nov 14 9:46): post AA for thin chrome/tuner edges at distance
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+let TX = {}, Q = {};
+
+/* stage5 (Grok Nov 14 9:46, Blake 'this is messy'): floor falls off to black (radial albedo falloff, matte, walk fill lights excluded),
+   soft natural floor shadow (VSM blur), FXAA after tone mapping for thin chrome edges. stage4 kept. */
+/* stage4 (Grok Nov 13 9:28): organic film grain (slow cross-faded, multiplicative, black stays black). stage3 kept. */
+// ───────────────────────── STAGE v3 (under-fill for 360 orbit) / v2 (Grok, Nov 13 7:10 fixes: glare, steady black, full shadow) ─────────────────────────
+// Dramatic black studio void: baked softbox env (reflections), low-key key/rim
+// spots with soft shadows, glossy black floor + warm floor glow, bloom/vignette/grain.
+function setupStage(renderer, scene, camera, focus) {
+  const C = (focus && focus.center ? focus.center : new THREE.Vector3(0, 27, 0)).clone();
+  const R = (focus && focus.radius) || 70;
+  const mobile = !!(typeof Q !== 'undefined' && Q.mobile);
+  const shadowSize = (typeof Q !== 'undefined' && Q.shadowSize) || (mobile ? 1024 : 2048);
+
+  // 1. Renderer / scene basics ------------------------------------------------
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.08;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.VSMShadowMap;   // stage5: blurred variance shadows -> soft, natural floor shadow (PCFSoft ignores radius: the neck/headstock shadow was razor hard)
+  renderer.setClearColor(0x000000, 1);
+
+  scene.background = new THREE.Color(0x000000);
+  scene.fog = new THREE.Fog(0x000000, R * 5.5, R * 13);
+
+  // 2. Environment map: black studio with a few emissive softboxes ----------------
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0x000000);
+  const panelGeo = new THREE.PlaneGeometry(1, 1);
+  function panel(w, h, pos, rgb, power) {
+    const m = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(rgb[0] * power, rgb[1] * power, rgb[2] * power),
+      side: THREE.DoubleSide, fog: false
+    });
+    const p = new THREE.Mesh(panelGeo, m);
+    p.scale.set(w, h, 1);
+    p.position.set(pos[0], pos[1], pos[2]);
+    p.lookAt(0, 0, 0);
+    envScene.add(p);
+    return p;
+  }
+  // Large warm overhead softbox, pushed off the zenith (toward the headstock side)
+  // so a top-down/hero camera does not mirror it straight into the body.
+  panel(15, 9, [2.0, 9.0, -5.5], [1.0, 0.96, 0.90], 0.85);   // Grok v2: wider + much softer overhead softbox (no blown reflection from above)
+  // Two long thin cool strips, high and behind, for rim reflections along edges/chrome.
+  panel(0.6, 11, [-10, 4.5, -7], [0.80, 0.90, 1.00], 5.5);
+  panel(0.6, 11, [10, 4.5, -7], [0.85, 0.92, 1.00], 5.0);
+  // Broad dim zenith scrim so flat chrome tops read silver, not black (Grok tune).
+  panel(16, 12, [-1.5, 10, 2.5], [1.0, 0.98, 0.95], 0.2);
+  // Low horizon strips all round for chrome edge pings.
+  panel(18, 1.2, [0, 1.2, -12], [1, 1, 1], 0.55);   // Grok v2: dimmer (grazing clearcoat glare in walk view)
+  panel(1.2, 3, [-12, 1.5, 4], [1, 0.95, 0.9], 0.8);
+  // Dim large low-front bounce card.
+  panel(14, 7, [0, -0.5, 11], [0.95, 0.88, 0.80], 0.14);   // Grok v2: halved (walk-view glint on vertical chrome faces)
+  // Very faint grey gradient dome so clearcoat never goes pitch black.
+  {
+    const dome = new THREE.SphereGeometry(30, 32, 16);
+    const pos = dome.attributes.position;
+    const col = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const t = Math.max(0, pos.getY(i) / 30);          // 0 at/below horizon, 1 at zenith
+      const g = 0.002 + 0.03 * t * t;
+      col[i * 3] = g * 0.95; col[i * 3 + 1] = g * 0.97; col[i * 3 + 2] = g * 1.05;
+    }
+    dome.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    envScene.add(new THREE.Mesh(dome, new THREE.MeshBasicMaterial({
+      vertexColors: true, side: THREE.BackSide, fog: false
+    })));
+  }
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = pmrem.fromScene(envScene, 0.03).texture;
+  pmrem.dispose();
+  envScene.traverse(o => { if (o.isMesh) o.material.dispose(); });
+  panelGeo.dispose();
+  scene.environment = env;
+  scene.environmentIntensity = 1.0;
+
+  // 3. Real lights: low-key cinematic ----------------------------------------
+  // E = desired irradiance at the guitar; intensity is derived for decay 2.
+  function spot(hex, E, offset, angle, penumbra, targetOffset) {
+    const L = new THREE.SpotLight(hex, 1, 0, angle, penumbra, 2);
+    L.position.copy(C).add(offset);
+    L.target.position.copy(C);
+    if (targetOffset) L.target.position.add(targetOffset);
+    const d = L.position.distanceTo(L.target.position);
+    L.intensity = E * d * d;
+    L.castShadow = false;
+    scene.add(L, L.target);
+    return L;
+  }
+  // Key: above, a little toward the treble side and the front, warm white.
+  // Grok v2: lower key + wider/softer cone so the whole guitar AND its floor shadow (neck + headstock) are inside the shadow frustum
+  const key = spot(0xfff1e0, 2.9, new THREE.Vector3(R * 1.1, R * 2.2, R * 1.3), 0.52, 0.9,
+    new THREE.Vector3(-R * 0.15, -R * 0.35, -R * 0.35));
+  key.castShadow = true;
+  key.shadow.mapSize.set(shadowSize, shadowSize);
+  {
+    const d = key.position.distanceTo(key.target.position);
+    key.shadow.camera.near = Math.max(1, d - R * 1.9);
+    key.shadow.camera.far = d + R * 1.6;
+    key.shadow.bias = -0.0004;
+    key.shadow.normalBias = mobile ? 0.5 : 0.32;
+    key.shadow.radius = mobile ? 7 : 11;      // stage5: penumbra ~ a softbox 8" above the floor
+    key.shadow.blurSamples = mobile ? 10 : 16;
+    key.shadow.focus = 1;
+  }
+  // Rims: cool from behind-left (bass side), warmer from behind-right (treble side).
+  spot(0xcfe0ff, 1.6, new THREE.Vector3(-R * 1.6, R * 1.25, -R * 2.1), 0.55, 0.9);   // Grok v2: rims lower + a bit higher (their clearcoat glints were the walk-view glare blobs)
+  spot(0xffd9b0, 1.15, new THREE.Vector3(R * 1.75, R * 1.0, -R * 1.9), 0.55, 0.9);
+  // Grok tune: dim warm bounce from the floor glow so the back, neck back and headstock-back tuners read when orbiting low.
+  spot(0xffd2a8, 0.75, new THREE.Vector3(R * 0.3, -R * 0.3, R * 1.2), 0.9, 1.0);   // Grok v2: weaker + lower (it glinted off vertical chrome faces straight into the walk camera)
+  spot(0xc8d6ff, 0.8, new THREE.Vector3(-R * 0.6, -R * 0.1, -R * 1.6), 0.9, 1.0);
+  // v3 (Grok 7:51): under-fill for the 360 orbit — a soft warm spot from below, faded in by the app only when the camera goes under the guitar
+  const under = spot(0xffe2c4, 2.2, new THREE.Vector3(R * 0.4, -R * 1.6, R * 0.5), 0.75, 1.0);
+  const underI = under.intensity; under.intensity = 0;
+  // Extremely weak hemisphere so the underside is not a void.
+  scene.add(new THREE.HemisphereLight(0x27303f, 0x0a0705, 0.08));
+
+  // 4. Floor (Grok v2): ONE surface. The warm glow is baked into the floor's emissiveMap instead of a
+  // second additive plane 0.12 above it (that coplanar pair z-fought on iPhone depth buffers -> black flicker).
+  // A ShadowMaterial catcher just above carries the key-light shadow over the glow (emissive is never shadowed).
+  const FR = R * 22;
+  let glowTex;
+  {
+    const S = 2048, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    const g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
+    const rx = S * (R * 1.7) / (2 * FR), ry = S * (R * 2.6) / (2 * FR);
+    g.save(); g.translate(S / 2, S / 2); g.scale(rx, ry);
+    const grad = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+    grad.addColorStop(0.0, 'rgb(70,40,26)'); grad.addColorStop(0.3, 'rgb(34,19,12)');
+    grad.addColorStop(0.62, 'rgb(8,4,3)'); grad.addColorStop(1.0, 'rgb(0,0,0)');
+    g.fillStyle = grad; g.beginPath(); g.arc(0, 0, 1, 0, Math.PI * 2); g.fill(); g.restore();
+    glowTex = new THREE.CanvasTexture(cv); glowTex.colorSpace = THREE.SRGBColorSpace; glowTex.anisotropy = 4;
+  }
+  // stage5: the floor's light response falls off to black away from the guitar (albedo map), it is fully matte (the walk camera saw
+  // a hot specular sheen of the key at grazing angles), and the walk-mode fill lights (directional, no falloff) never touch it:
+  // they turned the whole floor flat grey in Blake's back-walk screenshot.
+  let fallTex;
+  {
+    const S = 1024, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    const g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
+    const rx = S * (R * 1.5) / (2 * FR), ry = S * (R * 2.1) / (2 * FR);
+    g.save(); g.translate(S / 2, S / 2); g.scale(rx, ry);
+    const grad = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+    grad.addColorStop(0.0, 'rgb(255,255,255)'); grad.addColorStop(0.35, 'rgb(190,190,190)'); grad.addColorStop(0.7, 'rgb(60,60,60)'); grad.addColorStop(1.0, 'rgb(0,0,0)');
+    g.fillStyle = grad; g.beginPath(); g.arc(0, 0, 1, 0, Math.PI * 2); g.fill(); g.restore();
+    fallTex = new THREE.CanvasTexture(cv); fallTex.colorSpace = THREE.SRGBColorSpace;
+  }
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x050505, map: fallTex, roughness: 1, metalness: 0, envMapIntensity: 0.0, emissive: 0xffffff, emissiveMap: glowTex });
+  floorMat.onBeforeCompile = sh => {   // drop directional lights (walk-mode side fills) from the floor only
+    sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_begin>', THREE.ShaderChunk.lights_fragment_begin.split('NUM_DIR_LIGHTS > 0').join('NUM_DIR_LIGHTS < 0'));
+  };
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(FR, 72), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(C.x, 0, C.z);
+  floor.receiveShadow = true;
+  scene.add(floor);
+  const catcher = new THREE.Mesh(new THREE.PlaneGeometry(R * 6, R * 6),
+    new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+  catcher.rotation.x = -Math.PI / 2; catcher.position.set(C.x, 0.3, C.z); catcher.receiveShadow = true; catcher.renderOrder = 1;
+  scene.add(catcher);
+
+  // 5. Post-processing ---------------------------------------------------------
+  const size = renderer.getSize(new THREE.Vector2());
+  const pr0 = renderer.getPixelRatio();
+  const rt = new THREE.WebGLRenderTarget(Math.max(1, size.x * pr0 | 0), Math.max(1, size.y * pr0 | 0), {
+    type: THREE.HalfFloatType, samples: mobile ? 2 : 4
+  });
+  const composer = new EffectComposer(renderer, rt);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), mobile ? 0.1 : 0.13, 0.35, 1.0);   // Grok v2: softer bloom, higher threshold (less glare halo)
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+
+  const FinalShader = {
+    uniforms: {
+      tDiffuse: { value: null },
+      uTime: { value: 0 },
+      uGrain: { value: 0.16 },   // v4: multiplicative film grain amplitude (~±6% in mid-tones)
+      uVig: { value: 0.35 }
+    },
+    vertexShader: /* glsl */`
+      varying vec2 vUv;
+      void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: /* glsl */`
+      uniform sampler2D tDiffuse;
+      uniform float uTime, uGrain, uVig;
+      varying vec2 vUv;
+      float hash(vec2 p) {
+        vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+        p3 += dot(p3, p3.yzx + 33.33);
+        return fract((p3.x + p3.y) * p3.z);
+      }
+      // soft value noise: grain clumps ~1.7 px across, like film rather than per-pixel digital noise
+      float vnoise(vec2 p) {
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      void main() {
+        vec4 c = texture2D(tDiffuse, vUv);
+        float d = length(vUv - 0.5) * 1.41421356;           // 0 centre, 1 corner
+        float vig = mix(1.0, uVig, smoothstep(0.32, 1.02, d));
+        float lum = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+        // Grok v4 (Nov 13 9:28): organic film grain. Two grain fields cross-fade slowly (a new field every ~1/7 s), so
+        // any one pixel changes only a little between frames: it breathes instead of sparkling. The grain MULTIPLIES the
+        // image, so pure black stays exactly black (steady background); strongest in the mid-tones, gentle in highlights.
+        vec2 q = gl_FragCoord.xy / 1.7;
+        float t = uTime * 7.0, k = floor(t), a = fract(t);
+        vec2 oA = vec2(hash(vec2(k, 1.3)), hash(vec2(k, 7.1))) * 517.0, oB = vec2(hash(vec2(k + 1.0, 1.3)), hash(vec2(k + 1.0, 7.1))) * 517.0;
+        float n = mix(vnoise(q + oA), vnoise(q + oB), a) - 0.5;
+        n += 0.35 * (hash(gl_FragCoord.xy) - 0.5);           // a touch of fine tooth (static: never flickers)
+        float w = smoothstep(0.0, 0.18, lum) * (1.0 - 0.55 * smoothstep(0.55, 1.0, lum));
+        c.rgb = c.rgb * vig * (1.0 + n * uGrain * w * vec3(1.0, 0.96, 1.05));
+        gl_FragColor = vec4(max(c.rgb, 0.0), c.a);
+      }`
+  };
+  // stage5: FXAA on the tone-mapped image. MSAA resolves BEFORE tone mapping, so very bright chrome pixels (tuners at distance)
+  // dominate their edge samples and stay stair-stepped; FXAA on the display-referred image smooths them. Desktop only (phone cost).
+  const fxaa = (!mobile && typeof FXAAShader !== 'undefined') ? new ShaderPass(FXAAShader) : null;
+  if (fxaa) composer.addPass(fxaa);
+  const finalPass = new ShaderPass(FinalShader);
+  composer.addPass(finalPass);
+
+  const clock = new THREE.Clock();
+  let tOver = null;   // tests: pin the grain clock
+  function render() {
+    finalPass.uniforms.uTime.value = tOver !== null ? tOver : clock.getElapsedTime() % 1000;
+    composer.render();
+  }
+
+  function resize(w, h, pixelRatio) {
+    const pr = Math.min(pixelRatio || window.devicePixelRatio || 1, mobile ? 2 : 2.5);
+    renderer.setPixelRatio(pr);
+    renderer.setSize(w, h);
+    composer.setPixelRatio(pr);
+    composer.setSize(w, h);
+    const bw = w * pr, bh = h * pr;
+    bloom.setSize(mobile ? bw * 0.5 : bw, mobile ? bh * 0.5 : bh); // internal is /2 again
+    if (fxaa) fxaa.material.uniforms.resolution.value.set(1 / Math.max(1, bw), 1 / Math.max(1, bh));
+    if (camera.isPerspectiveCamera) {
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+  }
+  resize(size.x, size.y, pr0);
+
+  return { composer, render, resize, env, key, floor, bloom, finalPass, fxaa, under, underI, setTime(t) { tOver = t; } };
+}
+
+/* body6 (Fable Nov 14 14:55, Blake pic #1 'change picture #1 to the strap button'): second strap button on the bass-shoulder wall by the neck
+   (same build as the tail one), output jack moved to the BACK where the back photos show it (flat black barrel, replaces the 'ferrule'). body5 kept. */
+/* body5 (Grok Nov 14 9:46, Blake 'this is messy'): roll radius limited by local width (no pinched/self-crossing horn tip), round horn tip,
+   lit-wood sides on the cutaway wall, real strap button. body4 kept. */
+/* body4 (Grok Nov 14 7:54): big rounded back edge, rounded neck-end corners, glossier sides. body3 kept. */
+/* body3 (Grok Nov 13 9:28): back cover centred, shell tagged for back walking. body2 kept. */
+// body v2 (Grok, Nov 13 7:10): softer clearcoat (no blown hotspot from the key/softbox)
+/* ======================= BODY: Blake's Taylor solid-body, photo-textured ======================= */
+/* model frame: +X treble, -Z toward headstock (spec y -> -Z), +Y up; body top Y=0, back Y=-1.75; bridge center at origin */
+const BD_T = 1.75;
+// nov14c (GPT, Blake pic #6): fair the treble horn's flank into its round tip; preserve all 49 indices.
+const BD_OUTLINE = [[-1.8,8.8],[-1.95,8.68],[-2.75,8.54],[-3.21,8.31],[-3.73,7.83],[-3.99,7.22],[-4.02,6.33],[-3.62,4.85],[-3.62,4.35],[-4.06,3.68],[-5.5,2.07],[-5.99,1.37],[-6.56,0.13],[-6.76,-0.76],[-6.84,-1.56],[-6.75,-2.87],[-6.12,-4.4],[-5.53,-5.15],[-4.82,-5.81],[-3.72,-6.42],[-1.83,-6.97],[-0.13,-7.17],[2.11,-6.86],[3.84,-6.23],[4.92,-5.4],[5.43,-4.7],[5.78,-3.99],[6.08,-2.96],[6.15,-1.92],[5.99,-0.82],[5.65,0.21],[5.28,0.94],[4.75,1.77],[3.5,3.38],[3.3,3.95],[3.34,4.72],[3.45,5.2],[3.57,5.93],[3.57,6.49],[3.51,6.72],[3.41,6.9],[3.25,6.98],[3.06,6.9],[2.62,6.5],[1.85,6.35],[1.47,6.39],[1.1,6.45],[1.1,8.9],[-1.1,8.9]];
+const BD_SHARP = new Set();   // body5: horn tip is now a 0.28" round (photos: back-full / back-from-headstock) instead of a cusp; horn tip rounded like the back photos (was sharp: its 0.42" roll crossed itself -> the 'notched stub')
+const BD_SHARP_OLD = new Set([40]);   // body4 (Grok Nov 14): neck-end + cutaway-root corners rounded like the photos (was 40,44,45,46)   // horn tip + neck-pocket corners stay sharp
+/* cleaned pickguard outline traced from the rectified top photo (fable2/assets/top-map.json "guardOutline"), spec inches */
+const BD_GUARD = [[-1.17,6.94],[-1.262,6.823],[-2.341,4.468],[-2.734,3.506],[-2.943,2.891],[-3.035,2.459],[-3.035,2.112],[-2.97,1.778],[-2.878,1.569],[-2.642,1.281],[-2.407,1.111],[-1.995,0.967],[-1.563,0.941],[1.6,0.92],[1.85,0.8],[2.0,0.55],[2.252,-0.041],[2.638,-0.675],[3.187,-1.794],[3.809,-3.194],[3.901,-3.299],[3.979,-3.325],[4.215,-3.286],[4.457,-3.109],[4.764,-2.684],[4.961,-2.278],[5.1,-1.85],[5.17,-1.4],[5.183,-0.636],[5.091,-0.113],[4.974,0.339],[4.79,0.849],[4.561,1.327],[4.182,1.955],[3.75,2.544],[3.56,2.786],[3.102,3.467],[2.95,3.8],[2.85,4.134],[2.88,4.86],[3.115,5.573],[3.115,5.861],[2.991,5.972],[2.762,5.959],[2.389,5.809],[2.134,5.757],[1.826,5.757],[1.473,5.861],[1.2,6.1],[1.0,6.5],[0.943,6.94]];
+const BD_GUARD_SHARP = new Set([0, 51]);        // the two ends of the straight edge under the fretboard
+
+/* photo mapping of the rectified top texture (spec inches -> uv) */
+const bd_photoUV = (x, y) => [(x + 7) / 13.4, (y + 7.5) / 16.6];
+const bd_aniso = () => (typeof Q !== 'undefined' && Q.aniso) || 4;
+const BD_FONT = px => `700 ${px}px "Arial Narrow","Helvetica Neue",Arial,"Liberation Sans Narrow","DejaVu Sans Condensed",sans-serif`;
+
+function bd_smooth(pts, closed, sharp = new Set(), per = 8) {
+  // centripetal Catmull-Rom through pts; indices in `sharp` stay as corners
+  const n = pts.length, out = [];
+  const P = i => { i = closed ? (i + n) % n : Math.max(0, Math.min(n - 1, i)); return new THREE.Vector2(pts[i][0], pts[i][1]); };
+  for (let i = 0; i < (closed ? n : n - 1); i++) {
+    const p1 = P(i), p2 = P(i + 1);
+    let p0 = P(i - 1), p3 = P(i + 2);
+    if (sharp.has(i)) p0 = p1.clone().multiplyScalar(2).sub(p2);
+    if (sharp.has((i + 1) % n)) p3 = p2.clone().multiplyScalar(2).sub(p1);
+    const c = new THREE.CatmullRomCurve3([p0, p1, p2, p3].map(v => new THREE.Vector3(v.x, v.y, 0)), false, 'centripetal');
+    const seg = Math.max(2, Math.ceil(p1.distanceTo(p2) * per));
+    for (let k = 0; k < seg; k++) { const v = c.getPoint((1 + k / seg) / 3); out.push([v.x, v.y]); }
+  }
+  return out;
+}
+function bd_shape(pts) { const s = new THREE.Shape(); pts.forEach((p, i) => i ? s.lineTo(p[0], p[1]) : s.moveTo(p[0], p[1])); s.closePath(); return s; }
+function bd_rrPts(w, h, r, seg = 8, cx = 0, cy = 0) {
+  // rounded rectangle polygon, CCW, spec coords (x, y)
+  r = Math.min(r, w / 2, h / 2); const out = [];
+  const cs = [[w / 2 - r, h / 2 - r, 0], [-(w / 2 - r), h / 2 - r, Math.PI / 2], [-(w / 2 - r), -(h / 2 - r), Math.PI], [w / 2 - r, -(h / 2 - r), Math.PI * 1.5]];
+  cs.forEach(([x, y, a0]) => { for (let k = 0; k <= seg; k++) { const a = a0 + k / seg * Math.PI / 2; out.push([cx + x + r * Math.cos(a), cy + y + r * Math.sin(a)]); } });
+  return out;
+}
+function bd_rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function bd_canvas(w, h, draw, srgb = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = bd_aniso(); return t;
+}
+
+/* bd_sweep: a slab built from a closed outline (spec x,y) with real rounded-over edges and smooth analytic normals.
+   Top face at Y=0, bottom at Y=-T, outline y -> -Z. Groups: 0 = top face + upper part of the top roundover,
+   1 = side wall (+ steep parts of both roundovers), 2 = back face + lower part of the bottom roundover.
+   o = { T, rT, rB, segT, segB, uvTop(x,y), uvBot(x,y), uvSide(arc,t,x,y), capTop, capBot } */
+function bd_sweep(src, o) {
+  const T = o.T, rT = o.rT || 0, rB = o.rB || 0, segT = o.segT || 5, segB = o.segB || segT;
+  const pts = [];
+  src.forEach(p => { const q = pts[pts.length - 1]; if (!q || Math.hypot(p[0] - q[0], p[1] - q[1]) > 1e-4) pts.push([p[0], p[1]]); });
+  if (pts.length > 2 && Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]) < 1e-4) pts.pop();
+  const n = pts.length; let area = 0;
+  for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; area += a[0] * b[1] - b[0] * a[1]; }
+  if (area < 0) pts.reverse();
+  const en = [], el = [];
+  for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy); el.push(l); en.push([dy / l, -dx / l]); }
+  const vn = [], vm = [], arc = []; let s = 0;
+  for (let i = 0; i < n; i++) {
+    const a = en[(i - 1 + n) % n], b = en[i]; let nx = a[0] + b[0], ny = a[1] + b[1]; const l = Math.hypot(nx, ny);
+    if (l < 1e-6) { nx = b[0]; ny = b[1]; } else { nx /= l; ny /= l; }
+    vn.push([nx, ny]); vm.push(Math.min(2.2, 1 / Math.max(.45, nx * b[0] + ny * b[1])));
+    arc.push(s); s += el[i];
+  }
+  arc.push(s);
+  // body5: per-vertex roll radius. A roll of radius r insets the outline by r*vm along the inward bisector; where the shape is
+  // narrower than that (horn tip, cutaway root) the inset rows crossed each other and folded the cap up into a notched stub.
+  // Limit r so the inset never exceeds 40% of the local width (inward ray to the opposite side), then smooth along the edge.
+  const inward = (j) => {
+    const p = pts[j], dx = -vn[j][0], dy = -vn[j][1]; let best = 1e9;
+    for (let i = 0; i < n; i++) {
+      if (i === j || (i + 1) % n === j) continue;
+      const a = pts[i], b = pts[(i + 1) % n], ex = b[0] - a[0], ey = b[1] - a[1], den = dx * ey - dy * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = ((a[0] - p[0]) * ey - (a[1] - p[1]) * ex) / den, u = ((a[0] - p[0]) * dy - (a[1] - p[1]) * dx) / den;
+      if (t > 1e-3 && u >= 0 && u <= 1 && t < best) best = t;
+    }
+    return best;
+  };
+  const scaleFor = (r) => {
+    if (!(r > 0)) return new Array(n).fill(1);
+    // convex bends: an inward offset larger than the local radius of curvature folds over -> keep r*vm under 85% of it
+    const curvR = (j) => {
+      const at = (dir) => { let k = j, acc = 0; while (acc < .12) { const k2 = (k + dir + n) % n; acc += Math.hypot(pts[k2][0] - pts[k][0], pts[k2][1] - pts[k][1]); k = k2; if (k === j) break; } return pts[k]; };
+      const A = at(-1), B = pts[j], C = at(1), cr = (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0]);
+      if (cr <= 0) return 1e9;   // concave (pts are CCW): the inset spreads out, no limit
+      const ab = Math.hypot(B[0] - A[0], B[1] - A[1]), bc = Math.hypot(C[0] - B[0], C[1] - B[1]), ca = Math.hypot(A[0] - C[0], A[1] - C[1]);
+      return ab * bc * ca / (2 * Math.abs(cr));
+    };
+    let sc = []; for (let j = 0; j < n; j++) sc.push(Math.min(1, .4 * inward(j) / (r * vm[j]), .85 * curvR(j) / (r * vm[j])));
+    for (let pass = 0; pass < 6; pass++) {   // min-then-average along the outline (~6 vertices each way) so the radius changes smoothly
+      const m = sc.map((v, j) => Math.min(v, sc[(j + 1) % n], sc[(j - 1 + n) % n]));
+      sc = m.map((v, j) => Math.min(v, (m[(j - 1 + n) % n] + 2 * v + m[(j + 1) % n]) / 4));
+    }
+    // nov14c (GPT, Blake pic #6): soften back-roll pinching locally, blending into the unchanged surrounding edge.
+    if (o.fairBack && r === rB && rB > rT) {   // Grok: GPT wrote `src === outline` (a buildBody local, ReferenceError here) -> explicit option
+      let fair = sc.slice();
+      for (let pass = 0; pass < 12; pass++) {
+        const m = fair.map((v, j) => Math.min(v, fair[(j + n - 1) % n], fair[(j + 1) % n]));
+        fair = m.map((v, j) => Math.min(v, (m[(j + n - 1) % n] + 2 * v + m[(j + 1) % n]) / 4));
+      }
+      const ease = v => { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
+      sc = sc.map((v, j) => {
+        const w = ease((pts[j][0] - 1.85) / .77) * ease((pts[j][1] - 3.38) / 1.34);
+        return v + w * (fair[j] - v);
+      });
+    }
+    return sc;
+  };
+  const sT = (n > 8 && !o.noLimit) ? scaleFor(rT) : new Array(n).fill(1), sB = (n > 8 && !o.noLimit) ? scaleFor(rB) : new Array(n).fill(1);
+  // profile rows: [kind, angle] -> per vertex [inset d, y, radial normal, vertical normal]
+  const prof = [];
+  if (rT > 0) for (let k = 0; k <= segT; k++) prof.push(['T', k / segT * Math.PI / 2]);
+  else prof.push(['T0', 0]);
+  prof.push(['W', 0]);
+  if (rB > 0) for (let k = 1; k <= segB; k++) prof.push(['B', k / segB * Math.PI / 2]);
+  const rowAt = (pr, j) => {
+    const a = pr[1];
+    if (pr[0] === 'T') { const r = rT * sT[j]; return [r * (1 - Math.sin(a)), -r * (1 - Math.cos(a)), Math.sin(a), Math.cos(a)]; }
+    if (pr[0] === 'T0') return [0, 0, 1, 0];
+    if (pr[0] === 'W') return [0, -(T - rB * sB[j]), 1, 0];
+    const r = rB * sB[j]; return [r * (1 - Math.cos(a)), -(T - r) - r * Math.sin(a), Math.cos(a), -Math.sin(a)];
+  };
+  const pos = [], nor = [], uv = [], idx = [[], [], []];
+  const uvTop = o.uvTop || (() => [0, 0]), uvBot = o.uvBot || uvTop, uvSide = o.uvSide || ((a, t) => [a, t]);
+  const emitRow = (prk, g) => {
+    const base = pos.length / 3;
+    for (let i = 0; i <= n; i++) {
+      const j = i % n, pr = rowAt(prk, j), p = pts[j], v = vn[j], d = pr[0] * vm[j], x = p[0] - v[0] * d, y = p[1] - v[1] * d;
+      pos.push(x, pr[1], -y);
+      const nl = Math.hypot(pr[2], pr[3]) || 1; nor.push(v[0] * pr[2] / nl, pr[3] / nl, -v[1] * pr[2] / nl);
+      const t = g === 0 ? uvTop(x, y) : g === 2 ? uvBot(x, y) : uvSide(arc[i], -pr[1] / T, x, y);
+      uv.push(t[0], t[1]);
+    }
+    return base;
+  };
+  const nyOf = pr => pr[0] === 'T' ? Math.cos(pr[1]) : pr[0] === 'B' ? -Math.sin(pr[1]) : 0;
+  let prevBase = -1, prevG = -1;
+  for (let k = 0; k < prof.length - 1; k++) {
+    const A = prof[k], B = prof[k + 1], nym = (nyOf(A) + nyOf(B)) / 2, g = nym > (o.topNy || .5) ? 0 : nym < -.5 ? 2 : 1;   // nov14c: o.topNy lets a roll be all edge material (guard bevel)
+    const b0 = (prevG === g && prevBase >= 0) ? prevBase : emitRow(A, g), b1 = emitRow(B, g);
+    for (let i = 0; i < n; i++) idx[g].push(b0 + i, b1 + i, b0 + i + 1, b1 + i, b1 + i + 1, b0 + i + 1);
+    prevBase = b1; prevG = g;
+  }
+  const cap = (d, yy, up, g) => {
+    const base = pos.length / 3, v2 = [];
+    for (let i = 0; i < n; i++) {
+      const p = pts[i], v = vn[i], dd = d * (up ? sT[i] : sB[i]) * vm[i], x = p[0] - v[0] * dd, y = p[1] - v[1] * dd;
+      pos.push(x, yy, -y); nor.push(0, up ? 1 : -1, 0); const t = (up ? uvTop : uvBot)(x, y); uv.push(t[0], t[1]); v2.push(new THREE.Vector2(x, y));
+    }
+    const tris = THREE.ShapeUtils.triangulateShape(v2, []);
+    for (const f of tris) {
+      const a = v2[f[0]], b = v2[f[1]], c = v2[f[2]], ccw = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) > 0;
+      if (ccw === up) idx[g].push(base + f[0], base + f[1], base + f[2]); else idx[g].push(base + f[0], base + f[2], base + f[1]);
+    }
+  };
+  if (o.capTop !== false) cap(rT, 0, true, 0);
+  if (o.capBot !== false) cap(rB, -T, false, 2);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex([...idx[0], ...idx[1], ...idx[2]]);
+  let st = 0; idx.forEach((a, g) => { if (a.length) geo.addGroup(st, a.length, g); st += a.length; });
+  return geo;
+}
+
+function buildBody() {
+  const group = new THREE.Group(), colliders = [];
+  const add = (geo, mat, x = 0, y = 0, z = 0, parent = group) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
+  const colMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+  const collider = (geo, x = 0, y = 0, z = 0, parent = group) => { const m = new THREE.Mesh(geo, colMat); m.position.set(x, y, z); m.visible = false; parent.add(m); colliders.push(m); return m; };
+  const flat = geo => { geo.rotateX(-Math.PI / 2); return geo; };   // shape (x, specY) -> (x, 0, -specY)
+  const cylZ = (rt, rb, h, seg = 20) => { const g = new THREE.CylinderGeometry(rt, rb, h, seg); g.rotateX(Math.PI / 2); return g; };
+
+  /* ---------- materials ---------- */
+  const mTop = new THREE.MeshPhysicalMaterial({ map: TX.top, color: 0xffe8e8, roughness: .62, metalness: 0, clearcoat: .85, clearcoatRoughness: .16, specularIntensity: .08, envMapIntensity: .5 });
+  const mBack = new THREE.MeshPhysicalMaterial({ map: TX.wood, color: 0xffe8e8, roughness: .62, metalness: 0, clearcoat: .85, clearcoatRoughness: .16, specularIntensity: .08, envMapIntensity: .5 });
+  const mSide = new THREE.MeshPhysicalMaterial({ map: TX.wood, color: new THREE.Color(2.1, 1.6, 1.6), roughness: .42, metalness: 0, clearcoat: 1, clearcoatRoughness: .08, specularIntensity: .3, envMapIntensity: 1.35, emissive: 0xffd8d8, emissiveMap: TX.wood, emissiveIntensity: 0 });   // emissiveIntensity driven by app7 (room bounce while walking on the back)   // body5: sides read as lit cherry wood (the dark back-wood map x2.1: the photos' sides are a mid wine red where light hits them; was a black slab)   // body4: glossy cherry sides that catch the room (were a flat dark box from the walk camera)
+  const mGuardTop = new THREE.MeshPhysicalMaterial({ map: TX.top, color: 0xffffff, roughness: .5, clearcoat: .7, clearcoatRoughness: .18, specularIntensity: .1, envMapIntensity: .5 });
+  const mGuardEdge = new THREE.MeshStandardMaterial({ color: 0xefe8d8, roughness: .4 });
+  const mChrome = new THREE.MeshStandardMaterial({ color: 0xeceef0, metalness: 1, roughness: .1 });
+  const mPickup = new THREE.MeshStandardMaterial({ color: 0xf2f3f5, metalness: 1, roughness: .24 });   // Grok tune: satin so flat tops pick up the softboxes
+  const mSatin = new THREE.MeshStandardMaterial({ color: 0xe4e6e8, metalness: 1, roughness: .2 });
+  const mBlack = new THREE.MeshStandardMaterial({ color: 0x0a0a0b, roughness: .5 });
+  const mBlackGloss = new THREE.MeshPhysicalMaterial({ color: 0x0c0c0d, roughness: .25, clearcoat: 1, clearcoatRoughness: .08 });
+  const mCream = new THREE.MeshPhysicalMaterial({ color: 0xefe4c6, roughness: .3, clearcoat: .5, clearcoatRoughness: .1 });
+
+  /* ---------- body shell ---------- */
+  const outline = bd_smooth(BD_OUTLINE, true, BD_SHARP, 8);
+  let area = 0; for (let i = 0; i < outline.length; i++) { const a = outline[i], b = outline[(i + 1) % outline.length]; area += a[0] * b[1] - b[0] * a[1]; }
+  const ccw = area > 0;
+  const bodyGeo = bd_sweep(outline, {
+    T: BD_T, rT: .25, rB: .42, segT: 6, segB: 12, fairBack: true,   // nov14c (GPT, Blake pic #6)   // body4: wide glossy roll on the BACK edge (Blake's back/side photos), was rB .25 / 6 segs
+    uvTop: bd_photoUV,
+    uvBot: (x, y) => [1 - (x + 7) / 13.4, (y + 7.5) / 16.6],                 // mirrored u on the back
+    uvSide: (arc, t) => [.3 + .4 * t, arc / 16.6],                           // grain axis (v) runs along the edge, a narrow central band across the thickness
+  });
+  add(bodyGeo, [mTop, mSide, mBack]).userData.backWalk = true;   // Grok 9:28: the real shell is the ground when walking on the back
+  collider(flat(new THREE.ShapeGeometry(bd_shape(outline))), 0, 0, 0);
+
+  /* edge helpers on the smoothed outline (spec coords) */
+  const n = outline.length;
+  const frame = i => { const a = outline[(i - 1 + n) % n], b = outline[(i + 1) % n]; let tx = b[0] - a[0], ty = b[1] - a[1]; const l = Math.hypot(tx, ty); tx /= l; ty /= l; return ccw ? [ty, -tx] : [-ty, tx]; };
+  const nearest = (sx, sy) => { let bi = 0, bd = 1e9; for (let i = 0; i < n; i++) { const d = (outline[i][0] - sx) ** 2 + (outline[i][1] - sy) ** 2; if (d < bd) { bd = d; bi = i; } } return bi; };
+  const walk = (i0, s) => {
+    const dir = s >= 0 ? 1 : -1; let rem = Math.abs(s), i = i0;
+    for (let k = 0; k < n; k++) {
+      const j = (i + dir + n) % n, a = outline[i], b = outline[j], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (rem <= L) { const t = rem / L, fa = frame(i), fb = frame(j); let nx = fa[0] + (fb[0] - fa[0]) * t, ny = fa[1] + (fb[1] - fa[1]) * t; const nl = Math.hypot(nx, ny); return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, nx / nl, ny / nl]; }
+      rem -= L; i = j;
+    }
+    const f = frame(i); return [outline[i][0], outline[i][1], f[0], f[1]];
+  };
+  // group on the side wall at mid-thickness, local +Z pointing outward
+  const edgeObj = (sx, sy, build) => {
+    const i = nearest(sx, sy), p = outline[i], nn = frame(i), o = new THREE.Group();
+    o.position.set(p[0], -BD_T / 2, -p[1]); o.rotation.y = Math.atan2(nn[0], -nn[1]); group.add(o); build(o);
+    return { pos: [p[0], -BD_T / 2, -p[1]], nrm: [nn[0], 0, -nn[1]] };
+  };
+
+  /* ---------- screws ---------- */
+  const screwHead = new THREE.SphereGeometry(.07, 14, 7, 0, Math.PI * 2, 0, Math.PI / 2); screwHead.scale(1, .45, 1);
+  const screwSlot = new THREE.BoxGeometry(.1, .012, .016);
+  const screw = (parent, x, y, z, rx = 0, r = 1) => {
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.x = rx; parent.add(g);
+    const h = add(screwHead, mSatin, 0, 0, 0, g); h.scale.setScalar(r); h.castShadow = false;
+    const s = add(screwSlot, mBlack, 0, .03 * r, 0, g); s.scale.setScalar(r); s.rotation.y = .3 + x * 1.7; s.castShadow = false;
+    return g;
+  };
+
+  /* ---------- pickguard: the real tortoise/binding/screws come from the photo ---------- */
+  const guardPts = bd_smooth(BD_GUARD, true, BD_GUARD_SHARP, 12);
+  // nov14c (Grok, Blake pic #4 'fix the pick guard line'): ONE clean cream bevel all round. Was a .02 roll whose upper half
+  // carried the photo (with the photo's own white edge lines beside it) -> a doubled, jagged line. Now a .045 bevel, all cream,
+  // and the top photo is cleaned of its baked edge lines (assets/top-2048-v2.jpg, nov14c-clean-top.py).
+  const guardGeo = bd_sweep(guardPts, { T: .06, rT: .045, rB: 0, segT: 4, topNy: .97, uvTop: bd_photoUV, capBot: false });
+  add(guardGeo, [mGuardTop, mGuardEdge], 0, .06, 0);
+  collider(flat(new THREE.ShapeGeometry(bd_shape(guardPts))), 0, .06, 0);
+
+  if (typeof buildHardware !== 'function') {   // Nov 13: replaced by hardware.js (Fable, from the gpt-image sheets) when present
+  /* ---------- pickups: two polished chrome covers, fully rounded ends, soft rolled top edge ---------- */
+  const pickup = (cx, cy, w, h, rotY) => {
+    const g = new THREE.Group(); g.position.set(cx, .34, -cy); g.rotation.y = rotY; group.add(g);
+    const geo = bd_sweep(bd_rrPts(w, h, h / 2, 10), { T: .36, rT: .09, rB: 0, segT: 6, capBot: false });   // top at Y=.34, foot buried below the guard
+    add(geo, mPickup, 0, 0, 0, g);
+    [-1, 1].forEach(s => screw(g, s * (w / 2 + .15), -.28, 0, 0, .85));
+    const c = new THREE.Mesh(new THREE.BoxGeometry(w, .28, h), colMat); c.position.set(0, -.14, 0); c.visible = false; g.add(c); colliders.push(c);
+  };
+  pickup(.04, 5.24, 2.3, .86, 0);
+  pickup(.05, 2.13, 2.4, .97, -3 * Math.PI / 180);
+
+  /* ---------- bridge: chrome plate, tail lip with string holes, six barrel saddles ---------- */
+  const strX = i => -1.025 + i * .41;
+  {
+    add(bd_sweep(bd_rrPts(3.2, 1.5, .25, 6), { T: .12, rT: .05, rB: 0, segT: 3, capBot: false }), mChrome, 0, .12, 0);
+    add(bd_sweep(bd_rrPts(3.0, .3, .08, 4), { T: .35, rT: .06, rB: 0, segT: 4, capBot: false }), mChrome, 0, .47, .6);   // lip: Z .45..75, Y .12..47
+    const hole = cylZ(.045, .045, .03, 12), headBack = cylZ(.06, .06, .06, 12);
+    const barrel = new THREE.CapsuleGeometry(.17, .6, 6, 18); barrel.rotateX(Math.PI / 2);
+    const riser = new THREE.BoxGeometry(.26, .2, .5), shaft = cylZ(.03, .03, 1, 8), headFront = cylZ(.055, .055, .06, 12);
+    const stagger = [.1, .04, -.02, -.1, -.04, .02];                           // Z offsets (+ = toward tail)
+    for (let i = 0; i < 6; i++) {
+      const x = strX(i), zc = -.15 + stagger[i];
+      add(riser, mChrome, x, .22, zc);
+      add(barrel, mChrome, x, .45, zc);                                         // crown at Y = .62
+      const tail = zc + .47, L = Math.max(.02, .45 - tail - .03);
+      const sh = add(shaft, mSatin, x, .36, tail + .03 + L / 2); sh.scale.z = L;
+      add(headFront, mSatin, x, .36, tail + .03);
+      add(hole, mBlack, x, .32, .44);
+      add(headBack, mSatin, x, .36, .78);
+    }
+    collider(new THREE.BoxGeometry(3.2, .12, 1.5), 0, .06, 0);
+    collider(new THREE.BoxGeometry(3.0, .35, .3), 0, .295, .6);
+    collider(new THREE.BoxGeometry(2.6, .5, 1.0), 0, .37, -.15);                 // saddle crowns: top at Y = .62
+  }
+
+  /* ---------- knobs: cream bell/top-hat, big readable VOLUME / TONE, numbered knurled skirt ---------- */
+  const skirtTex = bd_canvas(1024, 128, (x, w, h) => {
+    const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#f2e8cc'); g.addColorStop(1, '#e3d4ae'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 96; i++) { const px = i * w / 96; x.fillStyle = 'rgba(0,0,0,0.10)'; x.fillRect(px, 0, 3, h); x.fillStyle = 'rgba(255,255,255,0.16)'; x.fillRect(px + 5, 0, 2, h); }
+    x.fillStyle = '#141210'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = BD_FONT(Math.round(h * .7));
+    for (let i = 1; i <= 10; i++) { const px = w * (.055 + .89 * (i - 1) / 9); x.fillText(String(i), px, h * .54); if (i < 10) x.fillRect(px + w * .89 / 18 - 2, h * .25, 4, h * .5); }
+  });
+  const skirtBump = bd_canvas(128, 8, (x, w, h) => { x.fillStyle = '#707070'; x.fillRect(0, 0, w, h); for (let i = 0; i < 16; i++) { x.fillStyle = '#9a9a9a'; x.fillRect(i * 8, 0, 3, h); x.fillStyle = '#505050'; x.fillRect(i * 8 + 5, 0, 2, h); } }, false);
+  skirtBump.repeat.set(6, 1);
+  const mSkirt = new THREE.MeshPhysicalMaterial({ map: skirtTex, bumpMap: skirtBump, bumpScale: .004, roughness: .32, clearcoat: .5, clearcoatRoughness: .1 });
+  const knobTopTex = word => bd_canvas(512, 512, (x, w, h) => {
+    const g = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, '#f4ecd4'); g.addColorStop(.8, '#efe4c6'); g.addColorStop(1, '#dccca4');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#141210'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = BD_FONT(150);
+    const m = x.measureText(word).width || 1, sx = Math.max(.55, Math.min(1.15, w * .88 / m));
+    x.save(); x.translate(w / 2, h / 2 + 12); x.scale(sx, 1); x.fillText(word, 0, 0); x.restore();
+    x.fillRect(w / 2 - 7, 20, 14, 64);                                          // index line at the "12 o'clock" edge
+  });
+  const knobLathe = new THREE.LatheGeometry([[.372, 0], [.372, .05], [.36, .3], [.345, .315], [.33, .345], [.325, .37], [.322, .52], [.31, .575], [.29, .6], [0, .6]].map(p => new THREE.Vector2(p[0], p[1])), 48);
+  const knobSkirt = new THREE.CylinderGeometry(.362, .378, .3, 48, 1, true);
+  const knobDisc = flat(new THREE.CircleGeometry(.29, 48));
+  const knobCol = new THREE.CylinderGeometry(.38, .38, .6, 12);
+  const knob = (cx, cy, word, rot) => {
+    const g = new THREE.Group(); g.position.set(cx, .06, -cy); g.rotation.y = rot; group.add(g);
+    add(knobLathe, mCream, 0, 0, 0, g);
+    add(knobSkirt, mSkirt, 0, .15, 0, g);
+    add(knobDisc, new THREE.MeshPhysicalMaterial({ map: knobTopTex(word), roughness: .3, clearcoat: .5, clearcoatRoughness: .1 }), 0, .604, 0, g);
+    const c = new THREE.Mesh(knobCol, colMat); c.position.y = .3; c.visible = false; g.add(c); colliders.push(c);
+  };
+  knob(2.87, .99, 'VOLUME', -.6);
+  knob(3.83, -1.53, 'TONE', .35);
+
+  /* ---------- toggle switch ---------- */
+  {
+    const g = new THREE.Group(); g.position.set(4.45, .06, -.7); group.add(g);
+    add(new THREE.CylinderGeometry(.21, .21, .02, 24), mSatin, 0, .01, 0, g);
+    add(new THREE.CylinderGeometry(.17, .18, .07, 24), mChrome, 0, .055, 0, g);
+    add(new THREE.SphereGeometry(.07, 16, 10), mChrome, 0, .09, 0, g);
+    const lev = new THREE.Group(); lev.position.y = .09; lev.rotation.x = -20 * Math.PI / 180; g.add(lev);
+    add(new THREE.CylinderGeometry(.03, .036, .32, 10), mChrome, 0, .16, 0, lev);
+    add(new THREE.CapsuleGeometry(.055, .1, 4, 12), mBlackGloss, 0, .36, 0, lev);
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .45, 10), colMat); c.position.y = .22; c.visible = false; g.add(c); colliders.push(c);
+  }
+
+  }
+
+  /* ---------- edge hardware: strap buttons (tail + bass shoulder next to the neck) ---------- */
+  // body5: a real strap button (photo: chrome, felt washer, waisted post, domed head with a Phillips screw), was a plain dome
+  // body6: one shared builder so both buttons are identical. The chrome output-jack plate that sat on this wall is gone: Blake's pic #1 +
+  // photos/back-from-headstock.jpg show a strap button here and the output jack on the BACK (built in the back block below).
+  const mFelt = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: .95 });
+  const strapButton = o => {
+    add(cylZ(.24, .24, .025, 24), mFelt, 0, 0, .012, o);   // felt washer
+    const prof = [[0, 0], [.2, 0], [.2, .03], [.13, .07], [.105, .13], [.11, .2], [.2, .24], [.235, .28], [.22, .32], [.17, .355], [.09, .375], [0, .38]].map(([r, z]) => new THREE.Vector2(r, z));
+    const lg = new THREE.LatheGeometry(prof, 28); lg.rotateX(Math.PI / 2); add(lg, mChrome, 0, 0, .025, o);
+    const sl = new THREE.BoxGeometry(.13, .02, .02); [0, Math.PI / 2].forEach(r => { const m = add(sl, mBlack, 0, 0, .4, o); m.rotation.z = r; m.castShadow = false; });
+  };
+  const strap = edgeObj(0, -7.28, strapButton);
+  const strap2 = edgeObj(-2.3, 8.66, strapButton);   // body6: bass shoulder, ~1.2" out from the neck's bass edge (back-from-headstock.jpg: button sits right beside the neck)
+
+  /* ---------- back: black crinkle control-cavity cover, output jack ---------- */
+  // body6: the output jack is on the BACK (back-full.jpg / back-from-headstock.jpg: ONE ~0.75" black barrel with a darker centre hole, just
+  // off the body's neck end, a touch bass of the neck centre line). It replaces the 'neck-bolt ferrule' discs at (0, -8.0): the photos
+  // show only this one round black thing on the back near the neck. Flat discs only (this is walk ground): 0.062" proud of the back.
+  const JACK_X = -.35, JACK_Z = -8.1;   // 0.8" in from the neck end (photo ~0.6") so the 0.375" barrel stays on the flat back, clear of the 0.42" roll
+  const jack = { pos: [JACK_X, -BD_T, JACK_Z], nrm: [0, -1, 0] };
+  {
+    const coverTex = bd_canvas(256, 256, (x, w, h) => {
+      x.fillStyle = '#17171a'; x.fillRect(0, 0, w, h); const r = bd_rng(7);
+      for (let i = 0; i < 9000; i++) {
+        const v = r(), s = .8 + r() * 1.8;
+        x.fillStyle = v < .5 ? `rgba(0,0,0,${(.35 + r() * .4).toFixed(2)})` : `rgba(${110 + r() * 60 | 0},${110 + r() * 60 | 0},${120 + r() * 60 | 0},${(.25 + r() * .35).toFixed(2)})`;
+        x.fillRect(r() * w, r() * h, s, s);
+      }
+    });
+    const mCover = new THREE.MeshStandardMaterial({ map: coverTex, bumpMap: coverTex, bumpScale: .02, roughness: .9, metalness: 0 });
+    const cover = add(bd_sweep(bd_rrPts(3.6, 1.9, .3, 6), { T: .03, rT: .012, rB: 0, segT: 2, uvTop: (x, y) => [(x + 1.8) / 3.6, (y + .95) / 1.9], capBot: false }), mCover, 0, -BD_T - .03, 1.5);   // Grok Nov 13 9:28: centred on the body centre line (was x=.5, Blake: move to center)
+    cover.rotation.x = Math.PI;
+    [[-1.55, -.7], [1.55, -.7], [-1.55, .7], [1.55, .7]].forEach(([x, z]) => screw(group, x, -BD_T - .03, 1.5 + z, Math.PI, .8));
+    add(new THREE.CylinderGeometry(.375, .375, .04, 28), mBlackGloss, JACK_X, -BD_T - .018, JACK_Z);                                   // jack barrel face (black, slightly glossy), top .018 inside the back: no coplanar flicker
+    add(new THREE.CylinderGeometry(.29, .29, .012, 24), mBlack, JACK_X, -BD_T - .044, JACK_Z);                                          // flat matte nut ring
+    add(new THREE.CylinderGeometry(.13, .13, .012, 16), new THREE.MeshStandardMaterial({ color: 0x000000, roughness: .95 }), JACK_X, -BD_T - .056, JACK_Z);   // darker centre hole
+  }
+
+  /* ---------- side stickers: real label photos following the bass-side waist ---------- */
+  const li = nearest(-3.6, 4.6);
+  const dirHead = walk(li, .5)[1] > walk(li, -.5)[1] ? 1 : -1;                // which walk direction goes toward the headstock
+  const ribbon = (sTail, sHead, tex, halfH) => {
+    const K = 16, pos = [], uv = [], idx = [], yF = -BD_T / 2 + halfH, yB = -BD_T / 2 - halfH;
+    for (let k = 0; k <= K; k++) {
+      const w = walk(li, dirHead * (sTail + (sHead - sTail) * k / K)), x = w[0] + w[2] * .012, y = w[1] + w[3] * .012;
+      pos.push(x, yF, -y, x, yB, -y); uv.push(1, k / K, 0, k / K);              // u=1 toward the front face, v=1 toward the headstock
+    }
+    for (let k = 0; k < K; k++) { const a = 2 * k; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+    const m = add(g, new THREE.MeshPhysicalMaterial({ map: tex, roughness: .35, clearcoat: .3, clearcoatRoughness: .1, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    m.castShadow = false;
+  };
+  ribbon(.09, 2.04, TX.label1225, .31);     // 12/25: 1.95" along the edge, headstock side
+  ribbon(-1.33, -.09, TX.labelBPZ, .31);    // BPZ: 1.24" along the edge, tail side, 0.18" gap
+  const lc = walk(li, dirHead * .35);
+
+  /* ---------- footprint + anchors ---------- */
+  const footprint = [outline.map(p => [p[0], -p[1]])];
+  const anchors = {
+    bodyCenter: [0, 0, -1], bridge: [0, .62, 0], spawn: [0, .62, .25], knobs: [3.35, .66, .27],
+    labels: [lc[0] + lc[2] * .012, -BD_T / 2, -(lc[1] + lc[3] * .012)], labelsNormal: [lc[2], 0, -lc[3]],
+    backCover: [0, -BD_T, 1.5], jack: jack.pos, jackNormal: jack.nrm, strap: strap.pos, strapNormal: strap.nrm, strap2: strap2.pos, strap2Normal: strap2.nrm,
+  };
+  return { group, colliders, footprint, anchors };
+}
+
+/* hardware3 (Grok Nov 14 7:54): pickup selector rebuilt on the photographed slot (shape/tip/collar/colour per toggle sheet + photos). hardware2 kept. */
+// ---------------- HARDWARE v2 (Grok, Nov 13): bridge + knobs rebuilt from gpt-ref sheets; pickups/selector from Fable's hardware.js ----------------
+function hw_v2(x, y) { return new THREE.Vector2(x, y); }
+function hw_ss(a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+
+// planar UV (x -> u, -z -> v) for one material group of a bd_sweep geometry
+function hw_planarUV(geo, gi, su, sv) {
+  const g = geo.groups[gi]; if (!g) return;
+  const pos = geo.attributes.position; const idx = geo.index;
+  let uv = geo.attributes.uv;
+  if (!uv) { uv = new THREE.BufferAttribute(new Float32Array(pos.count * 2), 2); geo.setAttribute('uv', uv); }
+  const total = idx ? idx.count : pos.count;
+  const end = (g.count === Infinity) ? total : Math.min(total, g.start + g.count);
+  for (let k = g.start; k < end; k++) {
+    const vi = idx ? idx.getX(k) : k;
+    uv.setXY(vi, pos.getX(vi) * su, -pos.getZ(vi) * sv);
+  }
+  uv.needsUpdate = true;
+}
+
+function hw_brushedMap() {
+  const t = bd_canvas(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#b4b4b4'; ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1400; i++) {
+      const y = Math.random() * h, l = 120 + Math.random() * 100;
+      ctx.strokeStyle = 'rgb(' + l + ',' + l + ',' + l + ')';
+      ctx.lineWidth = 0.4 + Math.random() * 1.3;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y + (Math.random() - 0.5) * 1.5); ctx.stroke();
+    }
+  }, false);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+// saddle: rounded "tongue" swept along Z, tall tail, scoop, hooked crown at front. base Y = plate top.
+function hw_saddleGeo(mobile, base, W) {
+  const NZ = mobile ? 20 : 40, NT = mobile ? 8 : 18;
+  const prof = new THREE.SplineCurve([
+    // Grok fix (Blake's low-angle photo): LOW rear face with the holes, tongue rises toward the hooked crown at the string slot
+    hw_v2(0.50, 0.33), hw_v2(0.44, 0.355), hw_v2(0.32, 0.39), hw_v2(0.18, 0.45), hw_v2(0.04, 0.53),
+    hw_v2(-0.07, 0.59), hw_v2(-0.15, 0.62), hw_v2(-0.21, 0.60), hw_v2(-0.29, 0.47), hw_v2(-0.37, 0.30),
+    hw_v2(-0.45, 0.17), hw_v2(-0.50, 0.125)
+  ]);
+  const pts = prof.getPoints(NZ);
+  const pos = [], idx = [];
+  const ringN = NT + 1;
+  for (let i = 0; i <= NZ; i++) {
+    const z = pts[i].x; const H = Math.max(0.005, Math.min(0.62, pts[i].y) - base);
+    const wz = W * (1 - 0.45 * hw_ss(-0.28, -0.5, z));
+    const groove = 0.022 * hw_ss(-0.05, 0.08, z) * (1 - hw_ss(0.36, 0.46, z));
+    for (let j = 0; j <= NT; j++) {
+      const th = Math.PI * j / NT, c = Math.cos(th), s = Math.sin(th);
+      let y = base + H * Math.pow(s, 0.72);
+      y -= groove * Math.exp(-(c * c) / 0.09) * s;
+      pos.push(wz * 0.5 * c, y, z);
+    }
+  }
+  for (let i = 0; i < NZ; i++) for (let j = 0; j < NT; j++) {
+    const a = i * ringN + j, b = a + ringN, c = a + 1, d = b + 1;
+    idx.push(a, b, c, b, d, c);
+  }
+  // flat rear (tail) cap with its own vertices
+  const capStart = pos.length / 3; const zt = pts[0].x; const Ht = Math.min(0.62, pts[0].y) - base;
+  pos.push(0, base + Ht * 0.5, zt);
+  for (let j = 0; j <= NT; j++) { const k = j * 3; pos.push(pos[k], pos[k + 1], zt); }
+  for (let j = 0; j < NT; j++) idx.push(capStart, capStart + 1 + j, capStart + 2 + j);
+  // flat front foot cap
+  const fStart = pos.length / 3; const zf = pts[NZ].x;
+  pos.push(0, base + 0.004, zf);
+  const r0 = NZ * ringN;
+  for (let j = 0; j <= NT; j++) { const k = (r0 + j) * 3; pos.push(pos[k], pos[k + 1], zf); }
+  for (let j = 0; j < NT; j++) idx.push(fStart, fStart + 2 + j, fStart + 1 + j);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+function buildHardware() {
+  const group = new THREE.Group(); group.name = 'hardware';
+  const colliders = [];
+  const M = !!Q.mobile;
+  const SEG = M ? 10 : 22;
+  const D2R = Math.PI / 180;
+
+  // ---- materials ----
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xd2d4d6, metalness: 1, roughness: 0.18, envMapIntensity: 0.8 });   // Grok 7:10 glare pass
+  const satin = new THREE.MeshStandardMaterial({ color: 0xc8cbcf, metalness: 1, roughness: 0.42, roughnessMap: hw_brushedMap(), envMapIntensity: 0.75 });   // Grok 7:10: pickup tops no longer blow out under the key light
+  const black = new THREE.MeshPhysicalMaterial({ color: 0x0b0b0c, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12 });
+  const cream = new THREE.MeshPhysicalMaterial({ color: 0xd9ccaa, roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.2 });   // Grok tune: aged cream, no bloom halo
+  const dark = new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.75, metalness: 0.3 });
+  const cmat = new THREE.MeshBasicMaterial({ visible: false });
+
+  const vis = (m) => { m.castShadow = true; m.receiveShadow = true; return m; };
+  const collBox = (parent, w, h, d, x, yTop, z, ry) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), cmat);
+    m.position.set(x, yTop - h / 2, z); m.rotation.y = ry || 0; m.visible = false;
+    parent.add(m); colliders.push(m); return m;
+  };
+  const collCyl = (parent, r, h, x, yTop, z) => {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 16), cmat);
+    m.position.set(x, yTop - h / 2, z); m.visible = false;
+    parent.add(m); colliders.push(m); return m;
+  };
+
+  // ---- shared small parts ----
+  const screwGeo = new THREE.SphereGeometry(0.065, M ? 12 : 20, M ? 6 : 10, 0, Math.PI * 2, 0, Math.PI / 2);
+  const slotGeo = new THREE.BoxGeometry(0.085, 0.02, 0.014);
+  const screw = (parent, x, y, z, rot) => {
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rot || 0;
+    const dome = vis(new THREE.Mesh(screwGeo, chrome)); dome.scale.set(1, 0.58, 1); g.add(dome);
+    const s1 = new THREE.Mesh(slotGeo, dark); s1.position.y = 0.031; g.add(s1);
+    const s2 = new THREE.Mesh(slotGeo, dark); s2.position.y = 0.031; s2.rotation.y = Math.PI / 2; g.add(s2);
+    parent.add(g); return g;
+  };
+
+  // =============== 1) PICKUPS ===============
+  const GUARD = 0.06;
+  const pickup = (cx, cz, L, Wd, rotDeg) => {
+    const g = new THREE.Group(); g.position.set(cx, 0, cz); g.rotation.y = rotDeg * D2R;
+    const geo = bd_sweep(bd_rrPts(L, Wd, 0.07, M ? 5 : 10), { T: 0.30, rT: 0.06, rB: 0.012, segT: M ? 3 : 6, capBot: false });
+    hw_planarUV(geo, 0, 0.9, 2.2);
+    const cover = vis(new THREE.Mesh(geo, [satin, chrome, chrome]));
+    cover.position.y = GUARD + 0.30; g.add(cover);
+    screw(g, -(L / 2 + 0.13), GUARD, 0, 0.4); screw(g, (L / 2 + 0.13), GUARD, 0, -0.9);
+    collBox(g, L, 0.30, Wd, 0, GUARD + 0.30, 0, 0);
+    group.add(g); return g;
+  };
+  pickup(0.04, -5.24, 2.3, 0.86, 0);
+  pickup(0.05, -2.13, 2.3, 0.86, 0);   // Grok Nov 13: straight + same size as the neck pickup (pickups sheet + body-topdown photo)
+
+
+  // =============== 2) WRAPAROUND BRIDGE — Grok rebuild from gpt-ref/bridge-sheet.png ===============
+  // sheet measurements (front view 284 px/in, side 261 px/in, top 329 px/in):
+  // plate 3.1 x 1.34 x 0.106, end blocks 0.31 wide x 0.45 tall, saddles 0.39 wide x 1.27 long at 0.41 pitch,
+  // rear face 0.33 tall with 2 holes, tongue rises to forked crown 0.72 (string slot bottom 0.62) 0.21 from the front.
+  const bridge = new THREE.Group(); group.add(bridge);
+  const PLATE_T = 0.106, PZ = 0.28;               // plate centre Z (front edge -0.39, rear +0.95)
+  const plateGeo = bd_sweep(bd_rrPts(3.1, 1.34, 0.3, M ? 6 : 12), { T: PLATE_T, rT: 0.03, rB: 0.015, segT: M ? 3 : 5, capBot: false });
+  const plate = vis(new THREE.Mesh(plateGeo, chrome)); plate.position.set(0, PLATE_T, PZ); bridge.add(plate);
+  collBox(bridge, 3.1, PLATE_T, 1.34, 0, PLATE_T, PZ, 0);
+  const BLK_T = 0.36;
+  for (const sx of [-1, 1]) {
+    const bg = bd_sweep(bd_rrPts(0.31, 1.34, 0.15, M ? 5 : 10), { T: BLK_T - 0.02, rT: 0.14, rB: 0.0, segT: M ? 4 : 8, capBot: false });
+    const b = vis(new THREE.Mesh(bg, chrome)); b.position.set(sx * 1.395, BLK_T, PZ); bridge.add(b);
+    collBox(bridge, 0.31, BLK_T, 1.34, sx * 1.395, BLK_T, PZ, 0);
+  }
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2b2e, metalness: 0.9, roughness: 0.55 });
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(2.46, 0.004, 1.26), floorMat); floor.position.set(0, PLATE_T + 0.002, PZ); floor.receiveShadow = true; bridge.add(floor);
+
+  const SW = 0.195, SL = 1.27, ZT = 0.91;          // half width, length, tail Z (front = ZT - SL = -0.36)
+  const hw_lerpT = (tab, t) => { for (let k = 0; k < tab.length - 1; k++) { const a = tab[k], b = tab[k + 1]; if (t <= b[0]) { const u = (t - a[0]) / (b[0] - a[0]); const s = u * u * (3 - 2 * u); return a[1] + (b[1] - a[1]) * s; } } return tab[tab.length - 1][1]; };
+  const TOP = [[0, 0.32], [0.05, 0.335], [0.2, 0.45], [0.52, 0.57], [0.65, 0.64], [0.8, 0.72], [0.87, 0.72], [0.95, 0.6], [1, 0.46]];   // side-view silhouette
+  const halfW = t => {
+    let w = SW;
+    if (t < 0.1) w *= Math.pow(Math.max(0, 1 - Math.pow(1 - t / 0.1, 4)), 0.25);              // squarish tail with rounded corners (sheet front view = flat rear face)
+    if (t > 0.56) w *= 1 - 0.47 * hw_ss(0.56, 0.68, t);                                          // waist into the forked neck
+    if (t > 0.94) w *= Math.sqrt(Math.max(0, 1 - Math.pow((t - 0.94) / 0.06, 2)));             // rounded nose
+    return Math.max(w, 0.002);
+  };
+  const saddleGeo = (() => {
+    const NZ = M ? 48 : 96, NC = M ? 20 : 36, P = 5;
+    const pos = [], idx = [];
+    for (let i = 0; i <= NZ; i++) {
+      const t = i / NZ, z = ZT - SL * t, w = halfW(t), H = hw_lerpT(TOP, t) - PLATE_T;
+      const scoop = 0.055 * hw_ss(0.07, 0.18, t) * (1 - hw_ss(0.5, 0.62, t));                   // deep polished scoop along the tongue
+      const slot = (hw_lerpT(TOP, t) - 0.62) * hw_ss(0.62, 0.7, t) * (1 - hw_ss(0.9, 0.96, t)); // string slot between the forks
+      for (let j = 0; j <= NC; j++) {
+        const th = Math.PI * (1 - j / NC), c = Math.cos(th), s = Math.sin(th);
+        const x = w * Math.sign(c) * Math.pow(Math.abs(c), 2 / P);
+        const yn = Math.pow(Math.abs(s), 2 / P);
+        let y = PLATE_T + H * yn;
+        const xr = x / Math.max(w, 1e-3);
+        y -= scoop * Math.max(0, 1 - Math.pow(xr / 0.78, 2)) * yn;
+        y -= Math.max(0, slot) * Math.exp(-Math.pow(x / 0.045, 4)) * yn;
+        pos.push(x, y, z);
+      }
+    }
+    const R = NC + 1;
+    for (let i = 0; i < NZ; i++) for (let j = 0; j < NC; j++) { const a = i * R + j, b = a + R; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  })();
+  const holeMat = new THREE.MeshStandardMaterial({ color: 0x050506, roughness: 0.9, metalness: 0.2, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x8a8c90, metalness: 1, roughness: 0.3, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  const sadChrome = new THREE.MeshStandardMaterial({ color: 0xc6c9cc, metalness: 1, roughness: 0.24, envMapIntensity: 0.7 });   // Grok v2: tame bloom hot spots in walk view
+  const stagger = [0.04, 0.02, 0.0, -0.02, -0.01, 0.01];
+  const RT = SW * 0.98;                            // plan radius of the rounded tail
+  for (let i = 0; i < 6; i++) {
+    const sg = new THREE.Group(); sg.position.set(-1.025 + 0.41 * i, 0, stagger[i]); bridge.add(sg);
+    sg.add(vis(new THREE.Mesh(saddleGeo, sadChrome)));
+    // 2 holes in the rounded rear face (sheet: big Ø0.155 at -0.035/0.20, small Ø0.085 at +0.127/0.18)
+    for (const [hx, hy, hr] of [[-0.035, 0.2, 0.078], [0.12, 0.175, 0.042]]) {
+      const EZ = 0.1 * SL, q = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(hx) / SW, 4)), 0.25);
+      const zc = ZT - EZ * (1 - q);                                  // tail surface (superelliptic plan) at this x
+      const n = new THREE.Vector3(0, 0, 1);
+      const rim = new THREE.Mesh(new THREE.RingGeometry(hr, hr * 1.25, 24), rimMat), hole = new THREE.Mesh(new THREE.CircleGeometry(hr, 24), holeMat);
+      for (const m of [rim, hole]) { m.position.set(hx + n.x * 0.006, hy, zc + n.z * 0.006); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n); sg.add(m); }
+    }
+    collBox(sg, 0.36, 0.34 - PLATE_T, 0.5, 0, 0.36, 0.62, 0);
+    collBox(sg, 0.36, 0.52 - PLATE_T, 0.4, 0, 0.52, 0.2, 0);
+    collBox(sg, 0.2, 0.66 - PLATE_T, 0.36, 0, 0.66, -0.17, 0);
+  }
+
+  // =============== 3) TOP-HAT KNOBS — Grok rebuild: lathe traced from the gpt-ref/knobs-sheet.png side silhouette ===============
+  // silhouette px (r, y) from the sheet, base y=342, bottom radius 195.5 px -> 0.41 in (0.82 dia, 0.54 tall)
+  const KS = 0.41 / 195.5, KB = 342;
+  const kp = (r, y) => hw_v2(r * KS, (KB - y) * KS);
+  const skirtP = [[195.5, 342], [195.5, 333], [195.5, 321], [185.5, 303], [174.5, 285], [163.5, 267], [157, 257]].map(p => kp(...p));
+  const bodyP = [[157, 257], [154.5, 248], [154, 240], [152, 210], [149.5, 183], [147.5, 150], [146, 129], [144.5, 119]].map(p => kp(...p));
+  const topP = [[144.5, 119], [141, 113], [137, 107], [133, 100], [128, 94], [118, 89], [100, 86], [60, 83.3], [0, 82]].map(p => kp(...p));
+  const RTOP = 144.5 * KS;
+  const kCol = 0xd9ceb0;
+  const skirtTex = bd_canvas(2048, 128, (x, w, h) => {
+    x.fillStyle = '#f2ead6'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#16130f'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `600 ${Math.round(h * 0.72)}px "Helvetica Neue",Arial,"Liberation Sans","DejaVu Sans",sans-serif`;
+    // sheet TOP view: 0 at the top (above the word), increasing clockwise seen from above, ~32.7 deg apart
+    for (let n = 0; n <= 10; n++) { const a = 90 - 32.7 * n; let u = ((a + 90) / 360) % 1; if (u < 0) u += 1; x.save(); x.translate(u * w, h * 0.5); x.scale(0.85, 1); x.fillText(String(n), 0, 0); x.restore(); }
+  });
+  skirtTex.wrapS = THREE.RepeatWrapping;
+  const knurl = bd_canvas(64, 16, (x, w, h) => { const g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, '#202020'); g.addColorStop(0.5, '#e0e0e0'); g.addColorStop(1, '#202020'); x.fillStyle = g; x.fillRect(0, 0, w, h); }, false);
+  knurl.wrapS = knurl.wrapT = THREE.RepeatWrapping; knurl.repeat.set(48, 1);
+  const kSkirtMat = new THREE.MeshPhysicalMaterial({ color: kCol, map: skirtTex, roughness: 0.55, clearcoat: 0.15, clearcoatRoughness: 0.4, specularIntensity: 0.35 });
+  const kBodyMat = new THREE.MeshPhysicalMaterial({ color: kCol, bumpMap: knurl, bumpScale: 1.2, roughness: 0.55, clearcoat: 0.15, clearcoatRoughness: 0.4, specularIntensity: 0.35 });
+  const kSeg = M ? 64 : 128;
+  const skirtGeo = new THREE.LatheGeometry(skirtP, kSeg), bodyGeo = new THREE.LatheGeometry(bodyP, kSeg), topGeo = new THREE.LatheGeometry(topP, kSeg);
+  { // planar UVs on the domed top so the decal reads flat from above: word along +X, letter tops toward -Z
+    const p = topGeo.attributes.position, uv = topGeo.attributes.uv;
+    for (let k = 0; k < p.count; k++) uv.setXY(k, 0.5 + p.getX(k) / (2 * RTOP), 0.5 - p.getZ(k) / (2 * RTOP));
+    uv.needsUpdate = true;
+  }
+  const knob = (capTex, x, z, rotY) => {
+    const g = new THREE.Group(); g.position.set(x, GUARD, z); g.rotation.y = rotY;
+    g.add(vis(new THREE.Mesh(skirtGeo, kSkirtMat)));
+    g.add(vis(new THREE.Mesh(bodyGeo, kBodyMat)));
+    g.add(vis(new THREE.Mesh(topGeo, new THREE.MeshPhysicalMaterial({ color: kCol, map: capTex, roughness: 0.5, clearcoat: 0.2, clearcoatRoughness: 0.35, specularIntensity: 0.35 }))));
+    collCyl(g, 0.41, 0.54, 0, 0.54, 0);
+    group.add(g); return g;
+  };
+  // word direction matched to Blake's knobs-toggle-topdown photo (VOLUME reads ~208 deg, TONE ~183 deg in spec coords)
+  knob(TX.knobVol, 2.87, -0.99, 3.63);
+  knob(TX.knobTone, 3.83, 1.53, 3.19);
+
+  // =============== 4) PICKUP SELECTOR (hardware3, Grok Nov 14) ===============
+  // Placed ON the slot photographed in the top texture (slot ends measured in top-2048.jpg: (4.44,-0.25) .. (4.73,0.38)),
+  // so the 3D switch, the photo's slot line and its guard screw line up. Shape per gpt-ref/toggle-sheet.png + Blake's
+  // knobs-toggle photos: flat chrome blade leaning toward the neck end of the slot, small chrome collar, glossy black
+  // Strat-style tip (narrow at the blade, wide domed top).
+  const SC = [4.585, 0.062], SD = [-0.416, -0.909];
+  const sel = new THREE.Group(); sel.position.set(SC[0], 0, SC[1]);
+  sel.rotation.y = Math.atan2(SD[0], SD[1]);   // local +Z -> slot direction toward the neck end
+  group.add(sel);
+  const selChrome = new THREE.MeshStandardMaterial({ color: 0xe2e4e6, metalness: 1, roughness: 0.26, envMapIntensity: 1.25 });
+  const selBlack = new THREE.MeshPhysicalMaterial({ color: 0x151517, roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06, specularIntensity: 0.6, envMapIntensity: 1.4 });
+  // slot: dark recess cut into the guard with the switch's chrome plate showing at the bottom
+  const slot = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.03, 0.70), dark); slot.position.y = GUARD + 0.004; sel.add(slot);
+  const selPlate = vis(new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, 0.62), selChrome)); selPlate.position.y = GUARD + 0.016; sel.add(selPlate);
+  // lever: flat blade from the slot, leaning ~58 deg toward the neck end
+  const lever = new THREE.Group(); lever.position.set(0, GUARD + 0.01, 0.08); lever.rotation.x = 58 * D2R; sel.add(lever);
+  const LEV = 0.34;
+  const blade = vis(new THREE.Mesh(new THREE.BoxGeometry(0.06, LEV, 0.022), selChrome)); blade.position.y = LEV / 2; lever.add(blade);
+  const collar = vis(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.05, M ? 12 : 20), selChrome)); collar.position.y = 0.035; lever.add(collar);
+  const tipGeo = new THREE.LatheGeometry([[0.0, 0], [0.05, 0.0], [0.056, 0.03], [0.068, 0.14], [0.086, 0.28], [0.096, 0.35], [0.094, 0.39], [0.08, 0.43], [0.05, 0.455], [0.0, 0.465]].map(p => hw_v2(p[0], p[1])), M ? 20 : 36);
+  tipGeo.scale(1, 1, 0.78);
+  const tip = vis(new THREE.Mesh(tipGeo, selBlack)); tip.position.y = LEV - 0.1; lever.add(tip);
+  // the guard screw beside the slot (photographed at (4.78,-0.20)): give it real relief
+  screw(group, 4.778, GUARD, -0.20, 0.7);
+  collBox(sel, 0.22, 0.42, 0.8, 0, GUARD + 0.42, 0.18, 0);
+
+  return { group, colliders };
+}
+
+/* neck4 (Grok Nov 14 7:54): smooth neck->headstock back transition (no hump), neck straight out of the body (no heel). neck3 kept. */
+// Grok Nov 13 (v3): symmetric headstock (Blake 7:51: right side correct, mirror it), walkable headstock (footprint overlap at the nut, post colliders). v2 kept in neck2.js. Was: headstock outline / posts / truss-rod cover taken from gpt-ref/headstock-sheet.png (nut 1.69" = 121.9 px scale)
+const HS_SHEET = {"side2": [[-0.55, 7.178], [-0.779, 7.006], [-0.935, 6.907], [-1.313, 6.702], [-1.378, 6.497], [-1.37, 6.087], [-1.345, 5.513], [-1.321, 4.651], [-1.313, 3.79], [-1.304, 3.011], [-1.354, 2.559], [-1.403, 2.067], [-1.411, 1.641], [-1.337, 1.37], [-1.206, 1.165], [-1.083, 0.96], [-0.984, 0.755], [-0.911, 0.55], [-0.861, 0.345], [-0.853, 0.0]], "peak": [-0.386, 7.276], "peakP": [0.386, 7.276], "side1": [[0.853, 0.0], [0.861, 0.345], [0.911, 0.55], [0.984, 0.755], [1.083, 0.96], [1.206, 1.165], [1.337, 1.37], [1.411, 1.641], [1.403, 2.067], [1.354, 2.559], [1.304, 3.011], [1.313, 3.79], [1.321, 4.651], [1.345, 5.513], [1.37, 6.087], [1.378, 6.497], [1.313, 6.702], [0.935, 6.907], [0.779, 7.006], [0.55, 7.178]], "top": [[0.123, 7.203], [0.0, 7.198], [-0.123, 7.203]], "posts": [[-0.737, 5.36], [-0.806, 3.756], [-0.835, 2.18], [0.737, 5.36], [0.806, 3.756], [0.835, 2.18]], "trc": [[0.48, 0.937], [0.484, 0.896], [0.485, 0.854], [0.482, 0.813], [0.475, 0.772], [0.465, 0.732], [0.451, 0.693], [0.435, 0.655], [0.415, 0.619], [0.392, 0.584], [0.366, 0.552], [0.337, 0.522], [0.306, 0.494], [0.273, 0.469], [0.238, 0.447], [0.201, 0.429], [0.163, 0.413], [0.123, 0.401], [0.083, 0.392], [0.041, 0.387], [0.0, 0.385], [-0.041, 0.387], [-0.083, 0.392], [-0.123, 0.401], [-0.163, 0.413], [-0.201, 0.429], [-0.238, 0.447], [-0.273, 0.469], [-0.306, 0.494], [-0.337, 0.522], [-0.366, 0.552], [-0.392, 0.584], [-0.415, 0.619], [-0.435, 0.655], [-0.451, 0.693], [-0.465, 0.732], [-0.475, 0.772], [-0.482, 0.813], [-0.485, 0.854], [-0.484, 0.896], [-0.48, 0.937], [-0.198, 2.958], [-0.193, 2.981], [-0.186, 3.004], [-0.176, 3.025], [-0.163, 3.046], [-0.148, 3.064], [-0.131, 3.081], [-0.112, 3.095], [-0.092, 3.108], [-0.07, 3.117], [-0.047, 3.124], [-0.024, 3.129], [0.0, 3.13], [0.024, 3.129], [0.047, 3.124], [0.07, 3.117], [0.092, 3.108], [0.112, 3.095], [0.131, 3.081], [0.148, 3.064], [0.163, 3.046], [0.176, 3.025], [0.186, 3.004], [0.193, 2.981], [0.198, 2.958]], "trcScrews": [[0.0, 2.74], [0.0, 0.71]]};   // Grok Nov 13 7:51: SYMMETRIC — the -X half (right end of the Taylor logo, front view) mirrored onto +X
+// neck5 (Grok Nov 14 14:57): headstock-back seam line removed (loft meets the back cap flush). neck4 kept.
+// ---------------- NECK PART (fretboard, frets, nut, maple neck, headstock, strings) ----------------
+function buildNeck() {
+  const PI = Math.PI;
+  const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+  const NUT_Z = -24.7, SCALE_LEN = 24.875, END_Z = -6.3;
+  const HA = THREE.MathUtils.degToRad(6), CA = Math.cos(HA), SA = Math.sin(HA), HT = 0.55;
+  const HN = V3(0, CA, -SA);                                  // headstock face normal
+  const nk_F = (X, s) => V3(X, 0.10 - s * SA, NUT_Z - s * CA); // point on headstock face
+  const nk_w = (z) => 1.69 + (2.2 - 1.69) * ((z - NUT_Z) / (END_Z - NUT_Z)); // fretboard width at z
+  const nk_fretZ = (n) => NUT_Z + SCALE_LEN * (1 - Math.pow(2, -n / 12));
+  const nk_ss = (x, a, b) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  let nk_seed = 1337;
+  const nk_rand = () => { nk_seed |= 0; nk_seed = nk_seed + 0x6D2B79F5 | 0; let t = Math.imul(nk_seed ^ nk_seed >>> 15, 1 | nk_seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+  const group = new THREE.Group(); group.name = 'neck';
+  const colliders = [];
+
+  // ---------- helpers ----------
+  // prism from an [x,z] polygon, spanning y0..y1 (top cap at y1)
+  function nk_prism(poly, y0, y1) {
+    const sh = new THREE.Shape(poly.map(p => new THREE.Vector2(p[0], -p[1])));
+    const g = new THREE.ExtrudeGeometry(sh, { depth: y1 - y0, bevelEnabled: false, steps: 1 });
+    g.rotateX(-PI / 2); g.translate(0, y0, 0);
+    return g;
+  }
+  // planar projected UVs from position (called on local/untransformed positions)
+  function nk_projUV(g, fu, fv) {
+    const p = g.getAttribute('position'); const uv = new Float32Array(p.count * 2);
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      uv[2 * i] = fu(x, y, z); uv[2 * i + 1] = fv(x, y, z);
+    }
+    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    return g;
+  }
+  // keep only the side walls of an ExtrudeGeometry (materialIndex 1)
+  function nk_walls(geo) {
+    const grp = geo.groups.find(g => g.materialIndex === 1);
+    const out = new THREE.BufferGeometry();
+    for (const name of ['position', 'normal', 'uv']) {
+      const at = geo.getAttribute(name); const n = at.itemSize;
+      out.setAttribute(name, new THREE.BufferAttribute(at.array.slice(grp.start * n, (grp.start + grp.count) * n), n));
+    }
+    geo.dispose();
+    return out;
+  }
+  function nk_mesh(geo, mat, parent) {
+    const m = new THREE.Mesh(geo, mat); (parent || group).add(m); return m;
+  }
+
+  // ---------- procedural Indian rosewood (tileable along v) ----------
+  function nk_rosewoodTex() {
+    const W = 256, H = 1024;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.fillStyle = '#31190f'; g.fillRect(0, 0, W, H);
+    // broad tonal bands along the grain
+    for (let i = 0; i < 46; i++) {
+      const x = nk_rand() * W, w = 8 + nk_rand() * 48;
+      const r = 22 + nk_rand() * 40, gg = 10 + nk_rand() * 14, b = 6 + nk_rand() * 9;
+      g.fillStyle = `rgba(${r | 0},${gg | 0},${b | 0},${0.22 + nk_rand() * 0.35})`;
+      g.fillRect(x, 0, w, H);
+    }
+    // long pore streaks (dark) and lighter reddish streaks, drawn twice for vertical tiling
+    g.lineCap = 'round';
+    for (let i = 0; i < 320; i++) {
+      const x = nk_rand() * W, y0 = nk_rand() * H, len = 50 + nk_rand() * 520, drift = (nk_rand() - 0.5) * 7;
+      const dark = nk_rand() < 0.66;
+      g.strokeStyle = dark ? `rgba(14,7,4,${0.3 + nk_rand() * 0.45})` : `rgba(118,62,38,${0.14 + nk_rand() * 0.26})`;
+      g.lineWidth = dark ? 0.7 + nk_rand() * 1.5 : 1 + nk_rand() * 2.4;
+      for (const off of [0, -H, H]) { g.beginPath(); g.moveTo(x, y0 + off); g.lineTo(x + drift, y0 + len + off); g.stroke(); }
+    }
+    // fine speckle
+    for (let i = 0; i < 5000; i++) {
+      g.fillStyle = nk_rand() < 0.6 ? 'rgba(0,0,0,0.14)' : 'rgba(255,190,150,0.06)';
+      g.fillRect(nk_rand() * W, nk_rand() * H, 1, 2 + nk_rand() * 7);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Q.aniso;
+    return t;
+  }
+  const rwTex = nk_rosewoodTex();
+
+  // ---------- materials ----------
+  const rosewoodMat = new THREE.MeshPhysicalMaterial({ map: rwTex, bumpMap: rwTex, bumpScale: 0.012, roughness: 0.62, metalness: 0, specularIntensity: 0.16 });
+  const mapleMat = new THREE.MeshPhysicalMaterial({ map: TX.maple, roughness: 0.45, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.35, specularIntensity: 0.16 });
+  const headFaceMat = new THREE.MeshPhysicalMaterial({ map: TX.headFace, roughness: 0.5, metalness: 0, clearcoat: 0.55, clearcoatRoughness: 0.14, specularIntensity: 0.12, envMapIntensity: 0.55 });   // Grok tune: kill softbox glare band
+  const veneerEdgeMat = new THREE.MeshPhysicalMaterial({ color: 0x1a0e08, roughness: 0.5, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.1, specularIntensity: 0.15 });
+  const fretMat = new THREE.MeshStandardMaterial({ color: 0xd8d8d4, metalness: 1, roughness: 0.2 });
+  const dotMat = new THREE.MeshPhysicalMaterial({ color: 0xefe9dc, roughness: 0.35, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.1, specularIntensity: 0.2 });
+  const nutMat = new THREE.MeshPhysicalMaterial({ color: 0xefe6cf, roughness: 0.4, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.2, specularIntensity: 0.2 });
+  const slotMat = new THREE.MeshStandardMaterial({ color: 0x2b241c, roughness: 0.7, metalness: 0 });
+  const plainStrMat = new THREE.MeshStandardMaterial({ color: 0xf2f2f0, metalness: 1, roughness: 0.12 });
+  const colliderMat = new THREE.MeshBasicMaterial({ visible: false });
+
+  // ---------- fretboard ----------
+  const fbPoly = [[-0.845, NUT_Z], [0.845, NUT_Z], [1.1, END_Z], [-1.1, END_Z]];
+  const fbGeo = nk_prism(fbPoly, 0.10, 0.35);
+  nk_projUV(fbGeo, (x) => x * 0.6 + 0.5, (x, y, z) => -z * 0.11);
+  nk_mesh(fbGeo, rosewoodMat);
+
+  // ---------- frets ----------
+  const fretGeo = new THREE.CylinderGeometry(0.045, 0.045, 1, Q.mobile ? 8 : 12, 1);
+  fretGeo.rotateZ(PI / 2);
+  for (let n = 1; n <= 22; n++) {
+    const z = nk_fretZ(n);
+    const m = nk_mesh(fretGeo, fretMat);
+    m.scale.set(nk_w(z) - 0.03, 0.9, 1);
+    m.position.set(0, 0.35, z);
+  }
+
+  // ---------- inlay dots (top) and side dots ----------
+  const dotGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.02, 20);
+  const sideDotGeo = new THREE.SphereGeometry(0.035, 10, 8);
+  const dotFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21];
+  for (const n of dotFrets) {
+    const z = 0.5 * (nk_fretZ(n - 1) + nk_fretZ(n));
+    const xs = n === 12 ? [-0.32, 0.32] : [0];
+    for (const x of xs) { const d = nk_mesh(dotGeo, dotMat); d.position.set(x, 0.352, z); }
+    const w = nk_w(z);
+    const zs = n === 12 ? [z - 0.18, z + 0.18] : [z];
+    for (const zz of zs) { const s = nk_mesh(sideDotGeo, dotMat); s.position.set(-w / 2 + 0.018, 0.225, zz); s.castShadow = false; }
+  }
+
+  // ---------- nut ----------
+  const nutZ = NUT_Z - 0.095;
+  const nut = nk_mesh(new THREE.BoxGeometry(1.72, 0.34, 0.19), nutMat);
+  nut.position.set(0, 0.25, nutZ);
+  const slotGeo = new THREE.BoxGeometry(0.03, 0.02, 0.2);
+  for (let i = 0; i < 6; i++) {
+    const s = nk_mesh(slotGeo, slotMat);
+    s.position.set(-0.725 + i * 0.29, 0.418, nutZ); s.castShadow = false;
+  }
+
+  // ---------- maple neck back: swept C profile, with volute into the headstock ----------
+  // neck4 (Grok Nov 14): no volute hump. Neck depth (from the fretboard top) tapers 0.92" at the body -> 0.84" at the nut,
+  // then the carve fades into the flat headstock back (depth HT) over ~2" — Blake's headstock-back photo.
+  const nk_neckD = (z) => 0.84 + 0.08 * Math.min(1, Math.max(0, (z - NUT_Z) / (-8.9 - NUT_Z)));
+  const nk_hw = (s) => { const pts = HS_SHEET.side1; if (s <= pts[0][1]) return pts[0][0]; for (let i = 1; i < pts.length; i++) if (s <= pts[i][1]) { const a = pts[i - 1], b = pts[i], t = (s - a[1]) / (b[1] - a[1]); return a[0] + (b[0] - a[0]) * t; } return pts[pts.length - 1][0]; };
+  const VOL_L = 2.6;
+  // centre line of the back: stays level with the neck back past the nut, then bends (C1, smoothstep) into the
+  // headstock back plane — no 6 degree fold at the nut, no hump
+  const nk_volD = (s) => { const yN = 0.10 - nk_neckD(NUT_Z), yP = 0.10 - s * SA - HT * CA, yb = yN + (yP - yN) * nk_ss(s, 0, VOL_L); return (0.10 - s * SA - yb) / CA; };
+  // edge depth of the carve = how thick the headstock is AT ITS OUTLINE: 0 at the nut (round neck sides) -> full HT by ~1.8"
+  const nk_edge = (s) => (HT + 0.004) * nk_ss(s, 0.0, VOL_L * 0.85);
+  const stations = [];
+  let vAcc = 0, prevC = null;
+  const pushSt = (c, ax, dn, w, d) => {
+    if (prevC) vAcc += c.distanceTo(prevC);
+    prevC = c;
+    stations.push({ c, ax, dn, w, d, v: vAcc / 8 });
+  };
+  const NS = 36, Z0 = -8.0;   // neck4: starts INSIDE the body (end face at Z -8.9) — it comes straight out of the body, no carved heel
+  for (let i = 0; i <= NS; i++) {
+    const z = Z0 + (NUT_Z - Z0) * i / NS;
+    pushSt(V3(0, 0.10, z), V3(1, 0, 0), V3(0, -1, 0), nk_w(z) - 0.004, nk_neckD(z));
+    stations[stations.length - 1].e = 0;
+  }
+  const NH = Q.mobile ? 16 : 24;
+  for (let i = 1; i <= NH; i++) {
+    const s = VOL_L * Math.pow(i / NH, 1.3);
+    const k = nk_ss(s, 0, VOL_L);
+    // half-width follows the headstock outline (just inside it); edge depth = headstock thickness, centre fades 0.84 -> HT
+    // neck5 (Grok Nov 14 14:57, Blake pic #2 'get rid of the line'): the loft used to END 0.004" proud of the flat back cap
+    // (depth HT + .004 at s = VOL_L, cap at HT) -> a tiny lip straight across the headstock back that rendered as a dark line.
+    // The 0.004 clearance now fades out (x 4k(1-k)) so the loft lands exactly on the cap plane, same depth, same normal.
+    const lift = 0.004 * 4 * k * (1 - k), dep = i === NH ? HT : Math.max(HT + lift, nk_volD(s) + lift);
+    pushSt(nk_F(0, s), V3(1, 0, 0), HN.clone().negate(), 2 * nk_hw(s) - 0.01, dep);
+    stations[stations.length - 1].e = Math.min(nk_edge(s), dep);
+    stations[stations.length - 1].p = 0.55 + 0.9 * k;
+  }
+  const M = Q.mobile ? 14 : 20;
+  const BODY_BACK = 1.82;   // v3: body is 1.75" deep; heel reaches just past the back so there is no seam
+  (function () {
+    const pos = [], uv = [], idx = [];
+    for (let i = 0; i < stations.length; i++) {
+      const S = stations[i];
+      for (let j = 0; j <= M; j++) {
+        const th = -PI / 2 + PI * j / M, t = Math.sin(th);
+        const e = S.e || 0, dep = e + (S.d - e) * Math.pow(Math.max(0, 1 - t * t), S.p || 0.55);
+        const p = S.c.clone().addScaledVector(S.ax, t * S.w * 0.5).addScaledVector(S.dn, dep);
+        pos.push(p.x, p.y, p.z); uv.push(0.05 + 0.9 * j / M, S.v);
+      }
+    }
+    const row = M + 1;
+    for (let i = 0; i < stations.length - 1; i++) for (let j = 0; j < M; j++) {
+      const a = i * row + j, b = a + 1, c = a + row, d = c + 1;
+      idx.push(a, c, b, b, c, d);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals();
+    nk_mesh(g, mapleMat);
+  })();
+
+  // ---------- v3 (Grok 7:51): carved neck heel — the set-neck joint flares from the C profile down into the body back ----------
+  if (false) (function () {   // neck4: no carved heel (the neck leaves the body straight, Blake's back photos); kept for reference
+    const NSH = 18, z0 = -8.15, z1 = -11.2, pos = [], uv = [], idx = [];
+    for (let i = 0; i <= NSH; i++) {
+      const t = i / NSH, z = z0 + (z1 - z0) * t;
+      const e = Math.pow(1 - t, 1.7);                       // concave scoop, like a carved heel
+      const dep = 0.85 + (BODY_BACK - 0.85) * e;
+      const pw = 0.55 - 0.4 * e;                             // boxier where it meets the body
+      const w = nk_w(z) - 0.004 + 0.1 * e;
+      for (let j = 0; j <= M; j++) {
+        const th = -PI / 2 + PI * j / M, tt = Math.sin(th);
+        const d = dep * Math.pow(Math.max(0, 1 - tt * tt), pw);
+        pos.push(tt * w * 0.5, 0.10 - d, z); uv.push(0.05 + 0.9 * j / M, -z / 8);
+      }
+    }
+    const row = M + 1;
+    for (let i = 0; i < NSH; i++) for (let j = 0; j < M; j++) { const a = i * row + j, b = a + 1, c = a + row, d = c + 1; idx.push(a, c, b, b, c, d); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals();
+    nk_mesh(g, mapleMat);
+  })();
+
+  // thin maple under-slab beneath the fretboard overhang (sits flat on the body top at Y=0)
+  const usZ = -9.2, usW = nk_w(usZ) - 0.012;
+  const usGeo = nk_prism([[-usW / 2, usZ], [usW / 2, usZ], [1.094, END_Z], [-1.094, END_Z]], 0.0, 0.10);
+  nk_projUV(usGeo, (x) => x * 0.4 + 0.5, (x, y, z) => -z / 8);
+  nk_mesh(usGeo, mapleMat);
+
+  // ---------- headstock ----------
+  const side1 = HS_SHEET.side1, side2 = HS_SHEET.side2;
+  const nk_smooth = (pts, n) => new THREE.CatmullRomCurve3(pts.map(p => V3(p[0], p[1], 0)), false, 'centripetal').getPoints(n).map(p => [p.x, p.y]);
+  const segs = Q.mobile ? 20 : 30;
+  const outline = [...nk_smooth(side1, segs * 2), HS_SHEET.peakP, ...HS_SHEET.top, HS_SHEET.peak, ...nk_smooth(side2, segs * 2)];
+  const headShape = new THREE.Shape(outline.map(p => new THREE.Vector2(p[0], p[1])));
+  // local frame: x = model X, y = s (along face), z = thickness (0 = back, HT = face)
+  const HM = new THREE.Matrix4().makeBasis(V3(1, 0, 0), V3(0, -SA, -CA), HN.clone()).setPosition(0, 0.10 - HT * CA, NUT_Z + HT * SA);
+  const VEN = 0.06; // veneer thickness
+  // neck4: maple edge walls + back cap trimmed to the carve. Near the nut the headstock edge is only as thick as the
+  // carve's edge (nk_edge), so the round neck sides flow into the flat headstock with no step; the flat back cap starts at VOL_L.
+  const hsWall = (zTopF, zBotF, mat, uvF) => {
+    const pos = [], uv = [], idx = []; const n = outline.length;
+    for (let i = 0; i <= n; i++) {
+      const p = outline[i % n], zt = zTopF(p[1]), zb = zBotF(p[1]);
+      pos.push(p[0], p[1], zt, p[0], p[1], Math.min(zt, zb));
+      uv.push(...uvF(p[0], p[1], zt), ...uvF(p[0], p[1], zb));
+      if (i < n) { const a = 2 * i; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals(); g.applyMatrix4(HM);
+    const m = nk_mesh(g, mat); return m;
+  };
+  const mapleSide = mapleMat.clone(); mapleSide.side = THREE.DoubleSide;
+  const veneerSide = veneerEdgeMat.clone(); veneerSide.side = THREE.DoubleSide;
+  const zEdge = (sv) => HT - Math.min(HT, nk_edge(sv));            // HM-local z of the headstock's back edge at s
+  hsWall(() => HT - VEN, sv => zEdge(sv), mapleSide, (x, y, z) => [0.2 + z * 0.5 + x * 0.02, y / 8 + x * 0.03]);
+  hsWall(() => HT, sv => Math.max(HT - VEN, zEdge(sv)), veneerSide, (x, y, z) => [z, y]);
+  // flat maple back cap: only where the carve has fully faded (s >= VOL_L)
+  const capPts = [], hwV = nk_hw(VOL_L);
+  capPts.push([hwV, VOL_L]); for (const p of outline) if (p[1] > VOL_L) capPts.push(p); capPts.push([-hwV, VOL_L]);
+  const capShape = new THREE.Shape(capPts.map(p => new THREE.Vector2(p[0], p[1])));
+  const backCap = new THREE.ShapeGeometry(capShape);
+  { const ix = backCap.index.array; const rev = new ix.constructor(ix.length); for (let i = 0; i < ix.length; i++) rev[i] = ix[ix.length - 1 - i]; backCap.setIndex(new THREE.BufferAttribute(rev, 1)); }
+  nk_projUV(backCap, (x) => x * 0.33 + 0.5, (x, y) => y / 8 + 0.37);
+  backCap.computeVertexNormals();
+  backCap.applyMatrix4(HM);
+  nk_mesh(backCap, mapleMat);
+  // rosewood face with the real photo (logo + truss-rod cover baked in)
+  const faceCap = new THREE.ShapeGeometry(headShape);
+  faceCap.translate(0, 0, HT);
+  nk_projUV(faceCap, (x) => (1.6 - x) / 3.2, (x, y) => 1 - (y + 0.1) / 7.8);
+  faceCap.applyMatrix4(HM);
+  nk_mesh(faceCap, headFaceMat);
+  // 3D truss-rod cover: black crinkle teardrop, wide end at the nut, 3 screws (Nov 13 photo)
+  {
+    const trc = [[0.5, 0.12], [0.52, 0.6], [0.38, 1.5], [0.27, 2.2], [0.05, 2.56], [-0.17, 2.2], [-0.28, 1.5], [-0.42, 0.6], [-0.42, 0.12]];
+    const pts = HS_SHEET.trc.map(p => new THREE.Vector2(p[0], p[1]));
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256; const cg = cv.getContext('2d');
+    cg.fillStyle = '#141416'; cg.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 9000; i++) { const v = nk_rand(), r = 0.7 + nk_rand() * 1.6; cg.fillStyle = v < 0.5 ? `rgba(0,0,0,${(0.3 + nk_rand() * 0.4).toFixed(2)})` : `rgba(${120 + nk_rand() * 60 | 0},${120 + nk_rand() * 60 | 0},${125 + nk_rand() * 60 | 0},${(0.18 + nk_rand() * 0.3).toFixed(2)})`; cg.fillRect(nk_rand() * 256, nk_rand() * 256, r, r); }
+    const ct = new THREE.CanvasTexture(cv); ct.colorSpace = THREE.SRGBColorSpace; ct.wrapS = ct.wrapT = THREE.RepeatWrapping; ct.repeat.set(2, 2);
+    const trcMat = new THREE.MeshStandardMaterial({ map: ct, bumpMap: ct, bumpScale: 0.6, roughness: 0.82, metalness: 0.05 });
+    const tg = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: 0.025, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.02, bevelSegments: 3, curveSegments: 8 });
+    nk_projUV(tg, (x) => x, (x, y) => y);
+    tg.translate(0, 0, HT + 0.012); tg.applyMatrix4(HM);
+    const tm = nk_mesh(tg, trcMat); tm.castShadow = false;
+    const scrMat = new THREE.MeshStandardMaterial({ color: 0xd8dadc, metalness: 1, roughness: 0.25 });
+    const slotMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.8 });
+    const sh = new THREE.SphereGeometry(0.06, 14, 7, 0, PI * 2, 0, PI / 2); sh.scale(1, 0.45, 1);
+    for (const [x, s2] of HS_SHEET.trcScrews) {
+      const p0 = nk_F(x, s2).addScaledVector(HN, 0.05);
+      const sm = nk_mesh(sh, scrMat); sm.position.copy(p0); sm.quaternion.setFromUnitVectors(V3(0, 1, 0), HN); sm.castShadow = false;
+      for (const r of [0, PI / 2]) { const sl = nk_mesh(new THREE.BoxGeometry(0.08, 0.012, 0.014), slotMat); sl.position.copy(p0).addScaledVector(HN, 0.022); sl.quaternion.copy(sm.quaternion); sl.rotateY(0.4 + r); sl.castShadow = false; }
+    }
+  }
+
+  // ---------- strings ----------
+  const unitCyl = new THREE.CylinderGeometry(1, 1, 1, Q.mobile ? 6 : 8, 1);
+  const UP = V3(0, 1, 0);
+  function nk_cyl(p0, p1, r, mat) {
+    const d = new THREE.Vector3().subVectors(p1, p0); const len = d.length();
+    const m = new THREE.Mesh(unitCyl, mat);
+    m.scale.set(r, len, r);
+    m.position.copy(p0).addScaledVector(d, 0.5);
+    m.quaternion.setFromUnitVectors(UP, d.normalize());
+    group.add(m);
+    return { mesh: m, len };
+  }
+  // wound-string stripe texture
+  const wc = document.createElement('canvas'); wc.width = 4; wc.height = 16;
+  const wg = wc.getContext('2d');
+  wg.fillStyle = '#e4dccc'; wg.fillRect(0, 0, 4, 16);
+  wg.fillStyle = '#6a6256'; wg.fillRect(0, 8, 4, 8);
+  wg.fillStyle = '#b3a996'; wg.fillRect(0, 6, 4, 2);
+  const woundTex = new THREE.CanvasTexture(wc);
+  woundTex.wrapS = woundTex.wrapT = THREE.RepeatWrapping; woundTex.colorSpace = THREE.SRGBColorSpace;
+  const nk_woundMat = (len) => {
+    const t = woundTex.clone(); t.repeat.set(1, len / 0.05); t.needsUpdate = true;
+    return new THREE.MeshStandardMaterial({ color: 0xcfc6b4, metalness: 1, roughness: 0.35, map: t });
+  };
+  const posts = [[-0.835, 2.18], [-0.806, 3.756], [-0.737, 5.36], [0.737, 5.36], [0.806, 3.756], [0.835, 2.18]];   // low E -> high E; +X side mirrored from the -X (correct) side
+  const dias = [0.046, 0.036, 0.026, 0.017, 0.013, 0.010];
+  for (let i = 0; i < 6; i++) {
+    const r = Math.max(dias[i] / 2, 0.008);
+    const wound = i < 3;
+    const pBridge = V3(-1.025 + i * 0.41, 0.62 + r * 0.5, -0.15);
+    const pNut = V3(-0.725 + i * 0.29, 0.42 + r, NUT_Z);
+    const pPost = nk_F(posts[i][0], posts[i][1]).addScaledVector(HN, typeof tn_holeH === 'function' ? tn_holeH(posts[i][0], posts[i][1]) : 0.35);   // neck5: ends IN the post's string hole (tuners5), was 0.35 = between wraps
+    for (const [a, b] of [[pBridge, pNut], [pNut, pPost]]) {
+      const len = a.distanceTo(b);
+      nk_cyl(a, b, r, wound ? nk_woundMat(len) : plainStrMat);
+    }
+  }
+
+  // ---------- colliders (invisible, top faces walkable) ----------
+  const fbInset = [[-0.82, NUT_Z + 0.02], [0.82, NUT_Z + 0.02], [1.07, END_Z - 0.02], [-1.07, END_Z - 0.02]];
+  const fbCol = new THREE.Mesh(nk_prism(fbInset, 0.33, 0.35), colliderMat); fbCol.visible = false; group.add(fbCol); colliders.push(fbCol);
+  // v3: filler under the nut's front edge — the fretboard collider stops 0.02" short of the nut box, and that sliver had NO ground (walker got stuck at small steps)
+  const gapCol = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.02, 0.24), colliderMat); gapCol.position.set(0, 0.34, NUT_Z + 0.04 - 0.12); gapCol.visible = false; group.add(gapCol); colliders.push(gapCol);
+  const nutCol = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.02, 0.19), colliderMat); nutCol.position.set(0, 0.41, nutZ); nutCol.visible = false; group.add(nutCol); colliders.push(nutCol);
+  const headCol = new THREE.Mesh(faceCap.clone(), colliderMat); headCol.visible = false; group.add(headCol); colliders.push(headCol);
+  // Grok v3: tuner posts are solid for the walker (taller than STEP, so you walk AMONG them, not through or onto them)
+  for (const [px, ps] of posts) {
+    const pc = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 1.6, 12), colliderMat);
+    pc.position.copy(nk_F(px, ps)).add(V3(0, 0.75, 0)); pc.visible = false; pc.userData.wall = true; group.add(pc); colliders.push(pc);
+  }
+
+  // ---------- shadows ----------
+  group.traverse(o => { if (o.isMesh && o.visible) { if (o.castShadow !== false) o.castShadow = true; o.receiveShadow = true; } });
+
+  // ---------- footprint & anchors ----------
+  const footprint = [
+    // Grok v3: fretboard footprint overlaps 0.4" past the nut, so there is no sliver between the neck and headstock footprints
+    [[-0.82, NUT_Z + 0.02], [0.82, NUT_Z + 0.02], [0.82, NUT_Z - 0.4], [-0.82, NUT_Z - 0.4]],
+    fbInset.map(p => [p[0], p[1]]),
+    outline.map(([x, s]) => [x, NUT_Z - s * CA])
+  ];
+  const hf = nk_F(0, 3.7), hb = hf.clone().addScaledVector(HN, -HT);
+  const anchors = {
+    nut: [0, 0.42, NUT_Z],
+    neckMid: [0, 0.35, -15],
+    headstockFace: [hf.x, hf.y, hf.z],
+    headstockBack: [hb.x, hb.y, hb.z],
+    neckBack: [0, -0.75, -15]
+  };
+  return { group, colliders, footprint, anchors };
+}
+
+// ===================== TUNERS PART (v4, Grok Nov 13 9:09: D'Addario clip pulled in to its real size/position; v3 kept in tuners3.js) =====================
+// 3+3 sealed chrome tuners (face bushings/posts/string wraps, back housings with
+// brushed "Taylor" caps, tulip buttons) + D'Addario clip-on tuner on the bass edge.
+// All built inside a "headstock frame" group H: local +Y = face normal, local z = -s,
+// face at y=0, back at y=-0.55. H is rotated/positioned into the model frame.
+
+const TN_A = 6 * Math.PI / 180;
+const TN_OUT_T = HS_SHEET.side1.slice().sort((a,b)=>a[1]-b[1]);
+const TN_OUT_B = HS_SHEET.side2.slice().sort((a,b)=>a[1]-b[1]);
+// tuners5 (Grok Nov 14 14:57, Blake pic #3 'make the hole line up with the string entrance'): each post's string hole now sits
+// right above its top wrap at the height the string arrives, and points along that string toward its nut slot; neck5 ends the
+// string at the same point (tn_holeH), so every string visibly goes into its post hole. tuners4 kept.
+const TN_WRAPS = i => 2 + (i % 2);
+const TN_HOLE_H = i => 0.30 + TN_WRAPS(i) * 0.045 + 0.005;
+function tn_holeH(X, s) { let bi = 0, bd = 1e9; TN_POSTS.forEach((p, i) => { const d = Math.hypot(p[0] - X, p[1] - s); if (d < bd) { bd = d; bi = i; } }); return TN_HOLE_H(bi); }
+const TN_POSTS = [[0.835, 2.18], [0.806, 3.756], [0.737, 5.36], [-0.835, 2.18], [-0.806, 3.756], [-0.737, 5.36]];   // Grok v3: symmetric (+X mirrored from the correct -X side)
+const TN_ROLL = [0.35,-0.55,0.15,-0.3,0.6,-0.12];
+
+let tn_seed = 7;
+function tn_rnd(){ tn_seed = (tn_seed * 16807) % 2147483647; return (tn_seed - 1) / 2147483646; }
+
+function tn_edgeX(s, side){
+  const L = side > 0 ? TN_OUT_T : TN_OUT_B;
+  for (let i = 0; i < L.length - 1; i++){
+    const a = L[i], b = L[i+1];
+    if (s >= a[1] && s <= b[1]){ const t = (s - a[1]) / (b[1] - a[1]); return a[0] + (b[0] - a[0]) * t; }
+  }
+  return L[L.length-1][0];
+}
+
+function tn_canvas(size, draw){
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  draw(c.getContext('2d'), size);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = (typeof Q !== 'undefined' && Q.aniso) ? Q.aniso : 4;
+  return t;
+}
+
+function tn_roundRect(w, h, r, cx = 0, cy = 0){
+  const s = new THREE.Shape(), x = cx - w/2, y = cy - h/2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+
+// Tombstone: flat bottom, big rounded top (centered at origin, width w, height h)
+function tn_tombstone(w, h, rb){
+  const s = new THREE.Shape(), hw = w/2, hh = h/2;
+  s.moveTo(-hw + rb, -hh);
+  s.lineTo(hw - rb, -hh); s.quadraticCurveTo(hw, -hh, hw, -hh + rb);
+  s.lineTo(hw, hh - hw);
+  s.absarc(0, hh - hw, hw, 0, Math.PI, false);
+  s.lineTo(-hw, -hh + rb); s.quadraticCurveTo(-hw, -hh, -hw + rb, -hh);
+  return s;
+}
+
+// Tulip / paddle button outline, shaft end at x=0, tip at x=0.55, width 0.45
+function tn_paddleShape(){
+  // Nov 13 (gpt-image tuner sheet + photo): keystone/tulip — narrow neck, quick flare, near-parallel sides, flat end with chamfered corners
+  const top = [[0,0.06],[0.05,0.075],[0.13,0.17],[0.19,0.205],[0.47,0.19],[0.53,0.14],[0.55,0.07]];
+  const pts = top.map(p => new THREE.Vector2(p[0], p[1]));
+  for (let i = top.length - 1; i >= 0; i--) pts.push(new THREE.Vector2(top[i][0], -top[i][1]));
+  const s = new THREE.Shape(pts);
+  return s;
+}
+
+// Orientation whose local x'=-X, y'=-Z (toward tip), z'=-Y (away from the back).
+// A plane/circle (facing +z', uv up = +y') oriented this way reads upright and
+// un-mirrored for a camera behind the headstock looking at the back with the tip up.
+const TN_Q_DOWN = new THREE.Quaternion().setFromRotationMatrix(
+  new THREE.Matrix4().makeBasis(new THREE.Vector3(-1,0,0), new THREE.Vector3(0,0,-1), new THREE.Vector3(0,-1,0)));
+
+function tn_mesh(geo, mat, parent, x, y, z, noCast){
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = !noCast; m.receiveShadow = true;
+  if (x !== undefined) m.position.set(x, y, z);
+  parent.add(m);
+  return m;
+}
+
+function tn_capTexture(){
+  return tn_canvas(256, (g, S) => {
+    const c = S / 2;
+    g.fillStyle = '#b4b5b9'; g.fillRect(0, 0, S, S);
+    // radial brushed lines
+    g.lineWidth = 1;
+    for (let i = 0; i < 900; i++){
+      const a = tn_rnd() * Math.PI * 2, r0 = 6 + tn_rnd() * 20, r1 = r0 + 40 + tn_rnd() * 100;
+      const v = tn_rnd() < 0.5 ? 255 : 30;
+      g.strokeStyle = `rgba(${v},${v},${v},${0.04 + tn_rnd() * 0.12})`;
+      g.beginPath(); g.moveTo(c + Math.cos(a) * r0, c + Math.sin(a) * r0);
+      g.lineTo(c + Math.cos(a) * r1, c + Math.sin(a) * r1); g.stroke();
+    }
+    // soft anisotropic highlight
+    const gr = g.createLinearGradient(0, 0, S, S);
+    gr.addColorStop(0, 'rgba(255,255,255,0.18)'); gr.addColorStop(0.45, 'rgba(255,255,255,0)');
+    gr.addColorStop(0.55, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,0.22)');
+    g.fillStyle = gr; g.fillRect(0, 0, S, S);
+    // ring of tiny dots
+    for (let i = 0; i < 40; i++){
+      const a = i / 40 * Math.PI * 2, x = c + Math.cos(a) * 104, y = c + Math.sin(a) * 104;
+      g.fillStyle = '#2a2a2c'; g.beginPath(); g.arc(x, y, 2.6, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.35)'; g.beginPath(); g.arc(x - 0.8, y - 0.8, 1.0, 0, Math.PI * 2); g.fill();
+    }
+    // rim bevel shade
+    g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 6; g.beginPath(); g.arc(c, c, c - 4, 0, Math.PI * 2); g.stroke();
+    // "Taylor" script (not mirrored: geometry orientation handles the view)
+    g.save(); g.translate(c, c + 4); g.rotate(-0.12);
+    g.fillStyle = '#121212'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = 'italic 700 62px "Brush Script MT","Segoe Script","Apple Chancery","Snell Roundhand",cursive';
+    g.fillText('Taylor', 0, 0);
+    g.restore();
+  });
+}
+
+function tn_displayTexture(){
+  return tn_canvas(512, (g, S) => {
+    g.fillStyle = '#0a0a0b'; g.fillRect(0, 0, S, S);
+    const gl = g.createLinearGradient(0, 0, S, S * 0.6);
+    gl.addColorStop(0, 'rgba(255,255,255,0.07)'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gl; g.fillRect(0, 0, S, S);
+    g.strokeStyle = '#f2f2f2'; g.fillStyle = '#f2f2f2'; g.lineCap = 'round'; g.lineJoin = 'round';
+    // top row: "<"  refresh  ">"
+    g.font = '700 64px Helvetica, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('<', 150, 150); g.fillText('>', 362, 150);
+    g.lineWidth = 9; g.beginPath(); g.arc(256, 150, 30, 0.35 * Math.PI, 1.85 * Math.PI); g.stroke();
+    g.beginPath(); g.moveTo(256 + 30 * Math.cos(1.85 * Math.PI) + 10, 150 + 30 * Math.sin(1.85 * Math.PI) - 18);
+    g.lineTo(256 + 30 * Math.cos(1.85 * Math.PI) + 12, 150 + 30 * Math.sin(1.85 * Math.PI) + 8);
+    g.lineTo(256 + 30 * Math.cos(1.85 * Math.PI) - 14, 150 + 30 * Math.sin(1.85 * Math.PI) + 2);
+    g.closePath(); g.fill();
+    // power button: rounded square with power icon
+    g.lineWidth = 4; g.strokeStyle = '#8a8a8c';
+    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+      g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h); g.lineTo(x + r, y + h);
+      g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath(); };
+    rr(186, 220, 140, 140, 22); g.stroke();
+    g.strokeStyle = '#f2f2f2'; g.lineWidth = 10;
+    g.beginPath(); g.arc(256, 294, 40, -0.3 * Math.PI, 1.3 * Math.PI); g.stroke();
+    g.beginPath(); g.moveTo(256, 236); g.lineTo(256, 288); g.stroke();
+    // brand
+    g.font = '700 54px Helvetica, Arial, sans-serif';
+    g.fillText("D'Addario", 256, 436);
+  });
+}
+
+function buildTuners(){
+  const group = new THREE.Group();
+  group.name = 'tuners';
+
+  // headstock frame
+  const H = new THREE.Group();
+  H.position.set(0, 0.10, -24.7);
+  H.rotation.x = -TN_A;
+  group.add(H);
+
+  // ---- materials ----
+  const chromeCurved = new THREE.MeshPhysicalMaterial({ color: 0xe8e8ea, metalness: 1, roughness: 0.1 });
+  const chromeFlat   = new THREE.MeshPhysicalMaterial({ color: 0xe4e4e6, metalness: 1, roughness: 0.22 });
+  const chromeDark   = new THREE.MeshPhysicalMaterial({ color: 0x9a9a9e, metalness: 1, roughness: 0.3 });
+  const capTex2 = tn_capTexture(); const capMat = new THREE.MeshStandardMaterial({ map: capTex2, color: 0xffffff, metalness: 0.35, roughness: 0.45, emissive: 0xffffff, emissiveMap: capTex2, emissiveIntensity: 0.22 });   // Grok v2: cap + Taylor readable in the black void   // Grok tune: less mirror so the brushed cap + Taylor read in the black void
+  const stringMat = new THREE.MeshStandardMaterial({ color: 0xd9d9dc, metalness: 1, roughness: 0.32 });
+  const blackMat = new THREE.MeshPhysicalMaterial({ color: 0x141414, roughness: 0.7, metalness: 0, specularIntensity: 0.18 });
+  const rubberMat = new THREE.MeshPhysicalMaterial({ color: 0x0c0c0c, roughness: 0.95, metalness: 0, specularIntensity: 0.1 });
+  const dispTex = tn_displayTexture();
+  const dispMat = new THREE.MeshPhysicalMaterial({
+    map: dispTex, color: 0xffffff, emissive: 0xffffff, emissiveMap: dispTex, emissiveIntensity: 0.28,
+    roughness: 0.12, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.04, specularIntensity: 0.6 });
+  const holeMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9, metalness: 0.2 });
+
+  // ---- shared geometries ----
+  const washerGeo = new THREE.CylinderGeometry(0.25, 0.255, 0.035, 32);   // Nov 13: real washer ~0.5 dia
+  const nutGeo = new THREE.CylinderGeometry(0.205, 0.205, 0.12, 6);
+  const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.45, 20);
+  const tipGeo = new THREE.CylinderGeometry(0.095, 0.12, 0.03, 20);
+  const holeGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.26, 10);
+  const wrapThin = new THREE.TorusGeometry(0.128, 0.011, 7, 28);
+  const wrapThick = new THREE.TorusGeometry(0.133, 0.018, 7, 28);
+  const housingGeo = new THREE.ExtrudeGeometry(tn_roundRect(0.62, 0.75, 0.17), {
+    depth: 0.40, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3, curveSegments: 8 });
+  const housCylGeo = new THREE.CylinderGeometry(0.285, 0.285, 0.40, 40);   // v4: sheet SIDE 0.45" incl. cap
+  // Grok v2 (tuners sheet TOP/SIDE): tapered cone nose from the barrel into the shaft
+  const noseGeo = new THREE.CylinderGeometry(0.08, 0.16, 0.42, 40, 1, false);   // v4: slimmer so it stays inside the shorter barrel (it was poking through the Taylor caps) noseGeo.rotateZ(-Math.PI / 2);   // wide end at -X
+  const capGeo = new THREE.CylinderGeometry(0.275, 0.265, 0.045, 36);
+  const capFaceGeo = new THREE.CircleGeometry(0.262, 36);
+  const collarGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.09, 18);
+  const shaftGeo = new THREE.CylinderGeometry(0.07, 0.07, 1, 14);
+  const paddleGeo = new THREE.ExtrudeGeometry(tn_paddleShape(), {
+    depth: 0.1, bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.025, bevelSegments: 4, curveSegments: 6 });
+  paddleGeo.translate(0, 0, -0.05);
+  const screwGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.03, 12);
+
+  // ---- six tuners ----
+  for (let i = 0; i < 6; i++){
+    const X = TN_POSTS[i][0], s = TN_POSTS[i][1], z = -s;
+    const side = X > 0 ? 1 : -1;
+    const T = new THREE.Group(); T.position.set(X, 0, z); H.add(T);
+
+    // FACE side: washer, hex nut, post, tip, string hole, wraps
+    tn_mesh(washerGeo, chromeCurved, T, 0, 0.0175, 0);
+    tn_mesh(nutGeo, chromeCurved, T, 0, 0.095, 0).rotation.y = (i * 0.37) % (Math.PI / 3);
+    tn_mesh(postGeo, chromeCurved, T, 0, 0.155 + 0.225, 0);
+    tn_mesh(tipGeo, chromeCurved, T, 0, 0.155 + 0.45 + 0.015, 0);
+    // string hole: at the string's arrival height, axis along the string (post -> its nut slot; nut slots 0.145/0.435/0.725 from the centre, farthest post = innermost slot)
+    const rank = [2.18, 3.756, 5.36].indexOf(s), nutX = side * [0.725, 0.435, 0.145][rank < 0 ? 0 : rank];
+    const hole = tn_mesh(holeGeo, holeMat, T, 0, TN_HOLE_H(i), 0, true);
+    hole.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(nutX - X, 0, s).normalize());
+    const wrapGeo = side > 0 ? wrapThin : wrapThick;
+    const nWrap = TN_WRAPS(i);
+    for (let w = 0; w < nWrap; w++){
+      const wr = tn_mesh(wrapGeo, stringMat, T, 0, 0.30 + w * 0.045, 0, true);
+      wr.rotation.x = Math.PI / 2; wr.rotation.y = 0.06;
+    }
+
+    // BACK side: sealed housing + brushed cap
+    const hz = 0.06; // nudge housing toward the nut
+    // Nov 13 (Blake's back photo + gpt sheet): round polished barrel + squared gearbox nose toward the button side
+    tn_mesh(housCylGeo, chromeCurved, T, 0, -0.55 - 0.20, hz);
+    { const nm = tn_mesh(noseGeo, chromeCurved, T, side * 0.23, -0.77, hz); if (side < 0) nm.rotation.z = Math.PI; }
+    const capY = -0.56 - 0.40 - 0.0225;
+    tn_mesh(capGeo, chromeFlat, T, 0, capY, hz);
+    const capFace = tn_mesh(capFaceGeo, capMat, T, 0, capY - 0.0225 - 0.005, hz, true);   // v4: 0.005 (was 0.002: z-fought at long range)
+    capFace.quaternion.copy(TN_Q_DOWN);
+    tn_mesh(screwGeo, chromeDark, T, 0, -0.565, 0.52, true);
+
+    // sideways shaft + tulip button past the headstock edge
+    const shaftY = -0.77;   // v4: centred on the 0.40" barrel
+    // Nov 13 fix: btnStart is LOCAL to the tuner (was the absolute edge X -> buttons floated ~1" out on long shafts)
+    const btnStart = side * 0.46;   // v4: tuners sheet TOP: barrel far edge -> button start = 0.75"
+    const x0 = side * 0.3, x1 = btnStart + side * 0.03;
+    const shaft = tn_mesh(shaftGeo, chromeCurved, T, (x0 + x1) / 2, shaftY, hz);
+    shaft.scale.y = Math.abs(x1 - x0); shaft.rotation.z = Math.PI / 2;
+    const collar = tn_mesh(collarGeo, chromeCurved, T, side * 0.42, shaftY, hz);
+    collar.rotation.z = Math.PI / 2;
+    const paddle = tn_mesh(paddleGeo, chromeCurved, T, btnStart, shaftY, hz);
+    const px = new THREE.Vector3(side, 0, 0), py = new THREE.Vector3(0, 0, 1);
+    const pz = new THREE.Vector3().crossVectors(px, py);
+    paddle.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(px, py, pz));
+    paddle.rotateX(TN_ROLL[i] * 0.3); paddle.scale.set(1.05, 1.05, 1.0);   // v4 (Blake 9:09 'sticking out too much'): sheet size 0.58" x 0.45" (v2 had 1.25x = 0.69" x 0.51")
+  }
+
+  // ---- D'Addario clip-on tuner (bass edge, near the nut) ----
+  // Grok v4 (Blake 9:09 "it's sticking out too much"): his front + back photos show the clip body sitting ON the back of the
+  // headstock next to the bass tuner nearest the nut, only the jaw/hinge peeking ~0.3" past the edge. Was: body 0.85" outside the edge.
+  // Also a touch smaller (photo: ~0.95" x 1.1" vs the Taylor cap's 0.55") and moved up past the volute so it sits flat.
+  const cs = 1.22, cz = -cs;
+  const edgeX = tn_edgeX(cs, -1);
+  const bodyW = 0.95, bodyH = 1.1, bodyD = 0.3;
+  const bodyCX = edgeX - 0.12 + bodyW / 2;          // outer edge only 0.12" past the headstock edge
+  const C = new THREE.Group(); C.position.set(bodyCX, 0, cz); H.add(C);
+
+  const bodyShape = tn_tombstone(bodyW, bodyH, 0.12);
+  bodyShape.holes.push(tn_roundRect(0.69, 0.69, 0.09, 0, 0.04));
+  const bodyGeo = new THREE.ExtrudeGeometry(bodyShape, {
+    depth: bodyD, bevelEnabled: true, bevelThickness: 0.045, bevelSize: 0.045, bevelSegments: 3, curveSegments: 10 });
+  const body = tn_mesh(bodyGeo, blackMat, C, 0, -0.60, 0);
+  body.quaternion.copy(TN_Q_DOWN);
+  // plug behind the display opening + recessed glossy display
+  tn_mesh(new THREE.BoxGeometry(0.72, 0.27, 0.72), blackMat, C, 0, -0.60 - 0.135, -0.04);
+  const disp = tn_mesh(new THREE.PlaneGeometry(0.67, 0.67), dispMat, C, 0, -0.60 - 0.27 - 0.002, -0.04, true);
+  disp.quaternion.copy(TN_Q_DOWN);
+  // clip jaw: side bar outside the edge, top lip over the face, rubber pad, hinge pin
+  const jx = edgeX - bodyCX;
+  tn_mesh(new THREE.BoxGeometry(0.16, 0.72, 0.42), blackMat, C, jx - 0.075, -0.22, 0);   // v4: slimmer jaw hugging the edge
+  tn_mesh(new THREE.BoxGeometry(0.34, 0.09, 0.42), blackMat, C, jx + 0.02, 0.095, 0);
+  tn_mesh(new THREE.BoxGeometry(0.24, 0.04, 0.36), rubberMat, C, jx + 0.08, 0.025, 0, true);
+  const hinge = tn_mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.46, 16), blackMat, C, jx - 0.15, -0.64, 0);
+  hinge.rotation.x = Math.PI / 2;
+  // small chrome swivel ball between jaw and body
+  tn_mesh(new THREE.SphereGeometry(0.06, 12, 10), chromeDark, C, jx - 0.15, -0.64, 0.27, true);
+
+  // ---- anchors (model frame) ----
+  H.updateMatrix();
+  const toModel = (x, y, z) => { const p = new THREE.Vector3(x, y, z).applyMatrix4(H.matrix); return [p.x, p.y, p.z]; };
+  const anchors = {
+    tunerClip: toModel(bodyCX, -0.78, cz),
+    headstockBack: toModel(0, -0.55, -3.5)
+  };
+
+  return { group, colliders: [], footprint: [], anchors };
+}
+
+/* ===================== App v7 (Grok, Nov 14 9:46, Blake 'this is messy': back-walk side walls get a soft room bounce so they read as lit wood) — App v6 (Grok, Nov 14 9:02: frame-rate independent jump arc — AUDITOR rerun) — App v5 (Grok, Nov 14 7:54: side fill lights when walking on the back so the body sides read as lit cherry wood, ledge climb from the neck back onto the body back) — App v4 (Grok, Nov 13 9:28: walkable back — Back button flips the guitar in Walk too, walker lands on the back of body/neck/heel/headstock; tuners + clip are solid walls there) — App v3 (Grok, Nov 13 7:51: faster stick, walkable headstock, 360 photo orbit + Back/flip button) — App v2 (Grok, Nov 13 7:10: smooth pointer-event controls, analog joystick, life-like walk scale, steady photo view) — from app.js: loading, model assembly, walker (bound to the guitar), photo view, debug API ===================== */
+const V3 = THREE.Vector3;
+const TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
+if (TOUCH) document.body.classList.add('touch');
+const hint = document.getElementById('hint');
+const HINT_WALK = TOUCH ? 'Left stick to walk · drag to look · ◆ jump · Back = walk on the back' : 'WASD to walk (Shift = faster) · click/drag to look · Space to jump · B = walk on the back · P photo view';
+const HINT_BACK = TOUCH ? 'On the back · Left stick to walk · Front = back to the top' : 'On the back · WASD to walk · B or Front = back to the top';
+hint.textContent = HINT_WALK;
+const hideHint = () => hint.classList.add('gone');
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', stencil: false });
+const MOBILE = TOUCH || Math.min(screen.width, screen.height) < 600;
+let pr = Math.min(window.devicePixelRatio || 1, MOBILE ? 2 : 1.75);
+renderer.setPixelRatio(pr);
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+Q.mobile = MOBILE; Q.aniso = Math.min(renderer.capabilities.getMaxAnisotropy(), MOBILE ? 4 : 8); Q.shadowSize = MOBILE ? 1024 : 2048;
+
+/* ---------- textures ---------- */
+const lbar = document.getElementById('lbar');
+const loader = new THREE.TextureLoader();
+// app8 (nov14c, Blake pic #4/#5): cleaned top photo (no baked guard-edge lines, no blurred knob/toggle blobs; nov14c-clean-top.py),
+// full 2048 on phones too so the guard near the knobs and switch is sharp up close (was top-1024 on mobile).
+const files = { top: 'top-2048-v2.jpg', wood: 'wood-1024.jpg', maple: 'maple.jpg', headFace: 'headstock-face-sym.jpg', knobVol: 'knob-volume.jpg', knobTone: 'knob-tone.jpg', knobSkirt: 'knob-skirt.jpg', label1225: 'label-1225.jpg', labelBPZ: 'label-bpz.jpg' };
+let nLoaded = 0;
+await Promise.all(Object.entries(files).map(([k, f]) => new Promise((res, rej) => loader.load('assets/' + f, t => {
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = Q.aniso;
+  TX[k] = t; nLoaded++; lbar.style.width = (100 * nLoaded / Object.keys(files).length) + '%'; res(t);
+}, undefined, e => rej(new Error('texture ' + f))))));
+
+/* ---------- scene, model ---------- */
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.05, 2000);
+const BODY = buildBody(), NECK = buildNeck(), TUN = (typeof buildTuners === 'function') ? buildTuners() : null, HW = (typeof buildHardware === 'function') ? buildHardware() : null;
+const G = new THREE.Group(); G.add(BODY.group, NECK.group); if (TUN) G.add(TUN.group); if (HW) G.add(HW.group);
+G.scale.setScalar(3); G.position.set(0, 24 + 1.75 * 3, 0);   // back of the body floats 8" (24 units) over the floor
+scene.add(G);
+// Grok v2: every solid mesh casts + receives shadows (neck2's traverse never fired: castShadow defaults to false,
+// so the neck/headstock were missing from the floor shadow). Skip only transparent/polygon-offset decals.
+G.traverse(o => { if (o.isMesh && o.visible) { const m = o.material; if (!(m && (m.transparent || m.polygonOffset))) o.castShadow = true; o.receiveShadow = true; } });
+scene.updateMatrixWorld(true);
+const GT = {
+  colliders: [...BODY.colliders, ...NECK.colliders, ...(TUN ? TUN.colliders : []), ...(HW ? HW.colliders : [])],
+  footprint: [...BODY.footprint, ...NECK.footprint],
+  anchors: Object.assign({}, BODY.anchors, NECK.anchors, TUN ? TUN.anchors : {}),
+};
+GT.spawn = GT.anchors.spawn || [0, 0.62, 0.25];
+const bbox = new THREE.Box3().setFromObject(G), bc = bbox.getCenter(new V3()), bs = bbox.getSize(new V3());
+const L = Math.max(bs.x, bs.z, 1);
+const STAGE = setupStage(renderer, scene, camera, { center: bc.clone(), radius: L * 0.55 });
+// v7: nothing that casts a shadow moves except while the guitar turns over (applyFlip), so render the key's shadow map (and its
+// VSM blur) once instead of every frame: the softer stage5 shadow then costs nothing per frame (measured 1.88 -> 1.25 fps in the
+// software test renderer with per-frame VSM; that slowdown failed the logged 120 Hz-step walk tests).
+renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
+function resize() { STAGE.resize(window.innerWidth, window.innerHeight, pr); }
+window.addEventListener('resize', resize); resize();
+
+/* ---------- geometry helpers: local inches <-> world, footprint, ground ---------- */
+const tA = new V3(), ray = new THREE.Raycaster(), DOWN = new V3(0, -1, 0);
+const toWorld = (x, y, z) => { const v = G.localToWorld(new V3(x, y, z)); return [v.x, v.y, v.z]; };
+const W = a => new V3(...toWorld(a[0], a[1], a[2]));
+function pip(x, z, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0], zi = poly[i][1], xj = poly[j][0], zj = poly[j][1];
+    if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const inFoot = (x, z) => GT.footprint.some(p => pip(x, z, p));
+const INSET = .15;
+const insideLocal = (x, z) => inFoot(x, z) && inFoot(x + INSET, z) && inFoot(x - INSET, z) && inFoot(x, z + INSET) && inFoot(x, z - INSET);
+function onFootprint(wx, wz) { G.worldToLocal(tA.set(wx, G.position.y, wz)); return insideLocal(tA.x, tA.z); }
+// Grok v2 walk scale. World = model inches x3. Old walker: eye 0.5" (1.5u) -> saddles (0.72") towered over it = "everything too big".
+// New: a ~1.1" person (eye ~1" = 3u) with a 72 deg FOV, so a 0.7" bridge is chest-high and the pickups/neck read at life-like scale.
+const QS = new URLSearchParams(location.search);
+let EYE = +QS.get('eye') || 3.0, WALK_FOV = +QS.get('fov') || 72;
+const GRAV = 26, JUMP = 7.2, STEP_F = 1.3, STEP_B = 0.75;   // v4: on the back, anything taller than ~1/4" (tuner housings, clip) is a wall
+let STEP = STEP_F;
+const SPEED = 7.6, SPRINT = 1.6, ACCEL = 8, DECEL = 11;          // v3: ~1.8x faster top speed (Blake 7:51), same eased start/stop          // units/s, 1/s exponential response
+const LOOK_DAMP = 22, CAM_Y_DAMP = 13;                            // look + step-height smoothing (1/s)
+/* v4 back walking: when the guitar lies face-down the ground is the REAL back geometry (body shell + cover, neck C-profile,
+   carved heel, volute, headstock back) and the tuner housings / clip-on are walls. Front colliders are used upright. */
+const gLocalBox = (o) => { const b = new THREE.Box3().setFromObject(o), inv = new THREE.Matrix4().copy(G.matrixWorld).invert(); return b.applyMatrix4(inv); };
+const solid = o => o.isMesh && o.visible && o.material && !o.material.transparent && !o.material.polygonOffset;
+const BACKG = [], BACKW = [];
+// body: a flat copy of the top's footprint collider laid on the back plane (cheap: ~16k shell triangles -> a few hundred) + the cover / ferrule
+{ const bc0 = BODY.colliders[0], bk = new THREE.Mesh(bc0.geometry, bc0.material); bk.position.set(0, -1.75, 0); bk.visible = false; BODY.group.add(bk); bk.updateMatrixWorld(true); BACKG.push(bk); }
+BODY.group.traverse(o => { if (solid(o) && !(o.userData && o.userData.backWalk)) { const bb = gLocalBox(o); if (bb.min.y < -1.6 && bb.max.y - bb.min.y < .3) BACKG.push(o); } });
+NECK.group.traverse(o => { if (solid(o) && gLocalBox(o).min.y < -0.2) BACKG.push(o); });
+if (TUN) TUN.group.traverse(o => { if (solid(o)) BACKW.push(o); });
+let SIDE = 0, CUR_G = GT.colliders;                                 // 0 = top up (front colliders), 1 = back up
+function groundAt(x, z, feet) {
+  ray.set(tA.set(x, feet + (SIDE ? 3.7 : STEP + 0.4), z), DOWN); ray.far = 80;   // v5: on the back nothing overhangs — look from higher so the body back above the neck is found (ledge, not a tunnel)
+  const h = ray.intersectObjects(CUR_G, false);
+  return h.length ? h[0].point.y : -Infinity;
+}
+
+/* ---------- player: Minecraft-PE-style walker bound to the guitar (no flying) ---------- */
+const P = { pos: W(GT.spawn), vy: 0, yaw: 0, pitch: -.12, ground: false, vel: new V3() };
+{ const g = groundAt(P.pos.x, P.pos.z, P.pos.y + 2); if (g > -Infinity) P.pos.y = g; }
+const lastSafe = P.pos.clone(), lastLocal = G.worldToLocal(P.pos.clone());
+const LK = { yaw: P.yaw, pitch: P.pitch };                        // smoothed (rendered) look
+let camY = P.pos.y + EYE;
+let free = false, mode = 'walk', showYaw = 0.6, showPitch = 0.55, showT = 0, sYaw = 0.6, sPitch = 0.55;
+// v3: solid 'wall' colliders (tuner posts) taller than a step: the ground ray starts below their tops, so test them from above
+const WALLS = GT.colliders.filter(c => c.userData && c.userData.wall), wray = new THREE.Raycaster();
+function wallAt(x, z, feet) {
+  const WL = SIDE ? BACKW : WALLS;
+  if (!WL.length) return false;
+  wray.set(tA.set(x, feet + 12, z), DOWN); wray.far = 14;
+  const h = wray.intersectObjects(WL, false);
+  return h.length > 0 && h[0].point.y > feet + STEP;
+}
+function onBodyBack(wx, wz) { G.worldToLocal(tA.set(wx, G.position.y, wz)); return pip(tA.x, tA.z, GT.footprint[0]); }
+function tryMove(dx, dz) {
+  const nx = P.pos.x + dx, nz = P.pos.z + dz;
+  if (!onFootprint(nx, nz)) return false;
+  if (wallAt(nx, nz, P.pos.y)) return false;
+  const g = groundAt(nx, nz, P.pos.y); if (g === -Infinity) return false;
+  const rise = g - P.pos.y;
+  if (rise > (P.ground ? STEP : .05)) {
+    // v5: on the back the neck leaves the body with no heel (like the real guitar) — let the walker climb the ~1" ledge
+    // from the neck back onto the body back (camera eases up via CAM_Y_DAMP), but never onto tuners/clip (walls)
+    if (!(SIDE === 1 && P.ground && rise <= 3.3 && onBodyBack(nx, nz))) return false;
+    P.pos.y = g;   // feet go straight up onto the ledge; the eye eases up (CAM_Y_DAMP), so it reads as a climb
+  }
+  P.pos.x = nx; P.pos.z = nz; return true;
+}
+
+/* ---------- input v2: pointer events with per-pointer-ID tracking; nothing can stick ---------- */
+const K = {};
+const IN = { joyId: null, jx: 0, jy: 0, jumpIds: new Set(), looks: new Map() };
+const joyEl = document.getElementById('joy'), knob = joyEl.querySelector('i'), jumpEl = document.getElementById('jump');
+const view = renderer.domElement;
+const locked = () => document.pointerLockElement === view;
+const DEAD = 0.12;
+function joyUpdate(e) {
+  const r = joyEl.getBoundingClientRect(), rad = r.width / 2;
+  let dx = e.clientX - (r.left + rad), dy = e.clientY - (r.top + rad);
+  const m = Math.hypot(dx, dy), maxR = rad - 8;
+  if (m > maxR) { dx *= maxR / m; dy *= maxR / m; }
+  knob.style.transform = `translate(${dx}px,${dy}px)`;
+  let nx = dx / maxR, ny = dy / maxR; const n = Math.hypot(nx, ny);
+  if (n < DEAD) { IN.jx = IN.jy = 0; return; }
+  const k = Math.pow((Math.min(n, 1) - DEAD) / (1 - DEAD), 1.75) / n;   // dead zone + response curve: small push = slow creep, full push = top speed
+  IN.jx = nx * k; IN.jy = ny * k;
+}
+function joyRelease() { IN.joyId = null; IN.jx = IN.jy = 0; knob.style.transform = ''; joyEl.classList.remove('on'); }
+function jumpRelease(id) { if (id === undefined) IN.jumpIds.clear(); else IN.jumpIds.delete(id); jumpEl.classList.toggle('down', IN.jumpIds.size > 0); }
+function releaseAll() { joyRelease(); jumpRelease(); IN.looks.clear(); for (const k in K) K[k] = 0; }
+const enterWalk = () => { hideHint(); if (mode !== 'walk') setMode('walk'); };
+const cap = (el, id) => { try { el.setPointerCapture(id); } catch (_) { } };
+
+joyEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); enterWalk(); if (IN.joyId !== null && IN.joyId !== e.pointerId) return; IN.joyId = e.pointerId; cap(joyEl, e.pointerId); joyEl.classList.add('on'); joyUpdate(e); });
+joyEl.addEventListener('pointermove', e => { if (e.pointerId === IN.joyId) { e.preventDefault(); joyUpdate(e); } });
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) joyEl.addEventListener(ev, e => { if (e.pointerId === IN.joyId) joyRelease(); });
+
+jumpEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); enterWalk(); IN.jumpIds.add(e.pointerId); cap(jumpEl, e.pointerId); jumpEl.classList.add('down'); });
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) jumpEl.addEventListener(ev, e => jumpRelease(e.pointerId));
+
+const SENS_TOUCH = .0048, SENS_MOUSE = .0026;
+view.addEventListener('pointerdown', e => {
+  e.preventDefault(); hideHint();
+  IN.looks.set(e.pointerId, { x: e.clientX, y: e.clientY, t: e.pointerType }); cap(view, e.pointerId);
+  if (mode === 'walk' && !TOUCH && e.pointerType === 'mouse' && !locked() && view.requestPointerLock) {
+    try { const p = view.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (_) { }
+  }
+});
+function lookBy(dx, dy, touch) {
+  const s = touch ? SENS_TOUCH : SENS_MOUSE;
+  if (mode === 'walk') { P.yaw -= dx * s; P.pitch = Math.max(-1.35, Math.min(1.35, P.pitch - dy * s)); }
+  else { showYaw -= dx * s * 1.2; showPitch = Math.max(-1.35, Math.min(1.45, showPitch + dy * s * 1.2)); showT = 0; }   // v3: full orbit incl. underneath
+}
+view.addEventListener('pointermove', e => {
+  if (locked() && e.pointerType === 'mouse') { const dx = e.movementX || 0, dy = e.movementY || 0; if (Math.abs(dx) < 200 && Math.abs(dy) < 200) lookBy(dx, dy, false); return; }
+  const l = IN.looks.get(e.pointerId); if (!l) return;
+  e.preventDefault();
+  const dx = e.clientX - l.x, dy = e.clientY - l.y; l.x = e.clientX; l.y = e.clientY;
+  if (Math.abs(dx) > 160 || Math.abs(dy) > 160) return;          // ignore teleport jumps
+  // only one look finger drives the camera (first one), extra fingers are ignored
+  if (IN.looks.keys().next().value !== e.pointerId) return;
+  lookBy(dx, dy, e.pointerType !== 'mouse');
+});
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) view.addEventListener(ev, e => IN.looks.delete(e.pointerId));
+// belt and braces: anything that can swallow a pointerup resets ALL input
+window.addEventListener('blur', releaseAll);
+window.addEventListener('pagehide', releaseAll);
+document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+document.addEventListener('touchend', e => { if (e.touches.length === 0) releaseAll(); }, { passive: true });
+document.addEventListener('touchcancel', e => { if (e.touches.length === 0) releaseAll(); }, { passive: true });
+// stop Safari scroll / pinch-zoom / rubber-band / double-tap zoom (but let the mode button click)
+const isBtn = t => t && t.closest && t.closest('#mode,#flip');
+document.addEventListener('touchstart', e => { if (!isBtn(e.target)) e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+for (const g of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(g, e => e.preventDefault(), { passive: false });
+document.addEventListener('dblclick', e => e.preventDefault());
+document.addEventListener('pointerlockerror', () => { });
+document.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('keydown', e => { K[e.code] = 1; if (/^(Space|Arrow)/.test(e.code)) e.preventDefault(); hideHint(); if (e.code === 'KeyP' && !e.repeat) setMode(mode === 'walk' ? 'show' : 'walk'); if (e.code === 'KeyB' && !e.repeat) setFlip(flipTarget === 0); });
+window.addEventListener('keyup', e => { K[e.code] = 0; });
+const modeBtn = document.getElementById('mode'), flipBtn = document.getElementById('flip');
+// v3: Back/flip — turns the guitar over about its long axis (like laying it face-down) in photo view
+const G_Y0 = G.position.y, FLIP_C = 0.875 * 3;   // half body depth (world units): rotate about the body's mid-depth so it stays put
+let flipTarget = 0, flipV = 0;
+function applyFlip(v) {
+  const e = v * v * (3 - 2 * v), th = Math.PI * e;
+  G.rotation.z = th; G.position.x = -FLIP_C * Math.sin(th); G.position.y = G_Y0 - FLIP_C + FLIP_C * Math.cos(th);
+  G.updateMatrixWorld(true);
+  renderer.shadowMap.needsUpdate = true;   // v7: the shadow map is static and re-rendered only when the guitar moves (turning over)
+}
+// v4: put the walker on whichever face is up, at the same spot on the guitar (local x,z) if that spot is walkable there
+let dbgFlipWalk;
+const SF1 = new THREE.DirectionalLight(0xffe3c8, 0), SF2 = new THREE.DirectionalLight(0xcfdcff, 0), SF3 = new THREE.DirectionalLight(0xffeedd, 0);
+SF1.position.set(bc.x + 60, bc.y + 22, bc.z + 50); SF1.target.position.copy(bc);
+SF2.position.set(bc.x - 60, bc.y + 18, bc.z - 40); SF2.target.position.copy(bc);
+SF3.position.set(bc.x - 20, bc.y + 12, bc.z + 70); SF3.target.position.copy(bc);
+scene.add(SF1, SF1.target, SF2, SF2.target, SF3, SF3.target);
+let sideFillK = 0;
+// v7: the body side-wall material (body5 mSide): its wood-map 'bounce' glow fades in with the side fills
+let SIDE_MAT = null; G.traverse(o => { if (!SIDE_MAT && o.isMesh && o.userData.backWalk && Array.isArray(o.material) && o.material[1] && o.material[1].emissiveMap) SIDE_MAT = o.material[1]; });
+const BACK_SPAWN = [0, -1.75, -3.2], FRONT_SPAWN = GT.spawn;
+function placeWalker(local, yawFlip) {
+  const tryAt = (lx, lz) => { const w = G.localToWorld(new V3(lx, 0, lz)); if (!onFootprint(w.x, w.z)) return null; const g = groundAt(w.x, w.z, G.position.y + 40); return g > -Infinity ? new V3(w.x, g, w.z) : null; };
+  const sp = SIDE ? BACK_SPAWN : FRONT_SPAWN;
+  let w = (local && tryAt(local.x, local.z)) || tryAt(sp[0], sp[2]);
+  if (!w) return;
+  P.pos.copy(w); P.vy = 0; P.vel.set(0, 0, 0); P.ground = true; lastSafe.copy(P.pos);
+  if (yawFlip) { P.yaw = -P.yaw; LK.yaw = P.yaw; }
+  camY = P.pos.y + EYE;
+}
+function setSide(side) {
+  if (side === SIDE) return;
+  const local = lastLocal.clone();   // G is already turned: use the walker's spot from before the turn
+  SIDE = side; CUR_G = side ? BACKG : GT.colliders; STEP = side ? STEP_B : STEP_F;
+  G.updateMatrixWorld(true);
+  placeWalker(local, true);
+}
+const fadeEl = Object.assign(document.createElement('div'), { id: 'fade' });
+fadeEl.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:2;transition:opacity .22s ease';
+document.body.appendChild(fadeEl);
+let flipBusy = false;
+function setFlip(on) {
+  flipTarget = on ? 1 : 0; flipBtn.textContent = on ? 'Front' : 'Back';
+  if (mode === 'walk') {
+    // v4: in Walk the guitar turns over under a short fade and the walker lands on the other face
+    if (flipBusy) return; flipBusy = true; releaseAll(); fadeEl.style.opacity = '1';
+    setTimeout(() => {
+      const local = G.worldToLocal(P.pos.clone());
+      flipV = flipTarget; applyFlip(flipV);
+      SIDE = flipTarget; CUR_G = SIDE ? BACKG : GT.colliders; STEP = SIDE ? STEP_B : STEP_F;
+      placeWalker(local, true);
+      hint.classList.remove('gone'); hint.textContent = SIDE ? HINT_BACK : HINT_WALK; setTimeout(hideHint, 5000);
+      fadeEl.style.opacity = '0'; flipBusy = false;
+    }, 240);
+    return;
+  }
+  if (on) { showT = 0; }
+}
+dbgFlipWalk = (on) => { flipTarget = on ? 1 : 0; flipBtn.textContent = on ? 'Front' : 'Back'; const local = G.worldToLocal(P.pos.clone()); flipV = flipTarget; applyFlip(flipV); SIDE = flipTarget; CUR_G = SIDE ? BACKG : GT.colliders; STEP = SIDE ? STEP_B : STEP_F; placeWalker(local, true); };
+flipBtn.addEventListener('click', e => { e.stopPropagation(); setFlip(flipTarget === 0); });
+function setMode(m, keepFlip) {
+  mode = m; free = false; showT = 0; releaseAll(); document.body.dataset.mode = m; document.dispatchEvent(new CustomEvent('zg:mode', { detail: m }));   // site1 hook
+  if (m === 'walk' && flipV !== flipTarget) { flipV = flipTarget; applyFlip(flipV); }   // v4: walk on whichever face is up (no snap upright)
+  if (m === 'walk') setSide(flipTarget);
+  if (m === 'show') { sYaw = showYaw; sPitch = showPitch; }
+  else { LK.yaw = P.yaw; LK.pitch = P.pitch; camY = P.pos.y + EYE; }
+  modeBtn.textContent = m === 'walk' ? 'Photo view' : 'Walk';
+  hint.classList.remove('gone'); hint.textContent = m === 'walk' ? (SIDE ? HINT_BACK : HINT_WALK) : (TOUCH ? 'Drag to orbit the guitar' : 'Drag to orbit · P to walk again');
+  if (m === 'show' && locked()) document.exitPointerLock();
+  setTimeout(hideHint, 6000);
+}
+modeBtn.addEventListener('click', e => { e.stopPropagation(); setMode(mode === 'walk' ? 'show' : 'walk'); });
+
+/* ---------- main loop ---------- */
+let last = performance.now(), slow = 0, frames = 0, lastPR = 0, DT_MAX = .05;
+const tgt = new V3();
+const damp = (k, dt) => 1 - Math.exp(-k * dt);
+const ODO = { pred: 0, path: 0, t: 0, frames: 0 };
+function tick(now) {
+  requestAnimationFrame(tick);
+  const raw = (now - last) / 1000; last = now; const dt = Math.min(Math.max(raw, 0), DT_MAX);
+  if (flipV !== flipTarget) { flipV = flipTarget > flipV ? Math.min(1, flipV + raw / 1.1) : Math.max(0, flipV - raw / 1.1); applyFlip(flipV); if (flipV === flipTarget) setSide(flipTarget); }
+  const turning = flipV !== 0 && flipV !== 1;
+  frames++; if (raw > .034) slow++;
+  if (frames >= 120) { if (slow > 80 && pr > 1 && now - lastPR > 4000) { pr = Math.max(1, pr - .25); lastPR = now; resize(); } frames = slow = 0; }
+
+  // desired planar velocity from keyboard + analog stick
+  let f = 0, s = 0;
+  if (mode === 'walk') {
+    if (K.KeyW || K.ArrowUp) f += 1; if (K.KeyS || K.ArrowDown) f -= 1;
+    if (K.KeyD || K.ArrowRight) s += 1; if (K.KeyA || K.ArrowLeft) s -= 1;
+    const kn = Math.hypot(f, s); if (kn > 1) { f /= kn; s /= kn; }
+    f -= IN.jy; s += IN.jx;
+    const n = Math.hypot(f, s); if (n > 1) { f /= n; s /= n; }
+  }
+  const sp = SPEED * ((K.ShiftLeft || K.ShiftRight) ? SPRINT : 1);
+  const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
+  tgt.set((-sy * f + cy * s) * sp, 0, (-cy * f - sy * s) * sp);
+  const moving = tgt.lengthSq() > 1e-6;
+  P.vel.lerp(tgt, damp(moving ? ACCEL : DECEL, dt));
+  if (!moving && P.vel.lengthSq() < 1e-4) P.vel.set(0, 0, 0);
+  if (!turning) {   // v4: freeze the walker while the guitar is turning over in photo view
+  const ox = P.pos.x, oz = P.pos.z;   // v7 odometer (tests): distance the stick asked for vs distance actually walked, per sim step
+  if (P.vel.lengthSq() > 0) {
+    ODO.pred += Math.hypot(P.vel.x, P.vel.z) * dt;
+    const dx = P.vel.x * dt, dz = P.vel.z * dt;
+    if (!tryMove(dx, dz)) {
+      if (tryMove(dx, 0)) P.vel.z *= 0.5; else if (tryMove(0, dz)) P.vel.x *= 0.5; else P.vel.multiplyScalar(0.5);
+    }
+  }
+  const g = groundAt(P.pos.x, P.pos.z, P.pos.y);
+  const jumpHeld = mode === 'walk' && (K.Space || IN.jumpIds.size > 0);
+  P.pos.y += P.vy * dt - 0.5 * GRAV * dt * dt; P.vy -= GRAV * dt;   // v6: exact constant-gravity step — jump height no longer depends on frame rate (semi-implicit Euler lost ~17% of the jump at 20 fps)
+  if (g > -Infinity && P.pos.y <= g) {
+    const gap = g - P.pos.y; P.vy = 0; P.ground = true;
+    P.pos.y = gap > .06 ? P.pos.y + Math.min(gap, 8 * dt) : g;
+    if (jumpHeld && gap <= .06 + GRAV * dt * dt) { P.vy = JUMP; P.ground = false; }   // v4: allow for one frame of gravity sag (jump never fired below ~20 fps)
+  } else P.ground = false;
+  // never leave the guitar: off the footprint, fallen through, or too low -> back to the last safe spot
+  if (g === -Infinity || P.pos.y < g - 2 || P.pos.y < G.position.y - 10 || !onFootprint(P.pos.x, P.pos.z)) { P.pos.copy(lastSafe); P.vy = 0; P.vel.set(0, 0, 0); P.ground = false; camY = P.pos.y + EYE; }
+  else if (P.ground && P.pos.y >= g - .06) lastSafe.copy(P.pos);
+  ODO.path += Math.hypot(P.pos.x - ox, P.pos.z - oz); ODO.t += dt; ODO.frames++;
+  lastLocal.copy(P.pos); G.worldToLocal(lastLocal);
+  }
+
+  // smoothing: look + eye height (step-ups/downs ease instead of snapping)
+  LK.yaw += (P.yaw - LK.yaw) * damp(LOOK_DAMP, dt);
+  LK.pitch += (P.pitch - LK.pitch) * damp(LOOK_DAMP, dt);
+  const eyeT = P.pos.y + EYE;
+  camY += (eyeT - camY) * damp(P.ground ? CAM_Y_DAMP : 30, dt);
+  if (Math.abs(eyeT - camY) > 6) camY = eyeT;
+
+  if (!free) {
+    if (mode === 'walk') {
+      // portrait phones: widen the vertical FOV so the horizontal view stays ~50 deg+ (bridge + both pickups fit)
+      camera.fov = Math.min(95, Math.max(WALK_FOV, 2 * Math.atan(Math.tan(35 * Math.PI / 180) / camera.aspect) * 180 / Math.PI)); camera.near = 0.05; camera.far = 1200;
+      camera.position.set(P.pos.x, camY, P.pos.z); camera.rotation.set(LK.pitch, LK.yaw, 0, 'YXZ');
+    } else {
+      showT += dt; if (showT > 3) showYaw += dt * 0.08;
+      sYaw += (showYaw - sYaw) * damp(12, dt); sPitch += (showPitch - sPitch) * damp(12, dt);
+      const R = L * 0.95 * Math.max(1, 1.1 / camera.aspect), cx = bc.x, cz = bc.z + 6;
+      camera.fov = 38; camera.near = 2; camera.far = 2000;   // Grok v2: deep near plane in photo view -> no floor/catcher depth fighting
+      camera.position.set(cx + Math.sin(sYaw) * Math.cos(sPitch) * R, bc.y + Math.sin(sPitch) * R, cz + Math.cos(sYaw) * Math.cos(sPitch) * R);
+      camera.lookAt(cx, bc.y, cz);
+    }
+    camera.updateProjectionMatrix();
+  }
+  // v5: two low, near-horizontal warm/cool fills while walking on the back (the studio rig lights the TOP; turned over,
+  // the body's sides faced only black and read as a dark box in Blake's iPhone shot). Faded in, cheap (no shadows).
+  { const want = (!free && mode === 'walk' && SIDE === 1) ? 1 : 0; sideFillK += (want - sideFillK) * damp(4, dt); SF1.intensity = 1.6 * sideFillK; SF2.intensity = 1.1 * sideFillK; SF3.intensity = 1.6 * sideFillK; if (SIDE_MAT) SIDE_MAT.emissiveIntensity = 2.2 * sideFillK;
+    // SF3 rides with the walker (a soft 'room light' from over the shoulder) so whatever face you walk up to reads as lit wood
+    if (sideFillK > 0.01) { camera.getWorldDirection(tA); SF3.position.copy(camera.position).addScaledVector(tA, -40).add(new V3(0, 18, 0)); SF3.target.position.copy(camera.position).addScaledVector(tA, 10); SF3.target.updateMatrixWorld(); } }
+  if (STAGE.under) { const b = (!free && mode === 'show') ? Math.min(1, Math.max(0, (bc.y - 4 - camera.position.y) / 30)) : 0; STAGE.under.intensity = STAGE.underI * b; }
+  STAGE.render();
+  dbg.ready = true;
+}
+
+/* ---------- debug API (used by the render/edge tests) ---------- */
+const A = GT.anchors;
+const views = (() => {
+  const nrm = A.labelsNormal || [-1, 0, 0];
+  const lb = W(A.labels), cb = W(A.backCover), hf = W(A.headstockFace), hb = W(A.headstockBack), tc = W(A.tunerClip);
+  const br = W(A.bridge), kn = W(A.knobs), sp = W(GT.spawn), nt = W(A.nut);
+  const lp = toWorld(A.labels[0] + nrm[0] * 9 / 3, A.labels[1] + .5, A.labels[2] + nrm[2] * 9 / 3);
+  return {
+    hero: [br.x + 2, br.y + 26, br.z + 30, br.x, br.y - 4, br.z - 40],
+    heroWide: [br.x + 30, br.y + 48, br.z + 62, bc.x, bc.y, bc.z - 6],
+    topDown: [bc.x, bc.y + L * 1.05, bc.z + .5, bc.x, bc.y, bc.z],
+    desk: [bc.x + L * .55, bc.y + L * .42, bc.z + L * .5, bc.x, bc.y, bc.z],
+    bridgeClose: [br.x + 3, br.y + 9.5, br.z + 10.3, (br.x + kn.x) / 2, br.y, br.z - 3],
+    knobs: [kn.x + 1.5, kn.y + 6, kn.z + 5, kn.x, kn.y, kn.z],
+    sideLabels: [lp[0], lp[1], lp[2], lb.x, lb.y, lb.z],
+    back: [cb.x + 34, 4, cb.z + 30, cb.x, cb.y, cb.z],
+    headstockFront: [hf.x + 3, hf.y + 15, hf.z + 9, hf.x, hf.y, hf.z - 1],
+    headstockBack: [hb.x - 8, hb.y - 9, hb.z + 3, (hb.x + tc.x) / 2, (hb.y + tc.y) / 2, (hb.z + tc.z) / 2],
+    tunerClip: [tc.x - 6, tc.y - 5, tc.z - 1, tc.x, tc.y, tc.z],
+    walker: [sp.x, sp.y + EYE, sp.z, nt.x, nt.y + .5, nt.z],
+    bridgeLow: [...toWorld(.4, 1.1, 4.2), ...toWorld(0, .3, -.4)],
+    bridgeTop: [...toWorld(.6, 5.5, -1.0), ...toWorld(.3, 0, -1.3)],
+    pickupsTop: [...toWorld(.05, 6.5, -2.2), ...toWorld(.05, 0, -3.7)],
+    knobsTop: [...toWorld(3.6, 4.6, .6), ...toWorld(3.6, 0, .1)],
+    toggleClose: [...toWorld(5.9, 2.0, 1.2), ...toWorld(4.6, .1, -.35)],
+    headstockTop: [...toWorld(.1, 9, -28.6), ...toWorld(.1, 0, -28.4)],
+  };
+})();
+const dbg = window.__dbg = {
+  ready: false, P, G, STAGE, get sideFill() { return sideFillK; }, views, toWorld, renderer, scene, camera, GT,
+  cam(x, y, z, lx, ly, lz, fov) { free = true; camera.near = 0.05; camera.far = 2000; camera.fov = fov || 45; camera.position.set(x, y, z); camera.lookAt(lx, ly, lz); camera.updateProjectionMatrix(); },
+  walk() { free = false; if (mode !== 'walk') setMode('walk'); mode = 'walk'; },
+  flip(on) { setFlip(!!on); },
+  flipNow(on) { if (mode === 'walk') { dbgFlipWalk(!!on); return; } setFlip(!!on); flipV = flipTarget; applyFlip(flipV); setSide(flipTarget); },
+  placeLocal(x, z) { placeWalker({ x, z }, false); return G.worldToLocal(P.pos.clone()); },
+  rayCost(n) { const t0 = performance.now(); for (let i = 0; i < n; i++) groundAt(P.pos.x + (i % 7) * .1, P.pos.z, P.pos.y); return (performance.now() - t0) / n; },
+  side() { return SIDE; }, backSets() { return { ground: BACKG.length, walls: BACKW.length, tris: BACKG.reduce((a, o) => a + (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3, 0) }; },
+  setDtMax(v) { DT_MAX = v; },
+  odo(reset) { const r = { ...ODO }; if (reset) { ODO.pred = ODO.path = ODO.t = 0; ODO.frames = 0; } return r; },
+  probe(lx, lz) { const w = G.localToWorld(new V3(lx, 0, lz)); return { foot: onFootprint(w.x, w.z), ground: G.worldToLocal(new V3(w.x, groundAt(w.x, w.z, P.pos.y), w.z)).y, wall: wallAt(w.x, w.z, P.pos.y), feetLocalY: G.worldToLocal(P.pos.clone()).y }; },
+  orbit(yaw, pitch) { showYaw = sYaw = yaw; showPitch = sPitch = pitch; showT = -1e9; },
+  lookTarget(yaw, pitch) { LK.yaw = P.yaw = yaw; LK.pitch = P.pitch = pitch; camY = P.pos.y + EYE; },
+  setWalk(eye, fov) { if (eye) EYE = eye; if (fov) WALK_FOV = fov; },
+  input() { return { joy: [IN.jx, IN.jy], joyId: IN.joyId, looks: IN.looks.size, jump: IN.jumpIds.size, vel: P.vel.length(), yaw: P.yaw, keys: Object.keys(K).filter(k => K[k]) }; },
+  get eye() { return EYE; },
+  show() { free = false; setMode('show'); },
+  view(name) { const v = views[name]; if (v) dbg.cam(...v); return !!v; },
+  onGuitar() { const g = groundAt(P.pos.x, P.pos.z, P.pos.y); return P.ground && onFootprint(P.pos.x, P.pos.z) && g > -Infinity && Math.abs(P.pos.y - g) <= .2; },
+};
+setMode('show');   // site1: start at home (photo view) with the widget ring
+document.getElementById('load').classList.add('done');
+setTimeout(hideHint, 9000);
+requestAnimationFrame(tick);
+
+</script>
+<div id="zg-root"></div>
+<script type="module" src="harness.js"></script>
+</body>
+</html>
