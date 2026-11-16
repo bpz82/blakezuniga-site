@@ -10,7 +10,7 @@
 
 // Ids that may be registered.
 // 'selftest-broken' is TEST-ONLY: it is registered only when the page URL has ?selftest=1.
-export const ACTIVE = ['about', 'music', 'videos', 'shop', 'contact', 'selftest-broken'];
+export const ACTIVE = ['contact', 'collaborative-projects', 'selftest-broken'];
 
 // Ids that were once used and are now retired. Never remove an id from this list.
-export const RETIRED = [];
+export const RETIRED = ['about', 'music', 'videos', 'shop'];
