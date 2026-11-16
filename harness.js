@@ -449,7 +449,7 @@ function render() {
     const sc = 0.72 + 0.28 * d;
     const st = e.el.style;
     st.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + sc.toFixed(3) + ')';
-    st.opacity = (0.45 + 0.55 * d).toFixed(3);
+    st.opacity = (0.85 + 0.15 * d).toFixed(3);
     const z = Math.round(d * 20);
     if (z !== e.z) {
       e.z = z;
