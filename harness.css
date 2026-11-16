@@ -43,8 +43,30 @@
   pointer-events: none;
   transition: opacity 0.18s ease, visibility 0s linear 0.18s;
 }
-.zg-ring.zg-away .zg-tile {
+.zg-ring.zg-away .zg-tile,
+.zg-ring.zg-away .zg-track ellipse {
   pointer-events: none;
+}
+
+.zg-track {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 0;
+}
+.zg-track ellipse {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
+  touch-action: none;
+}
+.zg-ring.zg-dragging,
+.zg-ring.zg-dragging .zg-tile {
+  cursor: grabbing;
 }
 
 /* ---------- tiles ---------- */

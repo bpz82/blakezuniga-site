@@ -1,5 +1,7 @@
 /**
- * Widget harness: floating app-tiles orbiting over the 3D scene.
+ * Widget harness: floating app-tiles on a ring over the 3D scene.
+ * The ring stays still at rest. A horizontal swipe on a tile or the ring
+ * track spins it; momentum eases out and one tile snaps to the front.
  *
  * MODULE CONTRACT
  * ---------------
@@ -29,6 +31,9 @@
  * document-level 'zg:mode' event, detail 'show' | 'walk'): hidden and idle while
  * walking, visible in 'show'. If the scene does not announce a mode, the ring is
  * always shown.
+ *
+ * data-state: idle (at rest) | dragging | coasting (inertia/snap) | paused
+ * (panel open or tab hidden) | reduced | hidden (walk mode).
  */
 import { ACTIVE, RETIRED } from './widget-ids.js';
 import { widgets, brokenWidget } from './widgets.js';
@@ -36,26 +41,33 @@ import { widgets, brokenWidget } from './widgets.js';
 const TAU = Math.PI * 2;
 const ID_RE = /^[a-z][a-z0-9-]{1,31}$/;
 const MAX_TITLE = 32;
-const REV_MS = 40000; // one revolution per 40 s
 const ATTR_MS = 250; // data-angle update interval
 const LOAD_POLL_MS = 250;
 const LOAD_MAX_MS = 60000;
+const TAP_PX = 10; // movement below this is a tap, not a swipe
+const VEL_WINDOW_MS = 80;
+const FRICTION = 5; // s^-1; used to project where a flick would stop
+const MAX_VEL = 14; // rad/s cap
+const TRACK_PAD = 28; // extra stroke width beyond the tile size, in px
 
 const entries = new Map(); // id -> entry
 const order = []; // entries that have a tile, in registration order
-const pressed = new Set(); // pointer ids currently down on a tile
+const pressed = new Set(); // pointer ids currently down on a tile or the track
 const hovered = new Set(); // tiles hovered by a mouse
 
 let root = null;
 let ring = null;
+let trackSvg = null;
+let track = null; // ellipse: swipeable ring path, stroke only (center stays clear)
 let angle = Math.PI / 2; // first tile starts at the front
-let lastT = null;
 let raf = 0;
 let lastAttr = 0;
 let reduced = false;
 let walking = false; // scene is in walk mode: ring hidden, loop stopped
 let current = null; // open panel session
 let seq = 0;
+let drag = null; // active swipe: { id, x, y, angle, moved, maxDist, samples }
+let coast = null; // snap animation: { from, delta, t0, dur }
 
 // cached viewport geometry (updated on resize only)
 let vw = 1280;
@@ -190,7 +202,7 @@ function addTile(entry) {
     }
   }
   const el = entry.el;
-  onTap(el, () => openPanel(entry, el), pressed);
+  bindRingPointer(el, () => openPanel(entry, el), pressed);
   el.addEventListener('pointerenter', (e) => {
     if (e.pointerType === 'mouse') {
       hovered.add(el);
@@ -217,8 +229,96 @@ function markTileError(entry) {
 }
 
 /* ------------------------------------------------------------------ */
-/* tap handling (pointer events; iOS does not deliver click here)      */
+/* tap + swipe (pointer events; iOS does not deliver click here)       */
 /* ------------------------------------------------------------------ */
+
+function dxToAngle(dx) {
+  // A horizontal swipe of Rx (center to the side of the ring) is a quarter turn.
+  const r = Math.max(Rx, 80);
+  return -(dx / r) * (Math.PI / 2);
+}
+
+function wrapAngle(a) {
+  return ((a % TAU) + TAU) % TAU;
+}
+
+function shortest(from, to) {
+  let d = wrapAngle(to) - wrapAngle(from);
+  if (d > Math.PI) d -= TAU;
+  if (d < -Math.PI) d += TAU;
+  return d;
+}
+
+function snapTarget(a, vel) {
+  const n = Math.max(order.length, 1);
+  const step = TAU / n;
+  const projected = a + (vel || 0) / FRICTION;
+  let best = Math.PI / 2;
+  let bestAbs = Infinity;
+  for (let i = 0; i < n; i++) {
+    const s = wrapAngle(Math.PI / 2 - i * step);
+    const ad = Math.abs(shortest(projected, s));
+    if (ad < bestAbs) {
+      bestAbs = ad;
+      best = s;
+    }
+  }
+  return { snap: best, delta: shortest(a, best) };
+}
+
+function velocityOf(samples) {
+  if (!samples || samples.length < 2) return 0;
+  const a = samples[0];
+  const b = samples[samples.length - 1];
+  const dt = (b.t - a.t) / 1000;
+  if (dt < 0.008) return 0;
+  let v = (b.angle - a.angle) / dt;
+  if (v > MAX_VEL) v = MAX_VEL;
+  if (v < -MAX_VEL) v = -MAX_VEL;
+  return v;
+}
+
+function cancelCoast() {
+  coast = null;
+  if (raf) {
+    cancelAnimationFrame(raf);
+    raf = 0;
+  }
+}
+
+function settleNow() {
+  if (coast) {
+    angle = wrapAngle(coast.from + coast.delta);
+    coast = null;
+  }
+  if (raf) {
+    cancelAnimationFrame(raf);
+    raf = 0;
+  }
+  render();
+  writeAngle();
+}
+
+function startSnap(now, vel) {
+  const useVel = reduced ? 0 : vel || 0;
+  const { snap, delta } = snapTarget(angle, useVel);
+  if (reduced || Math.abs(delta) < 0.001) {
+    angle = snap;
+    coast = null;
+    if (raf) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+    render();
+    writeAngle();
+    sync();
+    return;
+  }
+  const dur = Math.min(700, Math.max(280, Math.abs(delta) * 420 + Math.abs(useVel) * 40));
+  coast = { from: angle, delta: delta, t0: now, dur: dur };
+  if (!raf) raf = requestAnimationFrame(frame);
+  sync();
+}
 
 function onTap(el, fn, pressSet) {
   let start = null;
@@ -250,9 +350,8 @@ function onTap(el, fn, pressSet) {
     start = null;
     if (
       allow &&
-      Math.hypot(e.clientX - s.x, e.clientY - s.y) < 10
-      // WEBSITE (integration, Nov 15): no 600 ms limit. On a busy main thread (the WebGL frame) the pointerup handler
-      // ran 1.7 s after pointerdown in the phone test, so the tap was dropped. The movement check alone defines a tap.
+      Math.hypot(e.clientX - s.x, e.clientY - s.y) < TAP_PX
+      // WEBSITE (integration, Nov 15): no 600 ms limit. The movement check alone defines a tap.
     ) {
       lastTap = performance.now();
       fn();
@@ -263,6 +362,98 @@ function onTap(el, fn, pressSet) {
   el.addEventListener('lostpointercapture', (e) => {
     if (pressSet && pressSet.delete(e.pointerId)) sync();
   });
+
+  // Keyboard activation (Enter/Space) arrives as click with detail 0.
+  // Pointer-originated clicks (detail > 0) are already handled by the tap path.
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (e.detail !== 0) return;
+    if (performance.now() - lastTap < 800) return;
+    fn();
+  });
+}
+
+function bindRingPointer(el, fn, pressSet) {
+  let lastTap = -1e9;
+
+  el.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    if (e.button > 0) return;
+    if (current || walking) return;
+    if (drag && drag.id !== e.pointerId) return;
+    cancelCoast();
+    drag = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      angle: angle,
+      moved: false,
+      maxDist: 0,
+      samples: [{ t: performance.now(), angle: angle }],
+    };
+    if (pressSet) pressSet.add(e.pointerId);
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch (_) {
+      /* capture is best-effort */
+    }
+    sync();
+  });
+
+  el.addEventListener('pointermove', (e) => {
+    e.stopPropagation();
+    const s = drag;
+    if (!s || s.id !== e.pointerId) return;
+    const dx = e.clientX - s.x;
+    const dy = e.clientY - s.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > s.maxDist) s.maxDist = dist;
+    // WEBSITE (integration, Nov 15): no 600 ms limit. On a busy main thread (the WebGL frame) the pointerup handler
+    // ran 1.7 s after pointerdown in the phone test, so the tap was dropped. The movement check alone defines a tap.
+    if (!s.moved && dist >= TAP_PX) s.moved = true;
+    if (!s.moved) return;
+    angle = s.angle + dxToAngle(dx);
+    const now = performance.now();
+    s.samples.push({ t: now, angle: angle });
+    while (s.samples.length > 1 && now - s.samples[0].t > VEL_WINDOW_MS) s.samples.shift();
+    render();
+    if (now - lastAttr >= ATTR_MS) writeAngle();
+    if (ring && !ring.classList.contains('zg-dragging')) ring.classList.add('zg-dragging');
+    sync();
+  });
+
+  const finish = (e, allow) => {
+    e.stopPropagation();
+    if (pressSet && pressSet.delete(e.pointerId)) {
+      /* press state updates in sync() */
+    }
+    const s = drag;
+    if (!s || s.id !== e.pointerId) return;
+    drag = null;
+    if (ring) ring.classList.remove('zg-dragging');
+    const now = performance.now();
+    const isTap = allow && !s.moved && s.maxDist < TAP_PX;
+    if (isTap) {
+      sync();
+      if (fn) {
+        lastTap = now;
+        fn();
+      }
+      return;
+    }
+    if (s.moved) {
+      startSnap(now, reduced ? 0 : velocityOf(s.samples));
+      return;
+    }
+    sync();
+  };
+  el.addEventListener('pointerup', (e) => finish(e, true));
+  el.addEventListener('pointercancel', (e) => finish(e, false));
+  el.addEventListener('lostpointercapture', (e) => {
+    if (pressSet && pressSet.delete(e.pointerId)) sync();
+  });
+
+  if (!fn) return;
 
   // Keyboard activation (Enter/Space) arrives as click with detail 0.
   // Pointer-originated clicks (detail > 0) are already handled by the tap path.
@@ -432,7 +623,7 @@ function closePanel(session) {
 }
 
 /* ------------------------------------------------------------------ */
-/* orbit loop                                                          */
+/* ring layout + inertia                                               */
 /* ------------------------------------------------------------------ */
 
 function render() {
@@ -460,17 +651,36 @@ function render() {
 
 function writeAngle() {
   lastAttr = performance.now();
-  root.setAttribute('data-angle', (((angle % TAU) + TAU) % TAU).toFixed(3));
+  if (root) root.setAttribute('data-angle', wrapAngle(angle).toFixed(3));
 }
 
 function frame(t) {
-  raf = requestAnimationFrame(frame);
-  if (lastT !== null) {
-    angle = (angle + (Math.min(t - lastT, 100) * TAU) / REV_MS) % TAU;
+  if (!coast) {
+    raf = 0;
+    return;
   }
-  lastT = t;
+  raf = requestAnimationFrame(frame);
+  const u = Math.min(1, (t - coast.t0) / coast.dur);
+  const e = 1 - Math.pow(1 - u, 3); // ease-out cubic
+  angle = coast.from + coast.delta * e;
   render();
-  if (t - lastAttr >= ATTR_MS) writeAngle();
+  if (t - lastAttr >= ATTR_MS || u >= 1) writeAngle();
+  if (u >= 1) {
+    angle = wrapAngle(coast.from + coast.delta);
+    coast = null;
+    raf = 0;
+    writeAngle();
+    sync();
+  }
+}
+
+function motionState() {
+  if (walking) return 'hidden';
+  if (current || document.hidden) return 'paused';
+  if (reduced && !drag) return 'reduced';
+  if (drag && drag.moved) return 'dragging';
+  if (coast) return 'coasting';
+  return 'idle';
 }
 
 function sync() {
@@ -478,27 +688,15 @@ function sync() {
   if (walking) {
     // Hidden overrides everything: no loop, no angle updates.
     if (root.dataset.state !== 'hidden') root.dataset.state = 'hidden';
-    if (raf) {
-      cancelAnimationFrame(raf);
-      raf = 0;
-      writeAngle(); // final value, once
-    }
+    if (drag) drag = null;
+    if (ring) ring.classList.remove('zg-dragging');
+    settleNow();
     return;
   }
-  const paused = pressed.size > 0 || hovered.size > 0 || !!current || document.hidden;
-  const run = !reduced && !paused;
-  const state = reduced ? 'reduced' : paused ? 'paused' : 'running';
+  const state = motionState();
   if (root.dataset.state !== state) root.dataset.state = state;
-  if (run && !raf) {
-    lastT = null; // no jump after a pause
-    raf = requestAnimationFrame(frame);
-  } else if (!run && raf) {
-    cancelAnimationFrame(raf);
-    raf = 0;
-    writeAngle();
-  } else if (!run) {
-    writeAngle();
-  }
+  if (document.hidden && coast) settleNow();
+  if (!drag && !coast && !raf) writeAngle();
 }
 
 /* ------------------------------------------------------------------ */
@@ -524,6 +722,8 @@ function applyMode(m) {
     if (current) closePanel(current); // unmount runs as usual
     hovered.clear();
     pressed.clear();
+    drag = null;
+    if (ring) ring.classList.remove('zg-dragging');
     const ae = document.activeElement;
     if (ae && ring.contains(ae)) {
       try {
@@ -564,6 +764,16 @@ function layout() {
     const lo = top + size / 2 + Ry;
     const hi = vh - bottom - size / 2 - Ry;
     cy = hi >= lo ? Math.min(hi, Math.max(lo, cy)) : (top + vh - bottom) / 2;
+  }
+  if (trackSvg && track) {
+    trackSvg.setAttribute('width', String(vw));
+    trackSvg.setAttribute('height', String(vh));
+    trackSvg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
+    track.setAttribute('cx', cx.toFixed(1));
+    track.setAttribute('cy', cy.toFixed(1));
+    track.setAttribute('rx', Math.max(Rx, 1).toFixed(1));
+    track.setAttribute('ry', Math.max(Ry, 1).toFixed(1));
+    track.setAttribute('stroke-width', String(Math.round(size + TRACK_PAD)));
   }
   render();
   fitTileLabels();
@@ -610,6 +820,14 @@ function boot() {
   ring.setAttribute('role', 'group');
   ring.setAttribute('aria-label', 'Site sections');
   root.appendChild(ring);
+
+  trackSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  trackSvg.setAttribute('class', 'zg-track');
+  trackSvg.setAttribute('aria-hidden', 'true');
+  track = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  trackSvg.appendChild(track);
+  ring.appendChild(trackSvg);
+  bindRingPointer(track, null, pressed);
 
   for (const e of entries.values()) addTile(e); // registered before boot
 
