@@ -1,7 +1,8 @@
 /**
  * Widget harness: floating app-tiles on a ring over the 3D scene.
- * The ring stays still at rest. A horizontal swipe on a tile or the ring
- * track spins it; momentum eases out and one tile snaps to the front.
+ * After the ZUNIGA reveal, the ring plays two intro loops, then glides one
+ * square forward every 6s. A horizontal swipe on a tile or the ring track
+ * spins it anytime; momentum eases out and one tile snaps to the front.
  *
  * MODULE CONTRACT
  * ---------------
@@ -32,8 +33,9 @@
  * walking, visible in 'show'. If the scene does not announce a mode, the ring is
  * always shown.
  *
- * data-state: idle (at rest) | dragging | coasting (inertia/snap) | paused
- * (panel open or tab hidden) | reduced | hidden (walk mode).
+ * data-state: idle (at rest) | intro (opening loops) | stepping (6s glide) |
+ * dragging | coasting (inertia/snap) | paused (panel open or tab hidden) |
+ * reduced | hidden (walk mode).
  */
 import { ACTIVE, RETIRED } from './widget-ids.js';
 import { widgets, brokenWidget } from './widgets.js';
@@ -49,6 +51,11 @@ const VEL_WINDOW_MS = 80;
 const FRICTION = 5; // s^-1; used to project where a flick would stop
 const MAX_VEL = 14; // rad/s cap
 const TRACK_PAD = 28; // extra stroke width beyond the tile size, in px
+const INTRO_LOOPS = 2;
+const INTRO_MS = 4000; // two full turns, ease-in-out
+const STEP_EVERY_MS = 6000;
+const STEP_MS = 800; // one-square glide
+const REVEAL_FALLBACK_MS = 8000;
 
 const entries = new Map(); // id -> entry
 const order = []; // entries that have a tile, in registration order
@@ -67,7 +74,13 @@ let walking = false; // scene is in walk mode: ring hidden, loop stopped
 let current = null; // open panel session
 let seq = 0;
 let drag = null; // active swipe: { id, x, y, angle, moved, maxDist, samples }
-let coast = null; // snap animation: { from, delta, t0, dur }
+let coast = null; // motion: { kind, from, delta, t0, dur, ease }
+let revealPhase = ''; // in | hold | down | done, from zg:reveal
+let ringShown = false;
+let stepTimer = 0;
+let stepRemain = STEP_EVERY_MS;
+let stepArmedAt = 0;
+let introPlayed = false;
 
 // cached viewport geometry (updated on resize only)
 let vw = 1280;
@@ -312,12 +325,111 @@ function startSnap(now, vel) {
     render();
     writeAngle();
     sync();
+    armStep(STEP_EVERY_MS);
     return;
   }
   const dur = Math.min(700, Math.max(280, Math.abs(delta) * 420 + Math.abs(useVel) * 40));
-  coast = { from: angle, delta: delta, t0: now, dur: dur };
+  coast = { kind: 'snap', from: angle, delta: delta, t0: now, dur: dur, ease: 'out' };
   if (!raf) raf = requestAnimationFrame(frame);
   sync();
+}
+
+function easeOutCubic(u) {
+  return 1 - Math.pow(1 - u, 3);
+}
+function easeInOutCubic(u) {
+  return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+}
+
+function canArmStep() {
+  return !walking && !current && !document.hidden && !drag && !coast && revealPhase === 'done' && order.length > 1;
+}
+
+function clearStepTimer() {
+  if (stepTimer) {
+    clearTimeout(stepTimer);
+    stepTimer = 0;
+  }
+}
+
+function pauseStepTimer() {
+  if (stepTimer) {
+    stepRemain = Math.max(0, stepRemain - (performance.now() - stepArmedAt));
+    clearStepTimer();
+  }
+}
+
+function resumeStepTimer() {
+  if (stepTimer || !canArmStep()) return;
+  armStep(stepRemain > 0 ? stepRemain : STEP_EVERY_MS);
+}
+
+function armStep(ms) {
+  clearStepTimer();
+  stepRemain = typeof ms === 'number' ? ms : STEP_EVERY_MS;
+  if (!canArmStep()) return;
+  stepArmedAt = performance.now();
+  stepTimer = setTimeout(doStep, stepRemain);
+}
+
+function doStep() {
+  stepTimer = 0;
+  if (!canArmStep()) return;
+  const n = Math.max(order.length, 1);
+  const delta = -TAU / n;
+  const now = performance.now();
+  if (reduced) {
+    angle = wrapAngle(angle + delta);
+    render();
+    writeAngle();
+    armStep(STEP_EVERY_MS);
+    sync();
+    return;
+  }
+  coast = { kind: 'step', from: angle, delta: delta, t0: now, dur: STEP_MS, ease: 'in-out' };
+  if (!raf) raf = requestAnimationFrame(frame);
+  sync();
+}
+
+function startRingIntro() {
+  if (introPlayed || walking || current || revealPhase !== 'done') return;
+  introPlayed = true;
+  if (reduced || order.length < 1) {
+    armStep(STEP_EVERY_MS);
+    return;
+  }
+  cancelCoast();
+  const now = performance.now();
+  coast = { kind: 'intro', from: angle, delta: -INTRO_LOOPS * TAU, t0: now, dur: INTRO_MS, ease: 'in-out' };
+  if (!raf) raf = requestAnimationFrame(frame);
+  sync();
+}
+
+function onMotionEnd(kind) {
+  if (kind === 'intro' || kind === 'step' || kind === 'snap') armStep(STEP_EVERY_MS);
+}
+
+function maybeShowRing() {
+  if (ringShown || !ring) return;
+  if (revealPhase === 'down' || revealPhase === 'widgets' || revealPhase === 'done') {
+    ring.classList.add('zg-on');
+    ringShown = true;
+  }
+}
+
+function onReveal(e) {
+  const d = (e && e.detail) || {};
+  const phase = d.phase || '';
+  if (phase) revealPhase = phase === 'widgets' ? 'down' : phase;
+  maybeShowRing();
+  if (revealPhase === 'done') {
+    if (d.skipped) {
+      introPlayed = true; // skip the loops; go to the rest state
+      armStep(STEP_EVERY_MS);
+    } else {
+      startRingIntro();
+    }
+  }
 }
 
 function onTap(el, fn, pressSet) {
@@ -381,6 +493,7 @@ function bindRingPointer(el, fn, pressSet) {
     if (e.button > 0) return;
     if (current || walking) return;
     if (drag && drag.id !== e.pointerId) return;
+    if (coast && (coast.kind === 'intro' || coast.kind === 'step')) introPlayed = true;
     cancelCoast();
     drag = {
       id: e.pointerId,
@@ -434,6 +547,10 @@ function bindRingPointer(el, fn, pressSet) {
     const now = performance.now();
     const isTap = allow && !s.moved && s.maxDist < TAP_PX;
     if (isTap) {
+      const { snap } = snapTarget(angle, 0);
+      angle = snap;
+      render();
+      writeAngle();
       sync();
       if (fn) {
         lastTap = now;
@@ -660,25 +777,29 @@ function frame(t) {
     return;
   }
   raf = requestAnimationFrame(frame);
-  const u = Math.min(1, (t - coast.t0) / coast.dur);
-  const e = 1 - Math.pow(1 - u, 3); // ease-out cubic
+  const u = Math.min(1, (t - coast.t0) / Math.max(1, coast.dur));
+  const e = coast.ease === 'in-out' ? easeInOutCubic(u) : easeOutCubic(u);
   angle = coast.from + coast.delta * e;
   render();
   if (t - lastAttr >= ATTR_MS || u >= 1) writeAngle();
   if (u >= 1) {
+    const kind = coast.kind || 'snap';
     angle = wrapAngle(coast.from + coast.delta);
     coast = null;
     raf = 0;
     writeAngle();
     sync();
+    onMotionEnd(kind);
   }
 }
 
 function motionState() {
   if (walking) return 'hidden';
   if (current || document.hidden) return 'paused';
-  if (reduced && !drag) return 'reduced';
+  if (reduced && !drag && !(coast && (coast.kind === 'intro' || coast.kind === 'step'))) return 'reduced';
   if (drag && drag.moved) return 'dragging';
+  if (coast && coast.kind === 'intro') return 'intro';
+  if (coast && coast.kind === 'step') return 'stepping';
   if (coast) return 'coasting';
   return 'idle';
 }
@@ -690,12 +811,15 @@ function sync() {
     if (root.dataset.state !== 'hidden') root.dataset.state = 'hidden';
     if (drag) drag = null;
     if (ring) ring.classList.remove('zg-dragging');
+    clearStepTimer();
     settleNow();
     return;
   }
   const state = motionState();
   if (root.dataset.state !== state) root.dataset.state = state;
   if (document.hidden && coast) settleNow();
+  if (current || document.hidden || drag || coast) pauseStepTimer();
+  else resumeStepTimer();
   if (!drag && !coast && !raf) writeAngle();
 }
 
@@ -859,6 +983,12 @@ function boot() {
   document.addEventListener('visibilitychange', sync);
   document.addEventListener('zg:mode', onSceneMode);
 
+  document.addEventListener('zg:reveal', onReveal);
+  if (document.body && document.body.dataset.reveal === 'done') {
+    revealPhase = 'done';
+    maybeShowRing();
+  }
+
   applyMode(currentSceneMode()); // no mode announced -> ring always shown
   layout();
   if (!walking) writeAngle();
@@ -871,17 +1001,31 @@ function boot() {
     console.warn('[zg] fonts.ready hook failed', err);
   }
 
-  // Show the ring only after the scene has finished loading.
+  // Show the ring after the scene is loaded AND the ZUNIGA reveal has reached the widgets phase.
   const t0 = Date.now();
   let timer = 0;
   const check = () => {
     const el = document.getElementById('load');
-    if (!el || el.classList.contains('done') || Date.now() - t0 > LOAD_MAX_MS) {
-      if (timer) clearInterval(timer);
-      ring.classList.add('zg-on');
-      return true;
-    }
-    return false;
+    const loaded = !el || el.classList.contains('done') || Date.now() - t0 > LOAD_MAX_MS;
+    if (!loaded) return false;
+    if (timer) clearInterval(timer);
+    maybeShowRing();
+    // If the word never announces a reveal (font failed), show the ring and arm the stepper.
+    setTimeout(() => {
+      if (revealPhase === 'done' || revealPhase === 'down') return;
+      if (!revealPhase) {
+        revealPhase = 'done';
+        introPlayed = true;
+        maybeShowRing();
+        armStep(STEP_EVERY_MS);
+        try {
+          document.body.classList.add('zg-reveal-done');
+        } catch (_) {
+          /* ignore */
+        }
+      }
+    }, REVEAL_FALLBACK_MS);
+    return true;
   };
   if (!check()) timer = setInterval(check, LOAD_POLL_MS);
 }

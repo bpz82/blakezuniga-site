@@ -116,6 +116,14 @@ body[data-mode="walk"] #flip {
   pointer-events: auto;
 }
 
+/* Hide Explore during the ZUNIGA load-in (Blake t143u). Home/Flip stay walk-only. */
+body.zg-intro #zg-explore,
+body:not(.zg-reveal-done) #zg-explore {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* chrome.js sets [hidden] if #mode is missing */
 #zg-explore[hidden],
 #zg-home[hidden] {
