@@ -1,6 +1,6 @@
 /*
  * Site widgets. Each one follows the harness module contract:
- *   { id, title, icon, mount(el, api), unmount? }
+ *   { id, title, icon, iconSrc?, mount(el, api), unmount? }
  * Retired placeholders stay in this file (no deleting) but are not in the
  * exported `widgets` list, so they do not appear on the home ring.
  */
@@ -200,6 +200,7 @@ function collaborativeProjectsWidget() {
     id: 'collaborative-projects',
     title: 'Collaborative Projects',
     icon: '◎',
+    iconSrc: 'assets/curl-tapes-faces.png',
     mount(el) {
       const p = document.createElement('p');
       p.textContent = 'Opening The Curl Tapes…';

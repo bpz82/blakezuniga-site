@@ -3,12 +3,16 @@
  *
  * MODULE CONTRACT
  * ---------------
- * register({ id, title, icon, mount(el, api), unmount() }) -> boolean
+ * register({ id, title, icon, iconSrc, mount(el, api), unmount() }) -> boolean
  *
  *   id       string, /^[a-z][a-z0-9-]{1,31}$/, must be listed in widget-ids.js ACTIVE
  *            (retired ids and duplicates are rejected). Ids are permanent.
  *   title    string, 1..32 chars, shown as the tile label and the panel title.
  *   icon     optional string of 1..3 characters (glyph/emoji), shown as text.
+ *   iconSrc  optional same-origin relative path to an image (e.g. assets/logo.png).
+ *            Only a relative path with a png/webp/jpg/jpeg/gif/svg extension is
+ *            accepted (no scheme, no //, no .., no backslash). If the image fails
+ *            to load, the tile falls back to the text icon.
  *   mount    required function(el, api). `el` is the widget's own container element
  *            (inside a shadow root). `api` is { close() } and nothing else.
  *            May return a Promise; a throw or a rejection shows only this widget's
@@ -85,11 +89,23 @@ function snapshot(def) {
     const n = Array.from(icon).length;
     if (n < 1 || n > 3) return reject('icon must be 1-3 characters for "' + id + '"');
   }
+  let iconSrc = '';
+  if (def.iconSrc !== undefined && def.iconSrc !== null && def.iconSrc !== '') {
+    if (!validIconSrc(def.iconSrc)) {
+      return reject('iconSrc must be a same-origin relative path for "' + id + '"');
+    }
+    iconSrc = def.iconSrc;
+  }
   if (typeof mount !== 'function') return reject('mount must be a function for "' + id + '"');
   if (unmount !== undefined && unmount !== null && typeof unmount !== 'function') {
     return reject('unmount must be a function for "' + id + '"');
   }
-  return { id, title, icon: icon || '', mount, unmount: unmount || null };
+  return { id, title, icon: icon || '', iconSrc, mount, unmount: unmount || null };
+}
+
+const ICON_SRC_RE = /^(\.\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\.(png|webp|jpe?g|gif|svg)$/i;
+function validIconSrc(src) {
+  return typeof src === 'string' && src.length <= 200 && !src.includes('..') && ICON_SRC_RE.test(src);
 }
 
 export function register(def) {
@@ -119,14 +135,28 @@ function span(cls, text) {
 }
 
 function buildTile(entry) {
-  const { id, title, icon } = entry.def;
+  const { id, title, icon, iconSrc } = entry.def;
   const b = document.createElement('button');
   b.type = 'button';
   b.className = 'zg-tile';
   b.dataset.id = id;
   b.setAttribute('aria-label', title);
-  const ic = span('zg-icon', icon || Array.from(title)[0].toUpperCase());
+  const fallback = icon || Array.from(title)[0].toUpperCase();
+  const ic = span('zg-icon', iconSrc ? '' : fallback);
   ic.setAttribute('aria-hidden', 'true');
+  if (iconSrc) {
+    const img = document.createElement('img');
+    img.className = 'zg-icon-img';
+    img.alt = '';
+    img.decoding = 'async';
+    img.draggable = false;
+    img.addEventListener('error', () => {
+      try { img.remove(); } catch (_) { /* ignore */ }
+      if (!ic.textContent) ic.textContent = fallback;
+    });
+    img.src = iconSrc;
+    ic.appendChild(img);
+  }
   b.append(ic, span('zg-label', title));
   return b;
 }
