@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Blake Zuniga</title>
+<title>Zuniga</title>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:#000;overscroll-behavior:none;touch-action:none}
   body{font:13px/1.35 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#eee;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
@@ -35,12 +35,16 @@
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <link rel="preload" href="assets/fonts/ZunigaMission-Regular-v3.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="harness.css">
+<link rel="stylesheet" href="chrome.css">
+<style>/* site1 build2: no load screen; the guitar fades in when its textures are ready */
+  canvas{opacity:0;transition:opacity .9s ease} body.zg-ready canvas{opacity:1}
+  @media (prefers-reduced-motion: reduce){canvas{transition:none}}</style>
 </head>
-<body>
-<div id="load"><div class="t">Loading guitar</div><div class="bar"><i id="lbar"></i></div></div>
+<body data-mode="show">
+<div id="load" class="done" style="display:none" aria-hidden="true"><div class="t">Loading guitar</div><div class="bar"><i id="lbar"></i></div></div>
 <div id="hud"><div id="title">Guitar Explorer</div><div id="hint"></div></div>
 <button id="mode" type="button">Photo view</button>
-<button id="flip" type="button">Back</button>
+<button id="flip" type="button">Flip Guitar</button>
 <div id="joy"><i></i></div>
 <div id="right">
   <div class="b" id="jump"><svg viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z"/></svg></div>
@@ -55,6 +59,8 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';   // head4 (Grok Nov 14 9:46): post AA for thin chrome/tuner edges at distance
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 let TX = {}, Q = {};
 
 /* stage5 (Grok Nov 14 9:46, Blake 'this is messy'): floor falls off to black (radial albedo falloff, matte, walk fill lights excluded),
@@ -1819,7 +1825,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) relea
 document.addEventListener('touchend', e => { if (e.touches.length === 0) releaseAll(); }, { passive: true });
 document.addEventListener('touchcancel', e => { if (e.touches.length === 0) releaseAll(); }, { passive: true });
 // stop Safari scroll / pinch-zoom / rubber-band / double-tap zoom (but let the mode button click)
-const isBtn = t => t && t.closest && t.closest('#mode,#flip');
+const isBtn = t => t && t.closest && t.closest('#mode,#flip,#zg-explore,#zg-home');
 document.addEventListener('touchstart', e => { if (!isBtn(e.target)) e.preventDefault(); }, { passive: false });
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 for (const g of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(g, e => e.preventDefault(), { passive: false });
@@ -1870,7 +1876,7 @@ fadeEl.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer
 document.body.appendChild(fadeEl);
 let flipBusy = false;
 function setFlip(on) {
-  flipTarget = on ? 1 : 0; flipBtn.textContent = on ? 'Front' : 'Back';
+  flipTarget = on ? 1 : 0; flipBtn.textContent = 'Flip Guitar';
   if (mode === 'walk') {
     // v4: in Walk the guitar turns over under a short fade and the walker lands on the other face
     if (flipBusy) return; flipBusy = true; releaseAll(); fadeEl.style.opacity = '1';
@@ -1886,7 +1892,7 @@ function setFlip(on) {
   }
   if (on) { showT = 0; }
 }
-dbgFlipWalk = (on) => { flipTarget = on ? 1 : 0; flipBtn.textContent = on ? 'Front' : 'Back'; const local = G.worldToLocal(P.pos.clone()); flipV = flipTarget; applyFlip(flipV); SIDE = flipTarget; CUR_G = SIDE ? BACKG : GT.colliders; STEP = SIDE ? STEP_B : STEP_F; placeWalker(local, true); };
+dbgFlipWalk = (on) => { flipTarget = on ? 1 : 0; flipBtn.textContent = 'Flip Guitar'; const local = G.worldToLocal(P.pos.clone()); flipV = flipTarget; applyFlip(flipV); SIDE = flipTarget; CUR_G = SIDE ? BACKG : GT.colliders; STEP = SIDE ? STEP_B : STEP_F; placeWalker(local, true); };
 flipBtn.addEventListener('click', e => { e.stopPropagation(); setFlip(flipTarget === 0); });
 function setMode(m, keepFlip) {
   mode = m; free = false; showT = 0; releaseAll(); document.body.dataset.mode = m; document.dispatchEvent(new CustomEvent('zg:mode', { detail: m }));   // site1 hook
@@ -1901,6 +1907,201 @@ function setMode(m, keepFlip) {
 }
 modeBtn.addEventListener('click', e => { e.stopPropagation(); setMode(mode === 'walk' ? 'show' : 'walk'); });
 
+/* ---------- site1: floating ZUNIGA word (zuniga3d.js), its own failure domain ---------- */
+let zgWordTick = null;
+try {
+// ---- ZUNIGA floating 3D word (snippet; paste inside the scene module) ----
+// Needs in scope: THREE, FontLoader, TextGeometry, scene, G, bc (Vector3), L, STAGE.
+// Defines one function: zgWordTick(dt, camera, mode). Everything else lives in zgW.
+const zgW = {
+  tick: null, // set to the real per-frame function once the font has loaded
+};
+
+(function zgWordLoad() {
+  const warn = (e) => {
+    if (zgW.warned) return;
+    zgW.warned = true;
+    console.warn('[zuniga3d] floating word disabled:', e && e.message ? e.message : e);
+  };
+
+  const build = (font) => {
+    const size = L * 0.16;
+
+    const geo = new TextGeometry('ZUNIGA', {
+      font: font,
+      size: size,
+      depth: size * 0.22,
+      curveSegments: 3,
+      bevelEnabled: true,
+      bevelThickness: size * 0.03,
+      bevelSize: size * 0.02,
+      bevelSegments: 1,
+    });
+    geo.computeBoundingBox();
+    geo.center();
+    geo.computeBoundingBox();
+    const width = geo.boundingBox.max.x - geo.boundingBox.min.x;
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.35,
+      metalness: 0,
+      emissive: 0x222222,
+      transparent: true, // only during the fade-in
+      opacity: 0,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    mesh.visible = false; // until the first tick has positioned it
+
+    // soft blob shadow texture, drawn once
+    const cv = document.createElement('canvas');
+    cv.width = 256;
+    cv.height = 64;
+    const cx = cv.getContext('2d');
+    cx.translate(128, 32);
+    cx.scale(1, 0.25); // circle -> 256x64 ellipse
+    const grd = cx.createRadialGradient(0, 0, 0, 0, 0, 128);
+    // WEBSITE (integration): the floor behind the guitar is already dark, so a plain black blob barely showed. A dark core
+    // inside a faint warm pool (the light the word blocks) makes the shadow read on the dark stage. Still one plane, one texture.
+    grd.addColorStop(0, 'rgba(0,0,0,0.92)');
+    grd.addColorStop(0.42, 'rgba(0,0,0,0.7)');
+    grd.addColorStop(0.62, 'rgba(70,40,30,0.28)');
+    grd.addColorStop(0.8, 'rgba(120,70,50,0.12)');
+    grd.addColorStop(1, 'rgba(120,70,50,0)');
+    cx.fillStyle = grd;
+    cx.fillRect(-128, -128, 256, 256);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const smat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+      opacity: 0,
+    });
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), smat);
+    shadow.rotation.order = 'YXZ'; // yaw about world Y, then lie flat
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.05;
+    shadow.renderOrder = 1;
+    shadow.castShadow = false;
+    shadow.receiveShadow = false;
+    shadow.visible = false;
+
+    scene.add(mesh);
+    scene.add(shadow);
+
+    // reused temporaries
+    const pos = new THREE.Vector3(); // smoothed anchor (no float)
+    const tgt = new THREE.Vector3();
+    const d = new THREE.Vector3();
+    let yaw = 0;
+    let sc = 1;
+    let init = false;
+    let t = 0;
+    let fade = 0;
+    let fading = true;
+    const TWO_PI = Math.PI * 2;
+
+    zgW.tick = function (dt, camera, mode) {
+      if (!(dt > 0)) dt = 0;
+      if (dt > 0.1) dt = 0.1;
+      t += dt;
+      const cp = camera.position;
+
+      // follow target (frozen in walk once initialised)
+      if (mode !== 'walk' || !init) {
+        d.set(bc.x - cp.x, 0, bc.z - cp.z);
+        const len = Math.hypot(d.x, d.z);
+        if (len < 1e-4) d.set(0, 0, -1);
+        else d.multiplyScalar(1 / len);
+        // WEBSITE (integration): offsets scale with the photo-view camera distance, so the word sits in the top of the frame on
+        // a wide desktop (camera ~0.95 L away) as well as on a tall phone (~2.3 L away); the word scales the same way (sc).
+        const D = Math.max(L * 0.5, Math.hypot(cp.x - bc.x, cp.y - bc.y, cp.z - bc.z));
+        sc += (Math.min(1.2, Math.max(0.55, D / (L * 2.3))) - sc) * (init ? 1 - Math.exp(-dt * 2.5) : 1);
+        tgt.set(bc.x + d.x * D * 0.2, bc.y + D * 0.17, bc.z + d.z * D * 0.2);
+        if (!init) {
+          pos.copy(tgt);
+        } else {
+          pos.lerp(tgt, 1 - Math.exp(-dt * 2.5));
+        }
+      }
+
+      // face the camera around Y only, damped
+      const tYaw = Math.atan2(cp.x - pos.x, cp.z - pos.z);
+      if (!init) {
+        yaw = tYaw;
+        init = true;
+      } else {
+        let a = tYaw - yaw;
+        a -= TWO_PI * Math.round(a / TWO_PI);
+        yaw += a * (1 - Math.exp(-dt * (mode === 'walk' ? 6 : 3)));
+      }
+
+      // float
+      const f = Math.sin(t * 0.9);
+      mesh.position.set(pos.x, pos.y + f * L * 0.012, pos.z);
+      mesh.rotation.set(0, yaw, Math.sin(t * 0.6) * 0.02);
+      mesh.scale.setScalar(sc);
+
+      // fade-in
+      if (fading) {
+        fade += dt;
+        const o = Math.min(1, fade / 0.8);
+        mat.opacity = o;
+        if (o >= 1) {
+          fading = false;
+          mat.transparent = false;
+          mat.opacity = 1;
+          mat.needsUpdate = true;
+        }
+      }
+      const fo = fading ? mat.opacity : 1;
+
+      // blob shadow: higher word -> a bit bigger and lighter
+      const h = f * 0.5 + 0.5; // 0..1
+      const k = 1 + 0.06 * h;
+      shadow.position.x = pos.x;
+      shadow.position.z = pos.z;
+      shadow.rotation.y = yaw;
+      shadow.scale.set(width * 1.5 * k * sc, size * 1.6 * k * sc, 1);
+      smat.opacity = (0.95 - 0.2 * h) * fo;
+
+      if (!mesh.visible) {
+        mesh.visible = true;
+        shadow.visible = true;
+      }
+    };
+  };
+
+  try {
+    new FontLoader().load(
+      'assets/fonts/zuniga-mission-v3.typeface.json',
+      (font) => {
+        try {
+          build(font);
+        } catch (e) {
+          warn(e);
+        }
+      },
+      undefined,
+      (err) => warn(err)
+    );
+  } catch (e) {
+    warn(e);
+  }
+})();
+
+zgWordTick = function zgWordTick(dt, camera, mode) {
+  if (zgW.tick) zgW.tick(dt, camera, mode);
+}
+// ---- end ZUNIGA snippet ----
+
+} catch (e) { console.warn('[zg] ZUNIGA word disabled:', e); zgWordTick = null; }
+let zgWordFail = 0;
 /* ---------- main loop ---------- */
 let last = performance.now(), slow = 0, frames = 0, lastPR = 0, DT_MAX = .05;
 const tgt = new V3();
@@ -1981,8 +2182,10 @@ function tick(now) {
     // SF3 rides with the walker (a soft 'room light' from over the shoulder) so whatever face you walk up to reads as lit wood
     if (sideFillK > 0.01) { camera.getWorldDirection(tA); SF3.position.copy(camera.position).addScaledVector(tA, -40).add(new V3(0, 18, 0)); SF3.target.position.copy(camera.position).addScaledVector(tA, 10); SF3.target.updateMatrixWorld(); } }
   if (STAGE.under) { const b = (!free && mode === 'show') ? Math.min(1, Math.max(0, (bc.y - 4 - camera.position.y) / 30)) : 0; STAGE.under.intensity = STAGE.underI * b; }
+  if (zgWordTick && zgWordFail < 3) { try { zgWordTick(dt, camera, mode); } catch (e) { if (++zgWordFail === 3) console.warn('[zg] ZUNIGA word stopped:', e); } }
   STAGE.render();
   dbg.ready = true;
+  if (!document.body.classList.contains('zg-ready')) document.body.classList.add('zg-ready');
 }
 
 /* ---------- debug API (used by the render/edge tests) ---------- */
@@ -2040,7 +2243,10 @@ setTimeout(hideHint, 9000);
 requestAnimationFrame(tick);
 
 </script>
+<button id="zg-explore" type="button">Explore the Guitar</button>
+<button id="zg-home" type="button" aria-label="Back to home">Home</button>
 <div id="zg-root"></div>
+<script type="module" src="chrome.js"></script>
 <script type="module" src="harness.js"></script>
 </body>
 </html>

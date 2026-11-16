@@ -1,0 +1,141 @@
+/* Site chrome over the scene. Link this after the scene's own styles. */
+
+@font-face {
+  font-family: 'Zuniga Mission';
+  src: url('assets/fonts/ZunigaMission-Regular-v3.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Old UI: always gone */
+#load,
+#hud,
+#mode {
+  display: none !important;
+}
+
+/* Touch controls only while walking (keeps existing body.touch display rule) */
+body:not([data-mode="walk"]) #joy,
+body:not([data-mode="walk"]) #right {
+  display: none !important;
+}
+
+/* Shared glass pill look */
+#zg-explore,
+#zg-home,
+body #flip {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Zuniga Mission', sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: none; /* WEBSITE: the font has lowercase; keep Blake's wording "Explore the Guitar" */
+  color: #fff;
+  background: rgba(14, 14, 18, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 4;
+  transition: opacity 0.18s ease, visibility 0s linear 0s,
+    background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+#zg-explore:hover,
+#zg-home:hover,
+body #flip:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+#zg-explore:active,
+#zg-home:active,
+body #flip:active {
+  transform: scale(0.97);
+}
+
+#zg-explore:focus-visible,
+#zg-home:focus-visible,
+body #flip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+/* Positions */
+#zg-explore {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+#zg-home {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  top: max(16px, env(safe-area-inset-top));
+  font-size: 15px;
+  padding: 0 18px;
+}
+
+/* #flip keeps its existing top-right position (no position/top/right set here) */
+body #flip {
+  font-size: 16px;
+  padding: 0 18px;
+}
+
+/* ---- visibility, driven only by body[data-mode] ---- */
+/* hidden state (fade out, then visibility:hidden, never clickable) */
+body[data-mode="walk"] #zg-explore,
+body:not([data-mode="walk"]) #zg-home,
+body:not([data-mode="walk"]) #flip {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s,
+    background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+/* visible state */
+body:not([data-mode="walk"]) #zg-explore,
+body[data-mode="walk"] #zg-home,
+body[data-mode="walk"] #flip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* chrome.js sets [hidden] if #mode is missing */
+#zg-explore[hidden],
+#zg-home[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 700px), (pointer: coarse) {
+  #zg-explore {
+    font-size: 18px;
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #zg-explore,
+  #zg-home,
+  body #flip,
+  body[data-mode="walk"] #zg-explore,
+  body:not([data-mode="walk"]) #zg-home,
+  body:not([data-mode="walk"]) #flip {
+    transition: none !important;
+  }
+}
