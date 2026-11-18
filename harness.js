@@ -756,8 +756,14 @@ function render() {
     const y = cy + Ry * s;
     const sc = 0.72 + 0.28 * d;
     const st = e.el.style;
-    st.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + sc.toFixed(3) + ')';
-    st.opacity = (0.85 + 0.15 * d).toFixed(3);
+    // amp10 (Blake t196u) 10d: only write styles whose value changed (an unchanged write is cheap, but a changed --zg-fade restyles the
+    // backdrop-filter tile; it moves slowly, so quantise to 2 decimals and skip equal values; the look is unchanged at 0.01 alpha steps)
+    const tf = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + sc.toFixed(3) + ')';
+    if (tf !== e.tf) { e.tf = tf; st.transform = tf; }
+    // amp9 (Blake t188u) 9f: the depth fade scales only the tile's fill alpha (harness.css multiplies --zg-fade into the
+    // background-color alpha); the label / icon stay at opacity 1. Was st.opacity = 0.85 + 0.15 * d.
+    const fd = (0.85 + 0.15 * d).toFixed(2);
+    if (fd !== e.fd) { e.fd = fd; st.setProperty('--zg-fade', fd); }
     const z = Math.round(d * 20);
     if (z !== e.z) {
       e.z = z;
@@ -828,7 +834,7 @@ function sync() {
 /* ------------------------------------------------------------------ */
 
 function cleanMode(v) {
-  return v === 'show' || v === 'walk' ? v : null;
+  return v === 'show' || v === 'walk' || v === 'amp' ? v : null;
 }
 
 function currentSceneMode() {
@@ -839,7 +845,7 @@ function applyMode(m) {
   if (!root || !ring) return;
   if (m) root.dataset.mode = m;
   else root.removeAttribute('data-mode');
-  const w = m === 'walk';
+  const w = m === 'walk' || m === 'amp';
   if (w === walking) return;
   walking = w;
   if (w) {

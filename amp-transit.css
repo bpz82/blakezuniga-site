@@ -1,0 +1,117 @@
+/* amp6 (WEBSITE, Nov 16): "Explore Amp" pop-up at the end of the neck + phone layout of the home buttons.
+   Linked after chrome.css and amp-chrome.css. */
+
+/* ---- Explore Amp pop-up (walk mode, headstock end) ---- */
+#zg-explore-amp-pop {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  position: fixed;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 84px);
+  min-height: 48px;
+  padding: 0 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Zuniga Mission', sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(14, 14, 18, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(10px) scale(0.9);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s,
+    background-color 0.15s ease, border-color 0.15s ease;
+}
+#zg-explore-amp-pop.zg-on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition: opacity 0.2s ease, visibility 0s linear 0s,
+    background-color 0.15s ease, border-color 0.15s ease;
+  animation: zg-amp-pop 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes zg-amp-pop {
+  0% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.82); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+#zg-explore-amp-pop:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+#zg-explore-amp-pop.zg-on:active { transform: translateX(-50%) scale(0.97); animation: none; }
+#zg-explore-amp-pop:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* desktop: show the E shortcut as a small key cap (not part of the button text) */
+body:not(.touch) #zg-explore-amp-pop::after {
+  content: 'E';
+  font: 600 11px/1 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 5px;
+  opacity: 0.8;
+}
+
+/* touch: above the joystick / jump button row */
+body.touch #zg-explore-amp-pop {
+  bottom: calc(174px + env(safe-area-inset-bottom));
+  min-height: 52px;
+}
+
+/* never outside walk mode */
+body:not([data-mode="walk"]) #zg-explore-amp-pop {
+  display: none !important;
+}
+
+/* amp7 (Blake t164u): the home Explore the Amp button is gone, so the amp6 phone side-by-side layout below is retired
+   (kept as a comment); Explore the Guitar is back in its site1 place.
+(* ---- phone home: Explore the Amp (left) + Explore the Guitar (right) side by side, no overlap ---- *)
+@media (max-width: 500px) {
+  #zg-explore,
+  #zg-explore-amp {
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    padding: 0 14px;
+    min-height: 48px;
+    max-width: calc(50vw - 20px);
+    white-space: nowrap;
+  }
+  #zg-explore-amp { left: max(12px, env(safe-area-inset-left)); }
+  #zg-explore { right: max(12px, env(safe-area-inset-right)); }
+}
+(* very narrow screens: stack (Explore the Amp above Explore the Guitar) *)
+@media (max-width: 370px) {
+  #zg-explore,
+  #zg-explore-amp { max-width: none; }
+  #zg-explore-amp { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 58px); }
+}
+
+*/
+@media (prefers-reduced-motion: reduce) {
+  #zg-explore-amp-pop,
+  #zg-explore-amp-pop.zg-on {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -86,7 +86,13 @@
   justify-content: center;
   gap: 4px;
   color: #141012;
-  background: rgba(255, 255, 255, 0.9);
+  /* amp9 (Blake t188u) 9d: "slightly see-through" squares - 78% white fill (was 0.9) + a light backdrop blur; the
+     icon/label stay fully opaque (#141012 on >= ~78% white keeps contrast > 10:1 over the dark scene) */
+  /* amp9 (Blake t188u) 9f: the ring's depth fade (harness.js render() writes --zg-fade = 0.85..1) now scales only the
+     fill alpha (0.663..0.78), not the whole tile, so the label / icon stay solid at every ring angle */
+  background: rgba(255, 255, 255, calc(0.78 * var(--zg-fade, 1)));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   border: 1px solid #fff;
   border-radius: 22%;
   box-shadow:
@@ -116,11 +122,11 @@
   pointer-events: none;
 }
 .zg-tile:hover {
-  background: rgba(232, 228, 226, 0.95);
+  background: rgba(232, 228, 226, calc(0.84 * var(--zg-fade, 1)));   /* amp9 (Blake t188u): was 0.95; same +0.06 step over the see-through fill; 9f: x depth fade */
   border-color: #fff;
 }
 .zg-tile:active {
-  background: rgba(232, 228, 226, 0.95);
+  background: rgba(232, 228, 226, calc(0.84 * var(--zg-fade, 1)));   /* amp9 (Blake t188u); 9f: x depth fade */
   border-color: var(--zg-accent);
 }
 .zg-tile:focus-visible {
