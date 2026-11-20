@@ -75,10 +75,23 @@ body #flip:focus-visible {
 }
 
 /* Positions */
+/* amp13 (Blake t214u): Explore the Guitar is centred at the bottom (left:0 + right:0 + margin auto: exact centre, no transform so the
+   :active scale and the fade keep working). Phone portrait: the widget row sits above it; desktop: the row is bottom-left. */
 #zg-explore {
   position: fixed;
-  right: max(16px, env(safe-area-inset-right));
+  left: 0;
+  right: 0;
+  width: fit-content;
+  margin: 0 auto;
   bottom: max(16px, env(safe-area-inset-bottom));
+}
+/* amp13 (Blake t214u): short, narrow landscape (phone on its side, row is 3 tiles wide bottom-left): keep the old bottom-right spot so it cannot meet the row */
+@media (orientation: landscape) and (max-width: 899px) {
+  #zg-explore {
+    left: auto;
+    right: max(16px, env(safe-area-inset-right));
+    margin: 0;
+  }
 }
 
 #zg-home {

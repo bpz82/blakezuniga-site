@@ -47,7 +47,7 @@
   body[data-mode="amp"] #joy,
   body.zg-amp #zg-explore,
   body.zg-amp #flip { opacity:0; visibility:hidden; pointer-events:none; }
-  body[data-mode="amp"] #zg-root, body.zg-amp #zg-root { visibility:hidden; pointer-events:none; }
+  body[data-mode="amp"] #zg-root, body.zg-amp #zg-root { visibility:hidden; pointer-events:none; }   /* amp11 (Blake t206u) 11a: harness.css also hides .zg-ring itself in modes amp / walk (the ring set its own visibility, so this root rule never reached it) */
   /* amp7 (Blake t164u): the jump button (#right, touch) stays on the amp; "Back to Guitar" flies back to the neck end */
   #zg-back-guitar{position:fixed;top:calc(10px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right));z-index:6;
     font-family:'Zuniga Mission',sans-serif;font-size:15px;letter-spacing:.06em;color:#fff;background:rgba(14,14,18,.58);
@@ -3032,6 +3032,19 @@ try { await bootFinish(); } catch (e) { console.warn('[zg] boot finish failed:',
 <script type="module">
 /* Lazy-load the amp after the guitar's first frame. A failure leaves the guitar running. */
 window.__ampFail = 0;
+/* amp11 (Blake t206u) 11a: the widget squares are ONE straight row at the bottom-left (harness.js layout()), not a ring.
+   amp11WidgetRow(W, H) mirrors that layout (tile size, margins, bottom pad, safe-area insets from the row container's padding) and
+   returns { x0, y0, x1, y1 } plus circles [cx, cy, r] along the row (centre line, spacing size/2, r = size/2) that stand in for the
+   old 48 ring samples in the amp placement overlap tests (ringFrac = the share of those circles the amp's screen box touches). */
+function amp11WidgetRow(W, H) {
+  const n = Math.max(1, document.querySelectorAll('.zg-tile').length || 2), size = Math.round(Math.min(129, Math.max(106, W * 0.168))), GAP = 16;
+  let sl = 0, sb = 0;
+  try { const r = document.querySelector('.zg-ring'); if (r) { const cs = getComputedStyle(r); sl = parseFloat(cs.paddingLeft) || 0; sb = parseFloat(cs.paddingBottom) || 0; } } catch (_) { }
+  const margin = W < 600 ? 16 : 24, pad = H > W ? 110 : 24, x0 = Math.max(margin, sl + margin), y1 = H - (sb + pad), y0 = y1 - size;
+  const total = n * size + (n - 1) * GAP, x1 = x0 + Math.min(total, W - 2 * x0), circles = [];
+  for (let x = x0 + size / 2; x <= x1 - size / 2 + 0.5; x += size / 2) circles.push([x, (y0 + y1) / 2, size / 2]);
+  return { x0, y0, x1, y1, size, circles };
+}
 /* amp6 placement: on the floor the guitar's shadow falls on, just beyond the headstock end (the neck points at it),
    turned to face the home camera. Searched against the real home cameras (desktop 1280x800, phone 393x852 portrait,
    and this window): fully on screen above the bottom buttons, clear of the ZUNIGA title rest pose and the guitar,
@@ -3074,15 +3087,8 @@ function amp6PlaceV1(THREE, box, qs) {   // amp6 place v2: v1 kept for reference
     cam.lookAt(cx, bc.y, cz); cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
     v.cam = cam;
     v.px = (x, y, z) => { tmp.set(x, y, z).project(cam); return [(tmp.x + 1) / 2 * v.w, (1 - tmp.y) / 2 * v.h, tmp.z > -1 && tmp.z < 1]; };
-    // widget ring (harness.js layout())
-    const size = Math.round(Math.min(129, Math.max(106, v.w * 0.168)));
-    let Rx = Math.max(0, Math.min(v.w * 0.38, 420, v.w / 2 - size / 2 - 6)), Ry = Math.min(v.h * 0.14, 120), cy = v.h * 0.46;
-    if (v.touch) {
-      const top = 96, bottom = 190; Ry = Math.max(0, Math.min(Ry, (v.h - top - bottom - size) / 2));
-      const lo = top + size / 2 + Ry, hi = v.h - bottom - size / 2 - Ry;
-      cy = hi >= lo ? Math.min(hi, Math.max(lo, cy)) : (top + v.h - bottom) / 2;
-    }
-    v.ring = { cx: v.w / 2, cy, ox: Rx + size / 2, oy: Ry + size / 2, ix: Math.max(1, Rx - size / 2), iy: Math.max(1, Ry - size / 2), inner: Rx - size / 2 > 0 && Ry - size / 2 > 0 };
+    // amp11 (Blake t206u) 11a: widget row (this V1 scorer is not called); an ellipse that circumscribes the row rect keeps the old maths valid
+    { const rw = amp11WidgetRow(v.w, v.h); v.ring = { cx: (rw.x0 + rw.x1) / 2, cy: (rw.y0 + rw.y1) / 2, ox: (rw.x1 - rw.x0) * 0.75, oy: (rw.y1 - rw.y0) * 0.75, ix: 1, iy: 1, inner: false }; }
     // ZUNIGA rest pose (zuniga3d restOf)
     const cp = cam.position, d = new V(bc.x - cp.x, 0, bc.z - cp.z); if (d.lengthSq() < 1e-8) d.set(0, 0, -1); d.normalize();
     const D = Math.max(L * 0.5, cp.distanceTo(bc)), sc = Math.min(1.2, Math.max(0.55, D / (L * 2.3)));
@@ -3201,19 +3207,8 @@ function amp6PlaceV2(THREE, box, qs, why, opt) {   // amp6 place v3: opt = { pin
   if (!title || !title.every(Number.isFinite)) { title = [W * 0.22, 0, W * 0.78, H * 0.24]; titleSrc = 'conservative'; }
   const tgap = Math.max(18, Math.round(Math.min(W, H) * 0.035));
   const tz = [title[0] - tgap, title[1] - tgap, title[2] + tgap, title[3] + tgap];
-  // widget-ring path (harness.js layout() + render()): tile centre + half size, 48 samples round the ellipse
-  const size = Math.round(Math.min(129, Math.max(106, W * 0.168)));
-  let Rx = Math.max(0, Math.min(W * 0.38, 420, W / 2 - size / 2 - 6)), Ry = Math.min(H * 0.14, 120), rcy = H * 0.46;
-  if (touch) {
-    const top = 96, bottom = 190; Ry = Math.max(0, Math.min(Ry, (H - top - bottom - size) / 2));
-    const lo = top + size / 2 + Ry, hi = H - bottom - size / 2 - Ry;
-    rcy = hi >= lo ? Math.min(hi, Math.max(lo, rcy)) : (top + H - bottom) / 2;
-  }
-  const ring = [];
-  for (let i = 0; i < 48; i++) {
-    const a = i / 48 * Math.PI * 2, sn = Math.sin(a);
-    ring.push([W / 2 + Rx * Math.cos(a), rcy + Ry * sn, size / 2 * (0.72 + 0.28 * (sn + 1) / 2)]);
-  }
+  // amp11 (Blake t206u) 11a: widget row (harness.js layout()), circles along the row (was 48 samples round the ellipse)
+  const ring = amp11WidgetRow(W, H).circles;
   // guitar silhouette samples (walkable outline), at most ~160
   const gp = [], stride = Math.max(1, Math.ceil(pts.length / 160));
   for (let i = 0; i < pts.length; i += stride) { const w = G.localToWorld(new V(pts[i][0], 0.4, pts[i][1])); gp.push(px(w.x, w.y, w.z)); }
@@ -3418,16 +3413,8 @@ function* amp7PlaceGen(THREE, box, qs, why, opt) {
   if (!title || !title.every(Number.isFinite)) { title = [W * 0.22, 0, W * 0.78, H * 0.24]; titleSrc = 'conservative'; }
   const tgap = Math.max(18, Math.round(Math.min(W, H) * 0.035));
   const tz = [title[0] - tgap, title[1] - tgap, title[2] + tgap, title[3] + tgap];
-  // widget ring path (harness.js layout)
-  const size = Math.round(Math.min(129, Math.max(106, W * 0.168)));
-  let Rx = Math.max(0, Math.min(W * 0.38, 420, W / 2 - size / 2 - 6)), Ry = Math.min(H * 0.14, 120), rcy = H * 0.46;
-  if (touch) {
-    const top = 96, bottom = 190; Ry = Math.max(0, Math.min(Ry, (H - top - bottom - size) / 2));
-    const lo = top + size / 2 + Ry, hi = H - bottom - size / 2 - Ry;
-    rcy = hi >= lo ? Math.min(hi, Math.max(lo, rcy)) : (top + H - bottom) / 2;
-  }
-  const ring = [];
-  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, sn = Math.sin(a); ring.push([W / 2 + Rx * Math.cos(a), rcy + Ry * sn, size / 2 * (0.72 + 0.28 * (sn + 1) / 2)]); }
+  // amp11 (Blake t206u) 11a: widget row (harness.js layout()), circles along the row (was 48 samples round the ellipse)
+  const ring = amp11WidgetRow(W, H).circles;
   // guitar: floor footprint (world xz) and on-screen silhouette (projected mesh bounds, sampled)
   const gw = []; { const st = Math.max(1, Math.ceil(pts.length / 200)); for (let i = 0; i < pts.length; i += st) { const w = G.localToWorld(new V(pts[i][0], 0, pts[i][1])); gw.push([w.x, w.z]); } }
   const gp = [];
@@ -4279,7 +4266,7 @@ const PLACE1 = { stop: false };   // amp10 (Blake t196u) 10h3
 async function bootAmp() {   // amp8 (Blake t174u): staged boot, see the amp8 block above
   amp7Mark('boot');
   const qs = new URLSearchParams(location.search);
-  const assetBase = new URL('./amp10/assets/', import.meta.url).href;
+  const assetBase = new URL('./amp13/assets/', import.meta.url).href;
   let place, THREE = null, box = null, homeK = 1, am = null, homeO = [0, 0];   // amp9 (Blake t188u): + orbit-centre offset
   // 1. wait for the guitar (its textures are loaded before window.__dbg exists, so the amp never competes with them)
   while (!(window.__dbg && window.__dbg.scene)) await amp8AfterFrame();
@@ -4289,12 +4276,12 @@ async function bootAmp() {   // amp8 (Blake t174u): staged boot, see the amp8 bl
   let texP = null, hookP = null;
   try {
     THREE = await import('three');
-    am = await import('./amp10/amp.js');
+    am = await import('./amp13/amp.js');
     if (qs.get('ampFail') !== '1' && typeof am.prefetchAmpTextures === 'function') texP = am.prefetchAmpTextures(assetBase);
     AMP8.prefetchT = amp8Now();
     if (texP) texP.then(() => { AMP8.texturesT = amp8Now(); }, () => { });
-    hookP = import('./amp10/amp-hook.js');
-    try { const l = document.createElement('link'); l.rel = 'modulepreload'; l.href = new URL('./amp10/amp-walk.js', import.meta.url).href; document.head.appendChild(l); } catch (_) { }   // network only
+    hookP = import('./amp13/amp-hook.js');
+    try { const l = document.createElement('link'); l.rel = 'modulepreload'; l.href = new URL('./amp13/amp-walk.js', import.meta.url).href; document.head.appendChild(l); } catch (_) { }   // network only
     if (typeof am.ampWalkBox === 'function') box = am.ampWalkBox();
     // amp9 (Blake t188u) 9g2: test/debug hook (placement probe): the rule object and a synchronous re-run of the search
     // (report only: it rewrites __ampPlace / __amp9Home but never moves the amp)
@@ -4319,7 +4306,7 @@ async function bootAmp() {   // amp8 (Blake t174u): staged boot, see the amp8 bl
   const slots = () => { for (const l of (window.__amp7Slots || [])) { try { l.removeFromParent(); if (l.target) l.target.removeFromParent(); } catch (_) { } } window.__amp7Slots = []; };
   const lights = [];
   try {
-    const m = await (hookP || import('./amp10/amp-hook.js'));
+    const m = await (hookP || import('./amp13/amp-hook.js'));
     // 3a. build + add (hidden on layer 1, lights dark) right after a frame. amp9 (Blake t188u) 9g: no longer held for
     // the hold / reveal end (the build is ~45 ms of CPU; it is placed at the default spot and moved once the search is done)
     await amp8AfterFrame(); AMP8.safe.push('build@' + amp8Phase());

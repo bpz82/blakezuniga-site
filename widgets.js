@@ -210,9 +210,48 @@ function collaborativeProjectsWidget() {
   };
 }
 
+// amp12 (Blake t208u): Photos widget. The photo UI lives in photos.js, imported lazily on first open (no photo request and no
+// photos.js fetch before the tile is tapped). Contract: mountPhotos(el, { manifestUrl }) -> { unmount() }. Handled failures
+// (module or manifest cannot load) are shown inside the panel and logged with console.warn, never thrown.
+function photosWidget() {
+  let handle = null;
+  let gone = false;
+  return {
+    id: 'photos',
+    title: 'Photos',
+    icon: '▣',
+    iconSrc: 'assets/photos-icon.svg',
+    panel: 'wide',
+    async mount(el, api) {
+      gone = false;
+      handle = null;
+      try {
+        const mod = await import('./photos.js');
+        if (gone) return;
+        handle = mod.mountPhotos(el, { manifestUrl: new URL('photos/photos.json', import.meta.url).href, onBack: () => api.close() });
+      } catch (err) {
+        console.warn('[photos] could not load the photos module', err);
+        if (gone) return;
+        const p = document.createElement('p');
+        p.setAttribute('role', 'status');
+        p.textContent = 'Photos are not available right now. Please try again later.';
+        el.append(p);
+      }
+    },
+    unmount() {
+      gone = true;
+      if (handle && typeof handle.unmount === 'function') {
+        try { handle.unmount(); } catch (err) { console.warn('[photos] unmount failed', err); }
+      }
+      handle = null;
+    },
+  };
+}
+
 export const widgets = [
   contactWidget(),
   collaborativeProjectsWidget(),
+  photosWidget(),   // amp12 (Blake t208u)
 ];
 
 // TEST-ONLY: deliberately broken widget, registered only with ?selftest=1.

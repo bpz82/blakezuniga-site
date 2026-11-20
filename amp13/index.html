@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Zingaro — Amp Preview</title>
+  <link rel="preload" href="assets/fonts/ZunigaMission-Regular-v3.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="amp-chrome.css">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+  <style>
+    html,body{margin:0;height:100%;background:#000;overflow:hidden;touch-action:none}
+    canvas{display:block;width:100%;height:100%}
+  </style>
+</head>
+<body data-mode="show">
+  <button id="zg-explore-amp" type="button">Explore the Amp</button>
+  <button id="zg-home-amp" type="button" aria-label="Back to home">Home</button>
+  <script type="module" src="amp-chrome.js"></script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { mountAmp, ampTick, fitAmpCamera } from './amp.js';
+
+    const AMP_SCALE = 3;
+    const AMP_POS = { x: 0, y: 0, z: 0 };
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    // amp6: brighter, like the guitar scene (Blake: "It's dark").
+    renderer.toneMappingExposure = 1.22;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    // amp6: the old Fog(0x000000, 80, 220) blacked out the amp on the phone home
+    // view (portrait camera ~200+ units away). Fog now starts well beyond the
+    // home camera distance and only eats the far floor edge.
+    scene.fog = new THREE.Fog(0x000000, 400, 900);
+
+    const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.2, 2000);
+
+    // Home view: slightly above and off the front-left of the amp, at a
+    // distance that fits the whole amp for the CURRENT aspect. Portrait
+    // phones are limited by width (more margin), desktops by height.
+    const homePos = new THREE.Vector3(54, 54, 108);
+    const homeLook = new THREE.Vector3(0, 30, 0);
+    function updateFog() {
+      const d = homePos.distanceTo(homeLook);
+      scene.fog.near = d + 140;
+      scene.fog.far = d + 560;
+    }
+    function frameHome() {
+      const portrait = camera.aspect < 1;
+      const fit = fitAmpCamera(camera, {
+        scale: AMP_SCALE,
+        position: AMP_POS,
+        lookY: 10,
+        dir: portrait ? [0.36, 0.2, 0.91] : [0.44, 0.2, 0.88],
+        margin: portrait ? 0.09 : 0.16
+      });
+      homePos.copy(fit.position);
+      homeLook.copy(fit.look);
+      updateFog();
+    }
+    function goHome() {
+      camera.up.set(0, 1, 0);
+      camera.position.copy(homePos);
+      camera.lookAt(homeLook);
+    }
+    frameHome();
+    goHome();
+
+    // Black studio like the guitar scene: env map so PBR isn't black,
+    // warm key, cool rim, soft warm fill, dark floor.
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.62;
+    pmrem.dispose();
+    const hemi = new THREE.HemisphereLight(0xdde6ff, 0x2a1c12, 0.9);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffe9d2, 3.1);
+    key.position.set(40, 80, 50);
+    key.castShadow = true;
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.camera.near = 2; key.shadow.camera.far = 200;
+    key.shadow.camera.left = key.shadow.camera.bottom = -50;
+    key.shadow.camera.right = key.shadow.camera.top = 50;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xbcd4ff, 1.8);
+    rim.position.set(-40, 50, -30);
+    scene.add(rim);
+    const fill = new THREE.DirectionalLight(0xffe6cc, 0.8);
+    fill.position.set(-20, 20, 40);
+    scene.add(fill);
+
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(90, 48),
+      new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 1, metalness: 0 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    window.__dbg = {
+      ready: false, renderer, scene, camera,
+      show() {
+        document.body.dataset.mode = 'show';
+        camera.fov = 42; camera.near = 0.2; camera.far = 2000; camera.zoom = 1;
+        camera.updateProjectionMatrix();
+        frameHome();
+        goHome();
+        if (window.__ampHandle) window.__ampHandle.exploring = false;
+        document.body.classList.remove('zg-amp');
+        document.dispatchEvent(new CustomEvent('zg:mode', { detail: 'show' }));
+      },
+      cam(x,y,z,lx,ly,lz,fov){ camera.position.set(x,y,z); camera.lookAt(lx,ly,lz); if(fov){camera.fov=fov;camera.updateProjectionMatrix();} }
+    };
+
+    const qs = new URLSearchParams(location.search);
+    const handle = await mountAmp(scene, camera, renderer, {
+      scale: AMP_SCALE,
+      position: AMP_POS,
+      forceFail: qs.get('ampFail') === '1',
+      onError(e) { console.warn('[amp]', e); }
+    });
+
+    // Walk driver, wired the same way amp-hook does. If it fails, the orbit stays.
+    try {
+      const hook = await import('./amp-hook.js');
+      await hook.attachAmpWalk(handle, camera, renderer);
+    } catch (e) {
+      console.warn('[amp] walk unavailable, orbit kept:', e);
+    }
+
+    window.__ampHandle = handle;
+    window.__amp = { handle, ready: true };
+    window.__dbg.ready = true;
+    document.body.classList.add('zg-ready');
+
+    if (!handle.exploring) { frameHome(); goHome(); }
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      // Explore/walk mode refits itself inside the amp; home refits here.
+      frameHome();
+      if (!handle.exploring) goHome();
+    });
+
+    const clock = new THREE.Clock();
+    (function loop() {
+      requestAnimationFrame(loop);
+      const dt = Math.min(0.05, clock.getDelta());
+      try { ampTick(handle, dt, camera); } catch (e) { console.warn('[amp] tick', e); }
+      renderer.render(scene, camera);
+    })();
+  </script>
+</body>
+</html>

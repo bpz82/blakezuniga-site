@@ -1,8 +1,9 @@
 /**
- * Widget harness: floating app-tiles on a ring over the 3D scene.
- * After the ZUNIGA reveal, the ring plays two intro loops, then glides one
- * square forward every 6s. A horizontal swipe on a tile or the ring track
- * spins it anytime; momentum eases out and one tile snaps to the front.
+ * Widget harness: app-tiles laid out in ONE straight row over the 3D scene.
+ * amp11 (Blake t206u) 11a: the ring / ellipse carousel (orbit, depth scaling, intro loops, 6 s step, swipe
+ * inertia) is gone. The tiles sit in a clean horizontal row at the bottom-left of the home view; the only motion
+ * is a gentle linear slide-in (CSS, on the row) and, when more tiles exist than fit across, a linear drag-scroll
+ * along the row. Each tile has a CSS-only periodic glimmer (harness.css .zg-tile::after, animation zg-glimmer).
  *
  * MODULE CONTRACT
  * ---------------
@@ -19,7 +20,7 @@
  *   mount    required function(el, api). `el` is the widget's own container element
  *            (inside a shadow root). `api` is { close() } and nothing else.
  *            May return a Promise; a throw or a rejection shows only this widget's
- *            error message and never affects the scene, the ring or other widgets.
+ *            error message and never affects the scene, the row or other widgets.
  *   unmount  optional function(), called when the panel closes.
  *
  * register() returns true if the widget was accepted. Otherwise it logs a
@@ -28,72 +29,55 @@
  *
  * MODE
  * ----
- * The ring is the HOME layer. It follows the scene's mode (body.dataset.mode and the
- * document-level 'zg:mode' event, detail 'show' | 'walk'): hidden and idle while
- * walking, visible in 'show'. If the scene does not announce a mode, the ring is
- * always shown.
+ * The row is the HOME layer. It follows the scene's mode (body.dataset.mode and the
+ * document-level 'zg:mode' event, detail 'show' | 'walk' | 'amp'): hidden while
+ * walking or on the amp, visible in 'show'. If the scene does not announce a mode,
+ * the row is always shown. amp11: mode changes are read once per task (microtask), so the
+ * transient 'show' that Explore Amp announces for an instant (walk -> show -> amp, same task)
+ * never un-hides the row.
  *
- * data-state: idle (at rest) | intro (opening loops) | stepping (6s glide) |
- * dragging | coasting (inertia/snap) | paused (panel open or tab hidden) |
- * reduced | hidden (walk mode).
+ * data-state: idle (at rest) | intro (slide-in) | dragging | paused (panel open or tab hidden) |
+ * reduced | hidden (walk / amp mode).
+ * The .zg-ring container class (the row's container, name kept) carries zg-on (shown), zg-away (walking), zg-ret.
  */
 import { ACTIVE, RETIRED } from './widget-ids.js';
 import { widgets, brokenWidget } from './widgets.js';
 
-const TAU = Math.PI * 2;
 const ID_RE = /^[a-z][a-z0-9-]{1,31}$/;
 const MAX_TITLE = 32;
-const ATTR_MS = 250; // data-angle update interval
 const LOAD_POLL_MS = 250;
 const LOAD_MAX_MS = 60000;
 const TAP_PX = 10; // movement below this is a tap, not a swipe
-const VEL_WINDOW_MS = 80;
-const FRICTION = 5; // s^-1; used to project where a flick would stop
-const MAX_VEL = 14; // rad/s cap
-const TRACK_PAD = 28; // extra stroke width beyond the tile size, in px
-const INTRO_LOOPS = 2;
-const INTRO_MS = 4000; // two full turns, ease-in-out
-const STEP_EVERY_MS = 6000;
-const STEP_MS = 800; // one-square glide
+const INTRO_MS = 900; // slide-in window reported as data-state="intro"
 const REVEAL_FALLBACK_MS = 8000;
+const GAP = 16; // px between tiles in the row
 
 const entries = new Map(); // id -> entry
 const order = []; // entries that have a tile, in registration order
-const pressed = new Set(); // pointer ids currently down on a tile or the track
 const hovered = new Set(); // tiles hovered by a mouse
 
 let root = null;
-let ring = null;
-let trackSvg = null;
-let track = null; // ellipse: swipeable ring path, stroke only (center stays clear)
-let angle = Math.PI / 2; // first tile starts at the front
-let raf = 0;
-let lastAttr = 0;
+let ring = null; // the row container (class kept: zg-ring)
 let reduced = false;
-let walking = false; // scene is in walk mode: ring hidden, loop stopped
+let walking = false; // scene is in walk / amp mode: row hidden
 let current = null; // open panel session
 let seq = 0;
-let drag = null; // active swipe: { id, x, y, angle, moved, maxDist, samples }
-let coast = null; // motion: { kind, from, delta, t0, dur, ease }
+let drag = null; // active scroll drag: { id, x, scroll, moved }
 let revealPhase = ''; // in | hold | down | done, from zg:reveal
 let ringShown = false;
-let stepTimer = 0;
-let stepRemain = STEP_EVERY_MS;
-let stepArmedAt = 0;
-let introPlayed = false;
+let introTimer = 0;
+let introOn = false;
+let modeQueued = false;
 
-// cached viewport geometry (updated on resize only)
+// cached geometry (updated on layout only)
 let vw = 1280;
 let vh = 800;
 let size = 129;
-let cx = 640;
-let cy = 368;
-let Rx = 420;
-let Ry = 112;
+let rowX = 24; // left edge of the first tile
+let rowY = 647; // top of the row
+let scroll = 0; // px the row is scrolled left (only when the tiles overflow)
+let maxScroll = 0;
 
-/* ------------------------------------------------------------------ */
-/* registration                                                        */
-/* ------------------------------------------------------------------ */
 
 function reject(msg) {
   console.warn('[zg] register rejected: ' + msg);
@@ -125,7 +109,8 @@ function snapshot(def) {
   if (unmount !== undefined && unmount !== null && typeof unmount !== 'function') {
     return reject('unmount must be a function for "' + id + '"');
   }
-  return { id, title, icon: icon || '', iconSrc, mount, unmount: unmount || null };
+  // amp12 (Blake t208u): optional panel:'wide' (large panel, used by Photos); anything else = the normal panel
+  return { id, title, icon: icon || '', iconSrc, mount, unmount: unmount || null, wide: def.panel === 'wide' };
 }
 
 const ICON_SRC_RE = /^(\.\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\.(png|webp|jpe?g|gif|svg)$/i;
@@ -201,7 +186,6 @@ function buildErrorTile(entry) {
 function addTile(entry) {
   if (entry.built) return;
   entry.built = true;
-  entry.z = -1;
   try {
     entry.el = buildTile(entry);
   } catch (err) {
@@ -215,7 +199,7 @@ function addTile(entry) {
     }
   }
   const el = entry.el;
-  bindRingPointer(el, () => openPanel(entry, el), pressed);
+  bindRowPointer(el, () => openPanel(entry, el));   // amp11 (Blake t206u) 11a
   el.addEventListener('pointerenter', (e) => {
     if (e.pointerType === 'mouse') {
       hovered.add(el);
@@ -225,6 +209,7 @@ function addTile(entry) {
   el.addEventListener('pointerleave', () => {
     if (hovered.delete(el)) sync();
   });
+  el.style.setProperty('--zg-i', String(order.length));   // amp11 (Blake t206u) 11a: stagger index for the glimmer delay
   ring.appendChild(el);
   order.push(entry);
   render();
@@ -242,195 +227,8 @@ function markTileError(entry) {
 }
 
 /* ------------------------------------------------------------------ */
-/* tap + swipe (pointer events; iOS does not deliver click here)       */
+/* tap + linear scroll (pointer events; iOS does not deliver click here) */
 /* ------------------------------------------------------------------ */
-
-function dxToAngle(dx) {
-  // A horizontal swipe of Rx (center to the side of the ring) is a quarter turn.
-  const r = Math.max(Rx, 80);
-  return -(dx / r) * (Math.PI / 2);
-}
-
-function wrapAngle(a) {
-  return ((a % TAU) + TAU) % TAU;
-}
-
-function shortest(from, to) {
-  let d = wrapAngle(to) - wrapAngle(from);
-  if (d > Math.PI) d -= TAU;
-  if (d < -Math.PI) d += TAU;
-  return d;
-}
-
-function snapTarget(a, vel) {
-  const n = Math.max(order.length, 1);
-  const step = TAU / n;
-  const projected = a + (vel || 0) / FRICTION;
-  let best = Math.PI / 2;
-  let bestAbs = Infinity;
-  for (let i = 0; i < n; i++) {
-    const s = wrapAngle(Math.PI / 2 - i * step);
-    const ad = Math.abs(shortest(projected, s));
-    if (ad < bestAbs) {
-      bestAbs = ad;
-      best = s;
-    }
-  }
-  return { snap: best, delta: shortest(a, best) };
-}
-
-function velocityOf(samples) {
-  if (!samples || samples.length < 2) return 0;
-  const a = samples[0];
-  const b = samples[samples.length - 1];
-  const dt = (b.t - a.t) / 1000;
-  if (dt < 0.008) return 0;
-  let v = (b.angle - a.angle) / dt;
-  if (v > MAX_VEL) v = MAX_VEL;
-  if (v < -MAX_VEL) v = -MAX_VEL;
-  return v;
-}
-
-function cancelCoast() {
-  coast = null;
-  if (raf) {
-    cancelAnimationFrame(raf);
-    raf = 0;
-  }
-}
-
-function settleNow() {
-  if (coast) {
-    angle = wrapAngle(coast.from + coast.delta);
-    coast = null;
-  }
-  if (raf) {
-    cancelAnimationFrame(raf);
-    raf = 0;
-  }
-  render();
-  writeAngle();
-}
-
-function startSnap(now, vel) {
-  const useVel = reduced ? 0 : vel || 0;
-  const { snap, delta } = snapTarget(angle, useVel);
-  if (reduced || Math.abs(delta) < 0.001) {
-    angle = snap;
-    coast = null;
-    if (raf) {
-      cancelAnimationFrame(raf);
-      raf = 0;
-    }
-    render();
-    writeAngle();
-    sync();
-    armStep(STEP_EVERY_MS);
-    return;
-  }
-  const dur = Math.min(700, Math.max(280, Math.abs(delta) * 420 + Math.abs(useVel) * 40));
-  coast = { kind: 'snap', from: angle, delta: delta, t0: now, dur: dur, ease: 'out' };
-  if (!raf) raf = requestAnimationFrame(frame);
-  sync();
-}
-
-function easeOutCubic(u) {
-  return 1 - Math.pow(1 - u, 3);
-}
-function easeInOutCubic(u) {
-  return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
-}
-
-function canArmStep() {
-  return !walking && !current && !document.hidden && !drag && !coast && revealPhase === 'done' && order.length > 1;
-}
-
-function clearStepTimer() {
-  if (stepTimer) {
-    clearTimeout(stepTimer);
-    stepTimer = 0;
-  }
-}
-
-function pauseStepTimer() {
-  if (stepTimer) {
-    stepRemain = Math.max(0, stepRemain - (performance.now() - stepArmedAt));
-    clearStepTimer();
-  }
-}
-
-function resumeStepTimer() {
-  if (stepTimer || !canArmStep()) return;
-  armStep(stepRemain > 0 ? stepRemain : STEP_EVERY_MS);
-}
-
-function armStep(ms) {
-  clearStepTimer();
-  stepRemain = typeof ms === 'number' ? ms : STEP_EVERY_MS;
-  if (!canArmStep()) return;
-  stepArmedAt = performance.now();
-  stepTimer = setTimeout(doStep, stepRemain);
-}
-
-function doStep() {
-  stepTimer = 0;
-  if (!canArmStep()) return;
-  const n = Math.max(order.length, 1);
-  const delta = -TAU / n;
-  const now = performance.now();
-  if (reduced) {
-    angle = wrapAngle(angle + delta);
-    render();
-    writeAngle();
-    armStep(STEP_EVERY_MS);
-    sync();
-    return;
-  }
-  coast = { kind: 'step', from: angle, delta: delta, t0: now, dur: STEP_MS, ease: 'in-out' };
-  if (!raf) raf = requestAnimationFrame(frame);
-  sync();
-}
-
-function startRingIntro() {
-  if (introPlayed || walking || current || revealPhase !== 'done') return;
-  introPlayed = true;
-  if (reduced || order.length < 1) {
-    armStep(STEP_EVERY_MS);
-    return;
-  }
-  cancelCoast();
-  const now = performance.now();
-  coast = { kind: 'intro', from: angle, delta: -INTRO_LOOPS * TAU, t0: now, dur: INTRO_MS, ease: 'in-out' };
-  if (!raf) raf = requestAnimationFrame(frame);
-  sync();
-}
-
-function onMotionEnd(kind) {
-  if (kind === 'intro' || kind === 'step' || kind === 'snap') armStep(STEP_EVERY_MS);
-}
-
-function maybeShowRing() {
-  if (ringShown || !ring) return;
-  if (revealPhase === 'down' || revealPhase === 'widgets' || revealPhase === 'done') {
-    ring.classList.add('zg-on');
-    ringShown = true;
-  }
-}
-
-function onReveal(e) {
-  const d = (e && e.detail) || {};
-  const phase = d.phase || '';
-  if (phase) revealPhase = phase === 'widgets' ? 'down' : phase;
-  maybeShowRing();
-  if (revealPhase === 'done') {
-    if (d.skipped) {
-      introPlayed = true; // skip the loops; go to the rest state
-      armStep(STEP_EVERY_MS);
-    } else {
-      startRingIntro();
-    }
-  }
-}
 
 function onTap(el, fn, pressSet) {
   let start = null;
@@ -485,7 +283,9 @@ function onTap(el, fn, pressSet) {
   });
 }
 
-function bindRingPointer(el, fn, pressSet) {
+// amp11 (Blake t206u) 11a: a tile press is a tap unless it moves >= TAP_PX; a move scrolls the row linearly, and only
+// when the tiles overflow the row (maxScroll > 0). No inertia, no snapping, no angle.
+function bindRowPointer(el, fn) {
   let lastTap = -1e9;
 
   el.addEventListener('pointerdown', (e) => {
@@ -493,18 +293,7 @@ function bindRingPointer(el, fn, pressSet) {
     if (e.button > 0) return;
     if (current || walking) return;
     if (drag && drag.id !== e.pointerId) return;
-    if (coast && (coast.kind === 'intro' || coast.kind === 'step')) introPlayed = true;
-    cancelCoast();
-    drag = {
-      id: e.pointerId,
-      x: e.clientX,
-      y: e.clientY,
-      angle: angle,
-      moved: false,
-      maxDist: 0,
-      samples: [{ t: performance.now(), angle: angle }],
-    };
-    if (pressSet) pressSet.add(e.pointerId);
+    drag = { id: e.pointerId, x: e.clientX, scroll: scroll, moved: false, maxDist: 0, y: e.clientY };
     try {
       el.setPointerCapture(e.pointerId);
     } catch (_) {
@@ -518,59 +307,31 @@ function bindRingPointer(el, fn, pressSet) {
     const s = drag;
     if (!s || s.id !== e.pointerId) return;
     const dx = e.clientX - s.x;
-    const dy = e.clientY - s.y;
-    const dist = Math.hypot(dx, dy);
+    const dist = Math.hypot(dx, e.clientY - s.y);
     if (dist > s.maxDist) s.maxDist = dist;
-    // WEBSITE (integration, Nov 15): no 600 ms limit. On a busy main thread (the WebGL frame) the pointerup handler
-    // ran 1.7 s after pointerdown in the phone test, so the tap was dropped. The movement check alone defines a tap.
-    if (!s.moved && dist >= TAP_PX) s.moved = true;
+    if (!s.moved && dist >= TAP_PX && maxScroll > 0) s.moved = true;
     if (!s.moved) return;
-    angle = s.angle + dxToAngle(dx);
-    const now = performance.now();
-    s.samples.push({ t: now, angle: angle });
-    while (s.samples.length > 1 && now - s.samples[0].t > VEL_WINDOW_MS) s.samples.shift();
+    scroll = Math.max(0, Math.min(maxScroll, s.scroll - dx));
     render();
-    if (now - lastAttr >= ATTR_MS) writeAngle();
     if (ring && !ring.classList.contains('zg-dragging')) ring.classList.add('zg-dragging');
     sync();
   });
 
   const finish = (e, allow) => {
     e.stopPropagation();
-    if (pressSet && pressSet.delete(e.pointerId)) {
-      /* press state updates in sync() */
-    }
     const s = drag;
     if (!s || s.id !== e.pointerId) return;
     drag = null;
     if (ring) ring.classList.remove('zg-dragging');
-    const now = performance.now();
     const isTap = allow && !s.moved && s.maxDist < TAP_PX;
-    if (isTap) {
-      const { snap } = snapTarget(angle, 0);
-      angle = snap;
-      render();
-      writeAngle();
-      sync();
-      if (fn) {
-        lastTap = now;
-        fn();
-      }
-      return;
-    }
-    if (s.moved) {
-      startSnap(now, reduced ? 0 : velocityOf(s.samples));
-      return;
-    }
     sync();
+    if (isTap && fn) {
+      lastTap = performance.now();
+      fn();
+    }
   };
   el.addEventListener('pointerup', (e) => finish(e, true));
   el.addEventListener('pointercancel', (e) => finish(e, false));
-  el.addEventListener('lostpointercapture', (e) => {
-    if (pressSet && pressSet.delete(e.pointerId)) sync();
-  });
-
-  if (!fn) return;
 
   // Keyboard activation (Enter/Space) arrives as click with detail 0.
   // Pointer-originated clicks (detail > 0) are already handled by the tap path.
@@ -579,6 +340,18 @@ function bindRingPointer(el, fn, pressSet) {
     if (e.detail !== 0) return;
     if (performance.now() - lastTap < 800) return;
     fn();
+  });
+
+  // keyboard focus on a tile scrolled out of view: scroll the row so it is visible (and undo the browser's own scroll)
+  el.addEventListener('focus', () => {
+    if (ring) { ring.scrollLeft = 0; ring.scrollTop = 0; }
+    const i = order.findIndex((q) => q.el === el);
+    if (i < 0 || maxScroll <= 0) return;
+    const x = i * (size + GAP) - scroll;
+    const room = vw - rowX * 2;
+    if (x < 0) scroll = Math.max(0, i * (size + GAP));
+    else if (x + size > room) scroll = Math.min(maxScroll, i * (size + GAP) + size - room);
+    render();
   });
 }
 
@@ -609,7 +382,7 @@ function openPanel(entry, returnFocus) {
   onTap(scrim, () => closePanel(session));
 
   const panel = document.createElement('div');
-  panel.className = 'zg-panel';
+  panel.className = def.wide ? 'zg-panel zg-panel--wide' : 'zg-panel';   // amp12 (Blake t208u)
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-labelledby', 'zg-title-' + uid);
@@ -740,97 +513,64 @@ function closePanel(session) {
 }
 
 /* ------------------------------------------------------------------ */
-/* ring layout + inertia                                               */
+/* row layout                                                          */
 /* ------------------------------------------------------------------ */
 
+// amp11 (Blake t206u) 11a: one straight row, tile i at x = rowX + i * (size + GAP) - scroll, every tile at the same top y.
 function render() {
   const n = order.length;
   if (!n) return;
-  const step = TAU / n;
   for (let i = 0; i < n; i++) {
     const e = order[i];
-    const a = angle + i * step;
-    const s = Math.sin(a);
-    const d = (s + 1) / 2; // 0 = back, 1 = front
-    const x = cx + Rx * Math.cos(a);
-    const y = cy + Ry * s;
-    const sc = 0.72 + 0.28 * d;
-    const st = e.el.style;
-    // amp10 (Blake t196u) 10d: only write styles whose value changed (an unchanged write is cheap, but a changed --zg-fade restyles the
-    // backdrop-filter tile; it moves slowly, so quantise to 2 decimals and skip equal values; the look is unchanged at 0.01 alpha steps)
-    const tf = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + sc.toFixed(3) + ')';
-    if (tf !== e.tf) { e.tf = tf; st.transform = tf; }
-    // amp9 (Blake t188u) 9f: the depth fade scales only the tile's fill alpha (harness.css multiplies --zg-fade into the
-    // background-color alpha); the label / icon stay at opacity 1. Was st.opacity = 0.85 + 0.15 * d.
-    const fd = (0.85 + 0.15 * d).toFixed(2);
-    if (fd !== e.fd) { e.fd = fd; st.setProperty('--zg-fade', fd); }
-    const z = Math.round(d * 20);
-    if (z !== e.z) {
-      e.z = z;
-      st.zIndex = String(z);
-    }
-  }
-}
-
-function writeAngle() {
-  lastAttr = performance.now();
-  if (root) root.setAttribute('data-angle', wrapAngle(angle).toFixed(3));
-}
-
-function frame(t) {
-  if (!coast) {
-    raf = 0;
-    return;
-  }
-  raf = requestAnimationFrame(frame);
-  const u = Math.min(1, (t - coast.t0) / Math.max(1, coast.dur));
-  const e = coast.ease === 'in-out' ? easeInOutCubic(u) : easeOutCubic(u);
-  angle = coast.from + coast.delta * e;
-  render();
-  if (t - lastAttr >= ATTR_MS || u >= 1) writeAngle();
-  if (u >= 1) {
-    const kind = coast.kind || 'snap';
-    angle = wrapAngle(coast.from + coast.delta);
-    coast = null;
-    raf = 0;
-    writeAngle();
-    sync();
-    onMotionEnd(kind);
+    const tf = 'translate3d(' + (rowX + i * (size + GAP) - scroll).toFixed(1) + 'px,' + rowY.toFixed(1) + 'px,0)';
+    if (tf !== e.tf) { e.tf = tf; e.el.style.transform = tf; }
   }
 }
 
 function motionState() {
   if (walking) return 'hidden';
   if (current || document.hidden) return 'paused';
-  if (reduced && !drag && !(coast && (coast.kind === 'intro' || coast.kind === 'step'))) return 'reduced';
   if (drag && drag.moved) return 'dragging';
-  if (coast && coast.kind === 'intro') return 'intro';
-  if (coast && coast.kind === 'step') return 'stepping';
-  if (coast) return 'coasting';
-  return 'idle';
+  if (introOn) return reduced ? 'reduced' : 'intro';
+  return reduced ? 'reduced' : 'idle';
 }
 
 function sync() {
   if (!root) return;
-  if (walking) {
-    // Hidden overrides everything: no loop, no angle updates.
-    if (root.dataset.state !== 'hidden') root.dataset.state = 'hidden';
-    if (drag) drag = null;
-    if (ring) ring.classList.remove('zg-dragging');
-    clearStepTimer();
-    settleNow();
-    return;
-  }
   const state = motionState();
   if (root.dataset.state !== state) root.dataset.state = state;
-  if (document.hidden && coast) settleNow();
-  if (current || document.hidden || drag || coast) pauseStepTimer();
-  else resumeStepTimer();
-  if (!drag && !coast && !raf) writeAngle();
+  if (walking && drag) {
+    drag = null;
+    if (ring) ring.classList.remove('zg-dragging');
+  }
+}
+
+function startIntro() {
+  // the slide-in itself is a CSS transform transition on the row container; this only reports it as data-state="intro"
+  if (introTimer) clearTimeout(introTimer);
+  introOn = !reduced;
+  introTimer = introOn ? setTimeout(() => { introTimer = 0; introOn = false; sync(); }, INTRO_MS) : 0;
+  sync();
+}
+
+function maybeShowRing() {
+  if (ringShown || !ring) return;
+  if (revealPhase === 'down' || revealPhase === 'widgets' || revealPhase === 'done') {
+    ring.classList.add('zg-on');
+    ringShown = true;
+    startIntro();
+  }
+}
+
+function onReveal(e) {
+  const d = (e && e.detail) || {};
+  const phase = d.phase || '';
+  if (phase) revealPhase = phase === 'widgets' ? 'down' : phase;
+  maybeShowRing();
 }
 
 /* ------------------------------------------------------------------ */
-/* scene mode (show = home, walk)                                      */
+/* scene mode (show = home, walk, amp)                                 */
 /* ------------------------------------------------------------------ */
 
 function cleanMode(v) {
@@ -838,7 +578,14 @@ function cleanMode(v) {
 }
 
 function currentSceneMode() {
-  return cleanMode(document.body && document.body.dataset ? document.body.dataset.mode : null);
+  const m = cleanMode(document.body && document.body.dataset ? document.body.dataset.mode : null);
+  // amp11 (Blake t206u) 11b: Explore Amp = page 'show' then (a frame later on a rendering device) 'amp'. While the amp is exploring
+  // and we are already away, a 'show' is the transient one: keep the row away, no zg-ret / fade-in.
+  if (m === 'show' && walking) {
+    const h = window.__ampHandle;
+    if (h && h.exploring) return 'amp';
+  }
+  return m;
 }
 
 function applyMode(m) {
@@ -851,9 +598,8 @@ function applyMode(m) {
   if (w) {
     if (current) closePanel(current); // unmount runs as usual
     hovered.clear();
-    pressed.clear();
     drag = null;
-    if (ring) ring.classList.remove('zg-dragging');
+    ring.classList.remove('zg-dragging');
     const ae = document.activeElement;
     if (ae && ring.contains(ae)) {
       try {
@@ -872,39 +618,42 @@ function applyMode(m) {
   sync();
 }
 
-function onSceneMode(e) {
-  // Prefer the event detail; fall back to the body attribute.
-  applyMode(cleanMode(e && e.detail) || currentSceneMode());
+// amp11 (Blake t206u) 11a: Explore Amp announces walk -> show -> amp inside ONE task (the page leaves walk with setMode('show'),
+// then the amp emits 'amp'). Reading the mode once per task (microtask, after the whole dispatch stack) means the transient
+// 'show' never reaches applyMode, so the row is never un-hidden (zg-away stays, no zg-ret fade-in) between the press and the amp.
+function onSceneMode() {
+  if (modeQueued) return;
+  modeQueued = true;
+  queueMicrotask(() => {
+    modeQueued = false;
+    applyMode(currentSceneMode());
+  });
 }
 
 function layout() {
   vw = window.innerWidth || 1;
   vh = window.innerHeight || 1;
-  const touch = window.matchMedia('(pointer: coarse)').matches;
-  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp (~1.4x the Nov 16 sizes)
+  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp
   root.style.setProperty('--zg-size', size + 'px');
-  Rx = Math.max(0, Math.min(vw * 0.38, 420, vw / 2 - size / 2 - 6));
-  Ry = Math.min(vh * 0.14, 120);
-  cx = vw / 2;
-  cy = vh * 0.46;
-  if (touch) {
-    const top = 96;
-    const bottom = 190;
-    Ry = Math.max(0, Math.min(Ry, (vh - top - bottom - size) / 2));
-    const lo = top + size / 2 + Ry;
-    const hi = vh - bottom - size / 2 - Ry;
-    cy = hi >= lo ? Math.min(hi, Math.max(lo, cy)) : (top + vh - bottom) / 2;
+  // safe-area insets come from the row container's own padding (harness.css: env(safe-area-inset-*))
+  let sl = 0;
+  let sb = 0;
+  try {
+    const cs = getComputedStyle(ring);
+    sl = parseFloat(cs.paddingLeft) || 0;
+    sb = parseFloat(cs.paddingBottom) || 0;
+  } catch (_) {
+    /* no insets */
   }
-  if (trackSvg && track) {
-    trackSvg.setAttribute('width', String(vw));
-    trackSvg.setAttribute('height', String(vh));
-    trackSvg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
-    track.setAttribute('cx', cx.toFixed(1));
-    track.setAttribute('cy', cy.toFixed(1));
-    track.setAttribute('rx', Math.max(Rx, 1).toFixed(1));
-    track.setAttribute('ry', Math.max(Ry, 1).toFixed(1));
-    track.setAttribute('stroke-width', String(Math.round(size + TRACK_PAD)));
-  }
+  const margin = vw < 600 ? 16 : 24;
+  // amp11: bottom-left row. On a portrait phone it sits above the Explore the Guitar button (bottom pad 110, button top is
+  // ~64 px + 24 px above the bottom edge), under the guitar. On landscape / desktop it sits in the free bottom-left corner.
+  const pad = vh > vw ? 110 : 24;
+  rowX = Math.max(margin, sl + margin);
+  rowY = Math.max(0, vh - (sb + pad) - size);
+  const total = order.length * size + Math.max(0, order.length - 1) * GAP;
+  maxScroll = Math.max(0, total - (vw - rowX * 2));
+  if (scroll > maxScroll) scroll = maxScroll;
   render();
   fitTileLabels();
 }
@@ -935,6 +684,7 @@ function fitTileLabels() {
   }
 }
 
+
 /* ------------------------------------------------------------------ */
 /* bootstrap                                                           */
 /* ------------------------------------------------------------------ */
@@ -949,15 +699,8 @@ function boot() {
   ring.className = 'zg-ring';
   ring.setAttribute('role', 'group');
   ring.setAttribute('aria-label', 'Site sections');
+  ring.dataset.layout = 'row';   // amp11 (Blake t206u) 11a
   root.appendChild(ring);
-
-  trackSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  trackSvg.setAttribute('class', 'zg-track');
-  trackSvg.setAttribute('aria-hidden', 'true');
-  track = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-  trackSvg.appendChild(track);
-  ring.appendChild(trackSvg);
-  bindRingPointer(track, null, pressed);
 
   for (const e of entries.values()) addTile(e); // registered before boot
 
@@ -995,9 +738,8 @@ function boot() {
     maybeShowRing();
   }
 
-  applyMode(currentSceneMode()); // no mode announced -> ring always shown
+  applyMode(currentSceneMode()); // no mode announced -> row always shown
   layout();
-  if (!walking) writeAngle();
   sync();
   try {
     if (document.fonts && document.fonts.ready) {
@@ -1021,9 +763,7 @@ function boot() {
       if (revealPhase === 'done' || revealPhase === 'down') return;
       if (!revealPhase) {
         revealPhase = 'done';
-        introPlayed = true;
         maybeShowRing();
-        armStep(STEP_EVERY_MS);
         try {
           document.body.classList.add('zg-reveal-done');
         } catch (_) {
