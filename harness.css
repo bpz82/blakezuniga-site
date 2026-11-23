@@ -117,6 +117,15 @@ body[data-mode="walk"] .zg-ring {
   opacity: 0.07;
   pointer-events: none;
 }
+a.zg-tile {
+  text-decoration: none;
+  color: #141012;
+  -webkit-appearance: none;
+  appearance: none;
+}
+a.zg-tile:visited {
+  color: #141012;
+}
 .zg-tile:hover {
   background: rgba(232, 228, 226, calc(0.84 * var(--zg-fade, 1)));   /* amp9 (Blake t188u): was 0.95; same +0.06 step over the see-through fill; 9f: x depth fade */
   border-color: #fff;

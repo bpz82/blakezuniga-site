@@ -110,13 +110,28 @@ function snapshot(def) {
   if (unmount !== undefined && unmount !== null && typeof unmount !== 'function') {
     return reject('unmount must be a function for "' + id + '"');
   }
+  let href = '';
+  if (def.href !== undefined && def.href !== null && def.href !== '') {
+    if (!validHref(def.href)) return reject('href must be an https URL for "' + id + '"');
+    href = def.href;
+  }
   // amp12 (Blake t208u): optional panel:'wide' (large panel, used by Photos); anything else = the normal panel
-  return { id, title, icon: icon || '', iconSrc, mount, unmount: unmount || null, wide: def.panel === 'wide' };
+  // intro-polish: optional href (https only) makes the tile a new-tab link and skips the in-page panel
+  return { id, title, icon: icon || '', iconSrc, href, mount, unmount: unmount || null, wide: def.panel === 'wide' };
 }
 
 const ICON_SRC_RE = /^(\.\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\.(png|webp|jpe?g|gif|svg)$/i;
 function validIconSrc(src) {
   return typeof src === 'string' && src.length <= 200 && !src.includes('..') && ICON_SRC_RE.test(src);
+}
+function validHref(h) {
+  if (typeof h !== 'string' || h.length > 200) return false;
+  try {
+    const u = new URL(h);
+    return u.protocol === 'https:' && u.username === '' && u.password === '';
+  } catch (_) {
+    return false;
+  }
 }
 
 export function register(def) {
@@ -152,9 +167,15 @@ function span(cls, text) {
 }
 
 function buildTile(entry) {
-  const { id, title, icon, iconSrc } = entry.def;
-  const b = document.createElement('button');
-  b.type = 'button';
+  const { id, title, icon, iconSrc, href } = entry.def;
+  const b = href ? document.createElement('a') : document.createElement('button');
+  if (href) {
+    b.href = href;
+    b.target = '_blank';
+    b.rel = 'noopener noreferrer';
+  } else {
+    b.type = 'button';
+  }
   b.className = 'zg-tile';
   b.dataset.id = id;
   b.setAttribute('aria-label', title);
@@ -206,7 +227,14 @@ function addTile(entry) {
     }
   }
   const el = entry.el;
-  bindRowPointer(el, () => openPanel(entry, el));   // amp11 (Blake t206u) 11a
+  bindRowPointer(el, () => {
+    if (entry.def.href) {
+      // Synchronous window.open inside the tap/click gesture so iOS Safari does not block the tab.
+      try { window.open(entry.def.href, '_blank', 'noopener,noreferrer'); } catch (_) { /* ignore */ }
+      return;
+    }
+    openPanel(entry, el);
+  });   // amp11 (Blake t206u) 11a
   el.addEventListener('pointerenter', (e) => {
     if (e.pointerType === 'mouse') {
       hovered.add(el);
@@ -344,6 +372,11 @@ function bindRowPointer(el, fn) {
   // Pointer-originated clicks (detail > 0) are already handled by the tap path.
   el.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (el.tagName === 'A') {
+      // Pointer tap already called window.open; prevent a second tab. Keyboard uses the real <a> default.
+      if (performance.now() - lastTap < 800) e.preventDefault();
+      return;
+    }
     if (e.detail !== 0) return;
     if (performance.now() - lastTap < 800) return;
     fn();

@@ -202,12 +202,9 @@ function collaborativeProjectsWidget() {
     title: 'Collaborative Projects',
     icon: '◎',
     iconSrc: 'assets/curl-tapes-faces.png',
-    mount(el) {
-      const p = document.createElement('p');
-      p.textContent = 'Opening The Curl Tapes…';
-      el.append(p);
-      location.assign('https://thecurltapes.com');
-    },
+    href: 'https://thecurltapes.com',
+    // The tile is a real <a target=_blank rel=noopener>. mount is unused (the harness never opens a panel).
+    mount() { /* no in-page popup */ },
   };
 }
 

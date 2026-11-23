@@ -1779,7 +1779,7 @@ const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerH
    the ZUNIGA word + a small boot loop -> first ZUNIGA frame; THEN (at the word's hold) the guitar is built in steps of one
    per frame, its textures are uploaded one per frame, its programs are compiled with renderer.compileAsync-style slices
    (renderer.compile one material per slice, then polled with program.isReady(), KHR_parallel_shader_compile), every material
-   is warm-drawn once into a 4x4 twin of the composer's target, and only then does the hold end (BOOT.ready). */
+   is warm-drawn once into a 4x4 twin of the composer's target, and only then does BOOT.ready start the visible fade. */
 const BOOT = window.__zgBoot = { main: false, ready: false, t: {}, build: [], maxTaskMs: 0, texInit: 0, compiled: 0, warmed: 0, programsAtReady: 0, log: [] };
 const bootFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 const G = new THREE.Group();
@@ -1911,26 +1911,62 @@ const zgW = {
     veil.visible = false;
     mesh.renderOrder = 11;
 
-    // Tagline "Folk Blues" (Blake, 23 Nov 2026): a CHILD of the ZUNIGA mesh, so it shares its material (fade), pose, scale and
-    // float, and scene.children.find(TextGeometry) still returns ZUNIGA. Own failure domain: a throw leaves ZUNIGA intact.
+    // Tagline "Folk Blues" (Blake, 23 Nov 2026; intro-polish 23 Nov 2026): a CHILD of the ZUNIGA mesh so it
+    // shares pose, scale and float, and scene.children.find(TextGeometry) still returns ZUNIGA. Own failure
+    // domain: a throw leaves ZUNIGA intact. Own brighter material + a light bevel and a drop-shadow child;
+    // still Zuniga Mission v3 and smaller than ZUNIGA. Opacity is synced with the parent fade.
+    let tagMat = null;
     try {
-      const ssize = size * 0.34;
+      const ssize = size * 0.44;
       const sgeo = new TextGeometry('Folk Blues', {
         font: font,
         size: ssize,
-        depth: ssize * 0.2,
+        depth: ssize * 0.22,
         curveSegments: 3,
-        bevelEnabled: false,
+        bevelEnabled: true,
+        bevelThickness: ssize * 0.045,
+        bevelSize: ssize * 0.03,
+        bevelSegments: 1,
       });
       sgeo.center();
-      const sub = new THREE.Mesh(sgeo, mat);
+      tagMat = new THREE.MeshStandardMaterial({
+        color: 0xfff4e6,
+        roughness: 0.3,
+        metalness: 0,
+        emissive: 0x6a5340,
+        transparent: true,
+        opacity: 0,
+      });
+      const sub = new THREE.Mesh(sgeo, tagMat);
       sub.name = 'zg-tagline';
       sub.userData.text = 'Folk Blues';
-      sub.position.set(0, -size * 0.78, 0);
+      sub.userData.bevel = true;
+      sub.position.set(0, -size * 0.86, 0);
       sub.castShadow = false;
       sub.receiveShadow = false;
       sub.renderOrder = 11;
+      try {
+        const shMat = new THREE.MeshBasicMaterial({
+          color: 0x000000,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const sh = new THREE.Mesh(sgeo, shMat);
+        sh.name = 'zg-tagline-shadow';
+        sh.userData.role = 'tagline-shadow';
+        sh.position.set(ssize * 0.06, -ssize * 0.08, -ssize * 0.35);
+        sh.renderOrder = 10;
+        sh.castShadow = false;
+        sh.receiveShadow = false;
+        sub.add(sh);
+        tagMat.userData.shadowMat = shMat;
+      } catch (e2) {
+        console.warn('[zuniga3d] tagline shadow disabled:', e2 && e2.message ? e2.message : e2);
+      }
       mesh.add(sub);
+      BOOT.wordTag = sub;
     } catch (e) {
       console.warn('[zuniga3d] tagline disabled:', e && e.message ? e.message : e);
     }
@@ -1956,9 +1992,9 @@ const zgW = {
     const TWO_PI = Math.PI * 2;
 
     // Load-in (Blake t143u): fade/scale at center, hold, float down while the guitar and widgets reveal.
-    const IN_S = 0.55;
-    const HOLD_S = 0.8;
-    const DOWN_S = 1.5;
+    const IN_S = 0.7;
+    const HOLD_S = 0.45;
+    const DOWN_S = 1.2;
     const QUICK_S = 0.35;
     let phase = 'pending'; // pending | in | hold | down | done
     let phaseT = 0;
@@ -2034,12 +2070,44 @@ const zgW = {
       veil.lookAt(camera.position);
     }
 
+    function syncFade(o) {
+      mat.opacity = o;
+      if (tagMat) {
+        tagMat.opacity = o;
+        const sm = tagMat.userData && tagMat.userData.shadowMat;
+        if (sm) sm.opacity = 0.45 * o;
+      }
+    }
     function finishMat() {
       fading = false;
       fade = 1;
       mat.transparent = false;
       mat.opacity = 1;
       mat.needsUpdate = true;
+      if (tagMat) {
+        tagMat.transparent = false;
+        tagMat.opacity = 1;
+        tagMat.needsUpdate = true;
+        const sm = tagMat.userData && tagMat.userData.shadowMat;
+        if (sm) sm.opacity = 0.45;
+      }
+    }
+    const bootReady = () => !!(typeof BOOT !== 'undefined' && BOOT.ready);
+    const WAIT_FAILSAFE_MS = 60000;
+    zgW.path = window.__zgIntroPath = { start: null, end: null };
+    function placeIntroStart(camera) {
+      // Short float-down that stays above the guitar, never along the look-ray through the body.
+      camera.getWorldDirection(look);
+      center.copy(tgt);
+      center.y += Math.max(L * 0.09, (tgt.y - bc.y) * 0.25);
+      center.addScaledVector(look, -L * 0.1);
+    }
+    function recordPath() {
+      const lift = L * 0.05;
+      zgW.path = window.__zgIntroPath = {
+        start: { x: downFrom.x, y: downFrom.y + lift, z: downFrom.z },
+        end: { x: tgt.x, y: tgt.y + lift, z: tgt.z },
+      };
     }
 
     function setDone(fromSkip) {
@@ -2136,10 +2204,10 @@ const zgW = {
         reducedIntro = prefersReduced();
         const r = restOf(camera);
         sc = r.want;
-        const distRest = Math.max(L * 0.4, cp.distanceTo(tgt));
-        placeCenter(camera, distRest * 0.78);
-        downFrom.copy(center);
+        placeIntroStart(camera);
+        downFrom.copy(reducedIntro ? tgt : center);
         pos.copy(reducedIntro ? tgt : center);
+        recordPath();
         const tYaw0 = Math.atan2(cp.x - pos.x, cp.z - pos.z);
         yaw = tYaw0;
         init = true;
@@ -2147,21 +2215,39 @@ const zgW = {
         fading = true;
         fade = 0;
         mat.transparent = true;
-        mat.opacity = 0;
+        syncFade(0);
         veil.visible = true;
         veilMat.opacity = 1;
         try { G.visible = false; } catch (_) {}
         introScale = reducedIntro ? 1 : 0.84;
-        enterPhase('in');
-        emit('in');
+        enterPhase('wait');
+        // intro-polish: do not emit 'in' until BOOT.ready, so the canvas stays black while shaders and textures warm
+      } else if (phase === 'wait') {
+        restOf(camera);
+        placeIntroStart(camera);
+        downFrom.copy(reducedIntro ? tgt : center);
+        pos.copy(reducedIntro ? tgt : center);
+        recordPath();
+        syncFade(0);
+        veil.visible = true;
+        veilMat.opacity = 1;
+        introScale = reducedIntro ? 1 : 0.84;
+        if (bootReady() || performance.now() - phaseAt > WAIT_FAILSAFE_MS) {
+          enterPhase('in');
+          emit('in');
+        }
       } else if (phase !== 'done') {
-        const distRest = Math.max(L * 0.4, cp.distanceTo(tgt));
-        placeCenter(camera, distRest * 0.78);
+        restOf(camera);
+        if (phase === 'in' || phase === 'hold') {
+          placeIntroStart(camera);
+          downFrom.copy(reducedIntro ? tgt : center);
+          recordPath();
+        }
 
         if (reducedIntro) {
-          const u = BOOT.ready ? phaseU(QUICK_S) : (phaseAt = performance.now(), 0);   // amp10 (Blake t196u) 10e: the quick intro waits for the guitar
+          const u = (bootReady() || performance.now() - phaseAt > WAIT_FAILSAFE_MS) ? phaseU(QUICK_S) : (phaseAt = performance.now(), 0);
           fade = Math.min(1, u);
-          mat.opacity = fade;
+          syncFade(fade);
           introScale = 1;
           pos.copy(tgt);
           veilMat.opacity = 1 - easeOut(u);
@@ -2176,13 +2262,14 @@ const zgW = {
         } else if (phase === 'in') {
           const u = phaseU(IN_S);
           fade = Math.min(1, easeOut(u));
-          mat.opacity = fade;
+          syncFade(fade);
           introScale = 0.84 + 0.16 * easeOut(u);
           pos.copy(center);
           downFrom.copy(center);
+          recordPath();
           veilMat.opacity = 1;
           if (u >= 1) {
-            mat.opacity = 1;
+            syncFade(1);
             introScale = 1;
             enterPhase('hold');
             emit('hold');
@@ -2190,11 +2277,13 @@ const zgW = {
         } else if (phase === 'hold') {
           pos.copy(center);
           downFrom.copy(center);
+          recordPath();
           introScale = 1;
-          mat.opacity = 1;
+          syncFade(1);
           veilMat.opacity = 1;
-          if (phaseU(HOLD_S) >= 1 && (BOOT.ready || performance.now() - phaseAt > 20000)) {   // amp10 (Blake t196u) 10e: the hold lasts until the guitar is built, compiled and warmed (under the veil); 20 s failsafe
+          if (phaseU(HOLD_S) >= 1) {
             downFrom.copy(pos);
+            recordPath();
             downStarted = true;
             try { G.visible = true; } catch (_) {}
             enterPhase('down');
@@ -2206,7 +2295,7 @@ const zgW = {
           const e = easeInOut(u);
           pos.lerpVectors(downFrom, tgt, e);
           introScale = 1;
-          mat.opacity = 1;
+          syncFade(1);
           veilMat.opacity = 1 - e;
           if (u >= 1) {
             pos.copy(tgt);
@@ -2231,14 +2320,14 @@ const zgW = {
       // float (only once settled; keep the intro path clean)
       const f = phase === 'done' ? Math.sin(t * 0.9) : 0;
       const zRot = phase === 'done' ? Math.sin(t * 0.6) * 0.02 : 0;
-      mesh.position.set(pos.x, pos.y + f * L * 0.012, pos.z);
+      mesh.position.set(pos.x, pos.y + f * L * 0.012 + L * 0.05, pos.z);
       mesh.rotation.set(0, yaw, zRot);
       mesh.scale.setScalar(sc * introScale);
 
       if (phase === 'done' && fading) {
         fade += dt;
         const o = Math.min(1, fade / 0.8);
-        mat.opacity = o;
+        syncFade(o);
         if (o >= 1) finishMat();
       }
 
@@ -2352,10 +2441,10 @@ function loop(now) {   // the one rAF loop (boot loop first, the main tick once 
   if (BOOT.main) tick(now); else bootTick(now);
 }
 requestAnimationFrame(loop);
-// amp10 (Blake t196u) 10e BOOT SPLIT: the guitar is built AFTER ZUNIGA has started (G, bc, L, the stage and the word exist above).
-// Wait for the word's hold (static word, veil up): a long task then only holds the word a little longer. Falls back to 'go now'
-// when there is no word (failed / disabled), or after a safety time.
-for (let k = 0; !(/^(hold|down|done)$/.test(document.body.dataset.reveal || '') || (!zgWordTick || zgWordFail >= 3) && AMP8_INTRO.firstCanvasPixelT !== null || performance.now() > 25000); k++) await bootFrame();
+// intro-polish: build and warm the guitar BEFORE the word fade (under the black veil / loading overlay),
+// so the visible reveal is not fighting shader compiles or texture uploads. The word stays in phase 'wait'
+// (no zg:reveal 'in', canvas stays black) until BOOT.ready. Falls back to 'go now' if the word failed.
+await bootFrame();
 BOOT.t.buildStart = Math.round(performance.now());
 G.visible = false;   // the word hides it anyway; no-word fallback: nothing half-built shows
 // amp10 (Blake t196u) 10f: GATE B. The four builders are generators (yield between their sections); this runs them a few
@@ -2911,13 +3000,13 @@ setTimeout(hideHint, 9000);
 BOOT.t.mainStart = Math.round(performance.now());
 last = performance.now(); BOOT.main = true;   // amp10 (Blake t196u) 10e: the main tick takes over from the boot loop (rAF is in loop())
 
-/* amp10 (Blake t196u) 10e: finish the boot while the word holds (veil up): every step in its own frame.
+/* amp10 (Blake t196u) 10e / intro-polish: finish the boot while the word waits (veil up, canvas still black): every step in its own frame.
    1. images are decoded off the main thread (img.decode()), 2. ONE renderer.initTexture per frame (<= 1 upload per frame),
    3. renderer.compile one material per slice (links start in parallel when KHR_parallel_shader_compile exists), bound to a 4x4 twin
    of the composer's target so the programs are the ones the real frame uses, 4. wait until program.isReady() for all (no
    first-use getProgramParameter stall), 5. each distinct material is DRAWN once into the 4x4 target (pipeline build on
    drivers that build at first draw), 6. the guitar + floor are shown under the veil for two frames with the shadow pass on
-   (the depth / VSM programs), then BOOT.ready ends the hold. The word's opaque variant (program for the end of its fade) is warmed too. */
+   (the depth / VSM programs), then BOOT.ready starts the visible fade. The word's opaque variant (program for the end of its fade) is warmed too. */
 /* amp10 (Blake t196u) 10h3 GATE D: ONE per-frame upload counter for EVERY upload path (strips, initTexture, canvas textures, the amp warm draws, lazy
    first-render uploads): window.__zgUpl.n = image/canvas level-0 uploads since the start of this frame (reset by the first rAF callback of each frame).
    Every scheduler step that is about to upload waits (uplSlot) until n === 0, so a second upload is always deferred to the next frame.
@@ -2948,6 +3037,8 @@ async function bootFinish() {
     BOOT.parallel = renderer.extensions.has('KHR_parallel_shader_compile');
     let wm = null;
     if (BOOT.word) { wm = new THREE.Mesh(BOOT.word.geometry, BOOT.word.material.clone()); wm.material.transparent = false; wm.material.opacity = 1; wm.visible = false; wm.frustumCulled = false; scene.add(wm); }
+    let wt = null;
+    if (BOOT.wordTag && BOOT.wordTag.material) { wt = new THREE.Mesh(BOOT.wordTag.geometry, BOOT.wordTag.material.clone()); wt.material.transparent = false; wt.material.opacity = 1; wt.visible = false; wt.frustumCulled = false; scene.add(wt); }
     const meshes = [], mats = new Set(), texs = new Set();
     scene.traverse((o) => { if (o.isMesh) { meshes.push(o); for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m) mats.add(m); } });
     const vis0 = meshes.map((o) => o.visible);   // amp10 (Blake t196u) 10j: visibility before the boot touches anything
