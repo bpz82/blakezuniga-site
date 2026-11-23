@@ -1,6 +1,8 @@
 /**
  * Vinyl Vault (Blake, 23 Nov 2026). A search bar + a grid of every record in records.json; tap a cover for a small popup with
- * Spotify / Apple Music / YouTube / Copy ("Artist — Album").
+ * Spotify / Apple Music / YouTube / Copy ("Artist — Album"). The grid is A–Z with a sticky letter header; "Discover & Listen" spins
+ * a random record plus one verified track from records.json. A service without a working https album link is not shown; the popup
+ * says the record is only on vinyl and offers Copy instead (never a search page).
  *
  * CONTRACT
  * --------
@@ -20,14 +22,22 @@ const CSS = `
 .vv{box-sizing:border-box;color:#f1e9e6;font:15px/1.35 "Zuniga Mission",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .vv *{box-sizing:border-box}
 .vv-msg{margin:0;padding:22px;color:rgba(241,233,230,.85)}
-.vv-bar{position:sticky;top:0;z-index:5;padding:12px 14px;background:rgba(18,12,14,.88);
+.vv-bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px;background:rgba(18,12,14,.88);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-.vv-search{display:block;width:100%;margin:0;padding:12px 16px;min-height:46px;color:#f4ecea;background:rgba(255,255,255,.07);
+.vv-search{display:block;flex:1 1 220px;min-width:0;margin:0;padding:12px 16px;min-height:46px;color:#f4ecea;background:rgba(255,255,255,.07);
   border:1px solid rgba(255,255,255,.2);border-radius:999px;font:16px/1.3 "Zuniga Mission",system-ui,sans-serif;letter-spacing:.04em;
   outline:none;-webkit-appearance:none;appearance:none}
 .vv-search::placeholder{color:rgba(241,233,230,.5)}
 .vv-search:focus{border-color:#ff6b5a}
-.vv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;padding:8px 14px 22px}
+.vv-disc{flex:0 0 auto;min-height:46px;padding:8px 18px;color:#fff4f0;background:rgba(255,107,90,.85);border:0;border-radius:999px;
+  font:14px/1.1 "Zuniga Mission",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.vv-disc:hover{background:#ff6b5a}
+.vv-disc:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media (max-width:599px){.vv-disc{flex:1 1 100%}}
+.vv-sec[hidden]{display:none}
+.vv-L{position:sticky;top:var(--vv-bar,70px);z-index:4;margin:0;padding:6px 14px;font:400 22px/1.1 "Zuniga Mission",system-ui,sans-serif;
+  letter-spacing:.08em;color:#ff6b5a;background:rgba(18,12,14,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.1)}
+.vv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;padding:12px 14px 14px}
 @media (min-width:600px){.vv-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 16px}}
 @media (min-width:1000px){.vv-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .vv-cell{display:block;width:100%;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;
@@ -60,9 +70,13 @@ const CSS = `
 .vv-copy{background:rgba(255,107,90,.85);color:#fff4f0}
 .vv-copy:hover{background:rgba(255,107,90,1)}
 .vv-btn:focus-visible,.vv-x:focus-visible{outline:2px solid #ff6b5a;outline-offset:2px}
+.vv-wide{grid-column:1/-1}
+.vv-only{grid-column:1/-1;margin:0;padding:2px 2px 0;font:14px/1.35 system-ui,-apple-system,sans-serif;color:rgba(241,233,230,.85);text-align:center}
+.vv-track{margin:8px 2px 0;font:15px/1.3 system-ui,-apple-system,sans-serif;color:#ff9b8f}
+.vv-spin{width:100%;margin-top:8px}
 .vv-fb{display:block;width:100%;margin-top:10px;padding:10px 12px;color:#f4ecea;background:rgba(255,255,255,.07);
   border:1px solid rgba(255,255,255,.25);border-radius:10px;font:14px/1.3 system-ui,sans-serif}
-.vv-fb[hidden]{display:none}
+.vv-fb[hidden],.vv-y[hidden],.vv-track[hidden],.vv-spin[hidden],.vv-btn[hidden]{display:none}
 @keyframes vv-pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.vv-cell img{transition:none}.vv-cell:hover img{transform:none}.vv-card{animation:none}}
 `;
@@ -81,14 +95,34 @@ function str(v, max) {
   return typeof v === 'string' && v.trim().length > 0 && v.length <= max ? v.trim() : '';
 }
 
-function httpUrl(v) {
+// A working link is a non-empty https URL that is not a search page. null, "" and search URLs all count as missing ('').
+function workingUrl(v) {
   if (typeof v !== 'string' || v.length > 1000) return '';
   try {
     const u = new URL(v);
-    return u.protocol === 'https:' || u.protocol === 'http:' ? u.href : '';
+    if (u.protocol !== 'https:' || /\/search(\/|$)/i.test(u.pathname) || /search/i.test(u.search)) return '';
+    return u.href;
   } catch (_) {
     return '';
   }
+}
+
+// Sort rule: A–Z by artist, then album. For the sort key and the letter bucket only a leading English article "The " is ignored
+// (case-insensitive, trailing space required). "A " / "An " are NOT stripped (AC/DC, America stay under A).
+// A key that does not start with a letter goes under "#". Tie-break: album (case-insensitive), then original order (stable).
+function sortKey(artist) {
+  return artist.replace(/^the /i, '').trim();
+}
+function bucket(artist) {
+  const c = sortKey(artist).normalize('NFD').charAt(0).toUpperCase();
+  return c >= 'A' && c <= 'Z' ? c : '#';
+}
+function sortRecords(list) {
+  const cmp = (a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' });
+  return list
+    .map((r, i) => ({ r, i }))
+    .sort((x, y) => cmp(sortKey(x.r.artist), sortKey(y.r.artist)) || cmp(x.r.album, y.r.album) || x.i - y.i)
+    .map((x) => x.r);
 }
 
 // returns { list, skipped }; throws Error('...') when the file is not an array
@@ -105,13 +139,13 @@ function parseRecords(data, baseUrl) {
       if (!artist || !album || cover.length > 300 || !COVER_RE.test(cover)) throw new Error('row');
       const coverUrl = new URL(cover, baseUrl);
       if (coverUrl.origin !== baseUrl.origin || !coverUrl.pathname.startsWith(baseUrl.pathname)) throw new Error('row');
-      const spotify = httpUrl(r.spotify), apple = httpUrl(r.apple), youtube = httpUrl(r.youtube);
-      if (!spotify || !apple || !youtube) throw new Error('row');
+      const spotify = workingUrl(r.spotify), apple = workingUrl(r.apple), youtube = workingUrl(r.youtube);
+      const tracks = Array.isArray(r.tracks) ? r.tracks.map((t) => str(t, 200)).filter(Boolean) : [];
       const year = Number.isInteger(r.year) && r.year >= 1900 && r.year <= 2100 ? r.year : 0;
       const copyText = str(r.copyText, 400) || artist + ' — ' + album;
       list.push({
         id: String(r.id == null ? list.length : r.id).slice(0, 40),
-        artist, album, year, cover: coverUrl.href, spotify, apple, youtube, copyText,
+        artist, album, year, cover: coverUrl.href, spotify, apple, youtube, tracks, copyText,
         hay: (artist + ' ' + album + ' ' + (year || '')).toLowerCase(),
       });
     } catch (_) {
@@ -119,7 +153,7 @@ function parseRecords(data, baseUrl) {
     }
   }
   if (!list.length) throw new Error('no usable records');
-  return { list, skipped };
+  return { list: sortRecords(list), skipped };
 }
 
 export function mountVinylVault(host, opts) {
@@ -181,11 +215,25 @@ export function mountVinylVault(host, opts) {
     search.autocomplete = 'off';
     search.spellcheck = false;
     search.enterKeyHint = 'search';
+    const disc = el('button', 'vv-disc', 'Discover & Listen');
+    disc.type = 'button';
     const bar = el('div', 'vv-bar');
-    bar.append(search);
+    bar.append(search, disc);
 
-    const grid = el('div', 'vv-grid');
-    const cells = list.map((r) => {
+    // A–Z sections, each with a sticky letter header (the header under the search bar is always the current letter)
+    const secs = [];
+    let curSec = null;
+    for (const r of list) {
+      const L = bucket(r.artist);
+      if (!curSec || curSec.letter !== L) {
+        const sec = el('section', 'vv-sec');
+        sec.dataset.letter = L;
+        const h = el('h2', 'vv-L', L);
+        const grid = el('div', 'vv-grid');
+        sec.append(h, grid);
+        curSec = { letter: L, sec, grid, cells: [] };
+        secs.push(curSec);
+      }
       const b = el('button', 'vv-cell');
       b.type = 'button';
       b.dataset.id = r.id;
@@ -198,34 +246,49 @@ export function mountVinylVault(host, opts) {
       img.height = 300;
       img.src = r.cover;
       b.append(img, el('span', 'vv-a', r.artist), el('span', 'vv-b', r.album));
-      b.addEventListener('click', () => openPop(r, b));
-      grid.append(b);
-      return b;
-    });
+      b.addEventListener('click', () => show(r, '', false, b));
+      curSec.grid.append(b);
+      curSec.cells.push(b);
+    }
+    const listEl = el('div', 'vv-list');
+    listEl.append(...secs.map((x) => x.sec));
     const empty = el('p', 'vv-msg', 'No records match.');
     empty.setAttribute('role', 'status');
     empty.hidden = true;
 
-    root.replaceChildren(bar, grid, empty);
+    root.replaceChildren(bar, listEl, empty);
     root.dataset.count = String(list.length);
+
+    // letter headers stick just under the search bar, whatever height the bar wraps to
+    const setBar = () => { try { root.style.setProperty('--vv-bar', bar.offsetHeight + 'px'); } catch (_) { /* ignore */ } };
+    setBar();
+    window.addEventListener('resize', setBar);
+    cleanups.push(() => window.removeEventListener('resize', setBar));
 
     const filter = () => {
       const q = search.value.trim().toLowerCase();
       const terms = q ? q.split(/\s+/) : [];
       let shown = 0;
-      list.forEach((r, i) => {
-        const ok = terms.every((t) => r.hay.includes(t));
-        cells[i].hidden = !ok;
-        if (ok) shown++;
-      });
+      let i = 0;
+      for (const s of secs) {
+        let any = false;
+        for (const c of s.cells) {
+          const ok = terms.every((t) => list[i].hay.includes(t));
+          c.hidden = !ok;
+          if (ok) { shown++; any = true; }
+          i++;
+        }
+        s.sec.hidden = !any;
+      }
       empty.hidden = shown > 0;
       root.dataset.shown = String(shown);
     };
     search.addEventListener('input', filter);
     root.dataset.shown = String(list.length);
 
-    // ---- popup (built on first use) ----
-    let pop = null, popImg, popTitle, popYear, aS, aA, aY, copyBtn, fb, copyTimer = 0, lastCell = null, cur = null;
+    // ---- popup (built on first use; serves both a record tap and Discover & Listen) ----
+    const SERVICES = [['Spotify', 'spotify'], ['Apple Music', 'apple'], ['YouTube', 'youtube']];
+    let pop = null, popImg, popTitle, popYear, popTrack, btns, copyBtn, spinBtn, fb, copyTimer = 0, lastCell = null, cur = null;
     const buildPop = () => {
       pop = el('div', 'vv-pop');
       pop.hidden = true;
@@ -243,49 +306,77 @@ export function mountVinylVault(host, opts) {
       popTitle = el('h3', 'vv-t');
       popTitle.style.fontWeight = '400';
       popYear = el('p', 'vv-y');
-      const link = (label) => {
-        const a = el('a', 'vv-btn', label);
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        return a;
-      };
-      aS = link('Spotify');
-      aA = link('Apple Music');
-      aY = link('YouTube');
+      popTrack = el('p', 'vv-track');
       copyBtn = el('button', 'vv-btn vv-copy', 'Copy');
       copyBtn.type = 'button';
       copyBtn.addEventListener('click', doCopy);
+      spinBtn = el('button', 'vv-btn vv-spin', 'Spin again');
+      spinBtn.type = 'button';
+      spinBtn.addEventListener('click', () => spin(spinBtn));
       fb = el('input', 'vv-fb');
       fb.type = 'text';
       fb.readOnly = true;
       fb.hidden = true;
       fb.setAttribute('aria-label', 'Selected text, press copy on your keyboard');
-      const btns = el('div', 'vv-btns');
-      btns.append(aS, aA, aY, copyBtn);
-      card.append(popImg, x, popTitle, popYear, btns, fb);
+      btns = el('div', 'vv-btns');
+      card.append(popImg, x, popTitle, popYear, popTrack, btns, spinBtn, fb);
       pop.append(card);
       // tap/click on the backdrop (outside the card) closes
       pop.addEventListener('click', (e) => { if (e.target === pop) closePop(); });
       root.append(pop);
     };
-    function openPop(r, cell) {
+    function show(r, track, discover, opener) {
       if (!pop) buildPop();
+      const wasOpen = !pop.hidden;
       cur = r;
-      lastCell = cell;
+      if (opener && !wasOpen) lastCell = opener === spinBtn ? lastCell : opener;
       popImg.src = r.cover;
       popImg.alt = r.artist + ' — ' + r.album + ' cover';
       popTitle.textContent = r.artist + ' — ' + r.album;
       popYear.textContent = r.year ? String(r.year) : '';
       popYear.hidden = !r.year;
-      aS.href = r.spotify;
-      aA.href = r.apple;
-      aY.href = r.youtube;
+      popTrack.textContent = track;
+      popTrack.hidden = !track;
+      // only services with a working link get a button; if any is missing, say so and keep Copy right there
+      const items = [];
+      for (const [label, key] of SERVICES) {
+        if (!r[key]) continue;
+        const a = el('a', 'vv-btn', label);
+        a.href = r[key];
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        items.push(a);
+      }
+      const missing = items.length < SERVICES.length;
+      if (missing) {
+        if (items.length === 1) items[0].classList.add('vv-wide');
+        items.push(el('p', 'vv-only', "This one's only on vinyl — try searching it by name."));
+      }
+      copyBtn.classList.toggle('vv-wide', missing);
+      items.push(copyBtn);
+      btns.replaceChildren(...items);
+      spinBtn.hidden = !discover;
       copyBtn.textContent = 'Copy';
       fb.hidden = true;
       pop.dataset.id = r.id;
+      pop.dataset.mode = discover ? 'discover' : 'record';
       pop.hidden = false;
-      try { pop.querySelector('.vv-x').focus({ preventScroll: true }); } catch (_) { /* ignore */ }
+      if (!wasOpen) {
+        try { (discover ? spinBtn : pop.querySelector('.vv-x')).focus({ preventScroll: true }); } catch (_) { /* ignore */ }
+      }
     }
+    // Discover & Listen: random record from the loaded catalog + one track from its verified `tracks` list (never invented)
+    function spin(opener) {
+      const withTracks = list.filter((r) => r.tracks.length);
+      let pool = withTracks.length && Math.random() < 0.9 ? withTracks : list;
+      if (pool.length > 1 && cur) pool = pool.filter((r) => r !== cur);
+      const r = pool[Math.floor(Math.random() * pool.length)];
+      let track = '';
+      if (r.tracks.length) track = r.tracks[Math.floor(Math.random() * r.tracks.length)];
+      else console.info('[vinyl-vault] discover-no-tracklist ' + r.id + ' | ' + r.artist + ' | ' + r.album);
+      show(r, track, true, opener);
+    }
+    disc.addEventListener('click', () => spin(disc));
     function closePop() {
       if (!pop || pop.hidden) return;
       pop.hidden = true;
