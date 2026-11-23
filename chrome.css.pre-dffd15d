@@ -1,0 +1,250 @@
+/* Site chrome over the scene. Link this after the scene's own styles. */
+
+@font-face {
+  font-family: 'Zuniga Mission';
+  src: url('assets/fonts/ZunigaMission-Regular-v3.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Old UI: always gone */
+#load,
+#hud,
+#mode {
+  display: none !important;
+}
+
+/* Touch controls only while walking (keeps existing body.touch display rule) */
+body:not([data-mode="walk"]) #joy,
+body:not([data-mode="walk"]) #right {
+  display: none !important;
+}
+
+/* Shared glass pill look */
+#zg-explore,
+#zg-home,
+body #flip {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Zuniga Mission', sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: none; /* WEBSITE: the font has lowercase; keep Blake's wording "Explore the Guitar" */
+  color: #fff;
+  background: rgba(14, 14, 18, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 4;
+  transition: opacity 0.18s ease, visibility 0s linear 0s,
+    background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+#zg-explore:hover,
+#zg-home:hover,
+body #flip:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+#zg-explore:active,
+#zg-home:active,
+body #flip:active {
+  transform: scale(0.97);
+}
+
+#zg-explore:focus-visible,
+#zg-home:focus-visible,
+body #flip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+/* Positions */
+/* amp13 (Blake t214u): Explore the Guitar is centred at the bottom (left:0 + right:0 + margin auto: exact centre, no transform so the
+   :active scale and the fade keep working). The apps row (harness.js layout()) is centered and sits above it. */
+#zg-explore {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: fit-content;
+  margin: 0 auto;
+  bottom: max(16px, env(safe-area-inset-bottom));
+}
+/* home-v2: the old bottom-right landscape exception is retired; the apps row is centered and sits above Explore on every viewport. */
+
+#zg-home {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  top: max(16px, env(safe-area-inset-top));
+  font-size: 15px;
+  padding: 0 18px;
+}
+
+/* #flip keeps its existing top-right position (no position/top/right set here) */
+body #flip {
+  font-size: 16px;
+  padding: 0 18px;
+}
+
+/* ---- visibility, driven only by body[data-mode] ---- */
+/* hidden state (fade out, then visibility:hidden, never clickable) */
+body[data-mode="walk"] #zg-explore,
+body:not([data-mode="walk"]) #zg-home,
+body:not([data-mode="walk"]) #flip {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s,
+    background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+/* visible state */
+body:not([data-mode="walk"]) #zg-explore,
+body[data-mode="walk"] #zg-home,
+body[data-mode="walk"] #flip {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Hide Explore during the ZUNIGA load-in (Blake t143u). Home/Flip stay walk-only. */
+body.zg-intro #zg-explore,
+body:not(.zg-reveal-done) #zg-explore {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* chrome.js sets [hidden] if #mode is missing */
+#zg-explore[hidden],
+#zg-home[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 700px), (pointer: coarse) {
+  #zg-explore {
+    font-size: 18px;
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #zg-explore,
+  #zg-home,
+  body #flip,
+  body[data-mode="walk"] #zg-explore,
+  body:not([data-mode="walk"]) #zg-home,
+  body:not([data-mode="walk"]) #flip {
+    transition: none !important;
+  }
+}
+
+/* ---- home-v2: ONE universal walking-controls popup (walk-help.js) + its "?" re-open button ---- */
+#zg-walk-help,
+#zg-walk-help-btn {
+  position: fixed;
+  box-sizing: border-box;
+  z-index: 6;
+  font-family: 'Zuniga Mission', sans-serif;
+  color: #fff;
+  background: rgba(14, 14, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+}
+#zg-walk-help.show,
+#zg-walk-help-btn.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.18s ease, visibility 0s;
+}
+#zg-walk-help {
+  top: max(68px, calc(env(safe-area-inset-top) + 60px));
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px 44px 14px 18px;
+  border-radius: 18px;
+  letter-spacing: 0.08em;
+  font-size: 15px;
+  line-height: 1.5;
+}
+#zg-walk-help .zg-wh-title {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+#zg-walk-help ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#zg-walk-help b {
+  font-weight: 400;
+  display: inline-block;
+  min-width: 6.5em;
+  color: #fff;
+}
+#zg-walk-help .zg-wh-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#zg-walk-help-btn {
+  top: max(16px, env(safe-area-inset-top));
+  left: calc(max(16px, env(safe-area-inset-left)) + 112px);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#zg-walk-help-btn:hover,
+#zg-walk-help .zg-wh-close:hover { background: rgba(255, 255, 255, 0.2); }
+#zg-walk-help-btn:focus-visible,
+#zg-walk-help .zg-wh-close:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+/* Narrow phones: Home + Flip Guitar sit side by side up to ~y=96; keep the card below both (still above the joystick). */
+@media (max-width: 600px) {
+  #zg-walk-help { top: max(108px, calc(env(safe-area-inset-top) + 100px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #zg-walk-help, #zg-walk-help-btn { transition: none !important; }
+}

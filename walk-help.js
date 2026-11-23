@@ -2,7 +2,7 @@
 // replacing the per-object how-to hints (#hint in index.html, #zg-amp-hint in amp-chrome.js; both stay hidden / unused).
 // Own failure domain: init and every handler are wrapped, so a bug here can never break walking, the scene or the apps.
 // It only reads body[data-mode]; it never touches scene state. Styles: chrome.css (#zg-walk-help, #zg-walk-help-btn).
-// Dismiss: x button, tap on it, or Escape. A small "?" (next to Home) reopens it. Dismissal is remembered (localStorage, best effort).
+// Dismiss: x button, or Escape while the mouse is free (Esc while the mouse is captured only frees it). A small "?" (next to Home) reopens it. Dismissal is remembered (localStorage, best effort).
 
 const KEY = 'zg-walk-help-dismissed';
 
@@ -25,7 +25,8 @@ function init() {
     list.textContent = '';
     const rows = isTouch()
       ? [['Left stick', 'walk'], ['Drag', 'look around'], ['◆', 'jump']]
-      : [['W A S D', 'walk (Shift = faster)'], ['Click, then move the mouse', 'to look (or drag)'], ['Space', 'jump']];
+      : [['W A S D', 'walk (Shift faster)'], ['Click + move mouse', 'look'], ['Space', 'jump'], ['Esc', 'free mouse']];
+    card.dataset.kind = isTouch() ? 'touch' : 'desk'; // CSS: desktop card sits bottom-center, phone card keeps its top offset
     for (const [k, v] of rows) {
       const li = document.createElement('li');
       const kk = document.createElement('b');
@@ -100,13 +101,21 @@ function init() {
     setOpen(false);
   });
   btn.addEventListener('click', () => setOpen(true));
+  // Pointer lock: the first Esc only frees the mouse (browser default). Chrome may drop the lock BEFORE our keydown runs,
+  // so also treat Esc within 300 ms of a lock change as that same press (same idea as amp-walk.js). Mouse already free: Esc closes.
+  let lockChangedAt = -1e9;
+  document.addEventListener('pointerlockchange', () => { lockChangedAt = performance.now(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && open) {
+    try {
+      if (e.key !== 'Escape' || !open) return;
+      if (document.pointerLockElement || performance.now() - lockChangedAt < 300) return;
       dismissed = true;
       try { localStorage.setItem(KEY, '1'); } catch (_) { /* ignore */ }
       setOpen(false);
+    } catch (err) {
+      console.warn('[walk-help] Escape handler failed', err);
     }
-  });
+  }, true);
   new MutationObserver(onMode).observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
   document.addEventListener('zg:mode', onMode);
   onMode();

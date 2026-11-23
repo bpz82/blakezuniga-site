@@ -241,9 +241,18 @@ body:not(.zg-reveal-done) #zg-explore {
 #zg-walk-help .zg-wh-close:hover { background: rgba(255, 255, 255, 0.2); }
 #zg-walk-help-btn:focus-visible,
 #zg-walk-help .zg-wh-close:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+/* Desktop card: one line per control, bottom-center so it never covers the ZUNIGA / Folk Blues text (Home top-left, Flip top-right). */
+#zg-walk-help[data-kind="desk"] {
+  top: auto;
+  bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px));
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+#zg-walk-help[data-kind="desk"] li { white-space: nowrap; }
+#zg-walk-help[data-kind="desk"] b { min-width: 10.5em; }
 /* Narrow phones: Home + Flip Guitar sit side by side up to ~y=96; keep the card below both (still above the joystick). */
 @media (max-width: 600px) {
-  #zg-walk-help { top: max(108px, calc(env(safe-area-inset-top) + 100px)); }
+  #zg-walk-help:not([data-kind="desk"]) { top: max(108px, calc(env(safe-area-inset-top) + 100px)); }
 }
 @media (prefers-reduced-motion: reduce) {
   #zg-walk-help, #zg-walk-help-btn { transition: none !important; }
