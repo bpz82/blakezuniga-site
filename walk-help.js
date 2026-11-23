@@ -7,7 +7,9 @@
 const KEY = 'zg-walk-help-dismissed';
 
 function init() {
-  const touch = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
+  // Phone card ONLY when the primary pointer is coarse. 'ontouchstart' alone (touch-capable desktops, forced in tests) is NOT phone.
+  const mq = window.matchMedia ? matchMedia('(pointer: coarse)') : null;
+  const isTouch = () => (mq ? mq.matches : 'ontouchstart' in window);
   let dismissed = false;
   try { dismissed = localStorage.getItem(KEY) === '1'; } catch (_) { /* storage blocked: shown each time */ }
 
@@ -19,15 +21,22 @@ function init() {
   title.className = 'zg-wh-title';
   title.textContent = 'Walking controls';
   const list = document.createElement('ul');
-  const rows = touch
-    ? [['Left stick', 'walk'], ['Drag', 'look around'], ['◆', 'jump']]
-    : [['W A S D', 'walk (Shift = faster)'], ['Click + drag', 'look around'], ['Space', 'jump']];
-  for (const [k, v] of rows) {
-    const li = document.createElement('li');
-    const kk = document.createElement('b');
-    kk.textContent = k;
-    li.append(kk, document.createTextNode(' ' + v));
-    list.appendChild(li);
+  function fillRows() {
+    list.textContent = '';
+    const rows = isTouch()
+      ? [['Left stick', 'walk'], ['Drag', 'look around'], ['◆', 'jump']]
+      : [['W A S D', 'walk (Shift = faster)'], ['Click, then move the mouse', 'to look (or drag)'], ['Space', 'jump']];
+    for (const [k, v] of rows) {
+      const li = document.createElement('li');
+      const kk = document.createElement('b');
+      kk.textContent = k;
+      li.append(kk, document.createTextNode(' ' + v));
+      list.appendChild(li);
+    }
+  }
+  fillRows();
+  if (mq) {
+    try { mq.addEventListener('change', fillRows); } catch (_) { try { mq.addListener(fillRows); } catch (__) { /* ignore */ } }
   }
   const close = document.createElement('button');
   close.type = 'button';
@@ -50,6 +59,7 @@ function init() {
   document.body.append(card, btn);
 
   let open = false;
+  let flyTimer = 0;
   function render() {
     const m = document.body.dataset.mode;
     const walkish = m === 'walk' || m === 'amp';
@@ -67,7 +77,15 @@ function init() {
         const h = window.__amp && window.__amp.handle;
         // amp: only when the amp is walkable (driver present); the orbit-only amp has nothing to explain
         if (m === 'amp' && !(h && h.driver) && !(window.__ampHandle && window.__ampHandle.driver)) { open = false; render(); return; }
-        if (!open && !dismissed) open = true;
+        if (!open && !dismissed) {
+          // wait for the intro fly-in to finish so the first WASD press isn't swallowed
+          const fl = window.__dbg && typeof window.__dbg.fly === 'function' ? window.__dbg.fly() : null;
+          if (fl && fl.active) {
+            if (!flyTimer) flyTimer = setTimeout(() => { flyTimer = 0; onMode(); }, 250);
+            return;
+          }
+          open = true;
+        }
       } else {
         open = false;
       }
