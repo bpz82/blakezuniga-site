@@ -2,7 +2,7 @@
  * Vinyl Vault (Blake, 23 Nov 2026). A search bar + a grid of every record in records.json; tap a cover for a small popup with
  * Spotify / Apple Music / YouTube / Copy ("Artist — Album"). The grid is A–Z with a sticky letter header; "Discover & Listen" spins
  * a random record plus one verified track from records.json. A service without a working https album link is not shown; the popup
- * says the record is only on vinyl and offers Copy instead (never a search page).
+ * says so (all three missing: only on vinyl; otherwise "Not on X" per missing service) and offers Copy (never a search page).
  *
  * CONTRACT
  * --------
@@ -337,20 +337,23 @@ export function mountVinylVault(host, opts) {
       popYear.hidden = !r.year;
       popTrack.textContent = track;
       popTrack.hidden = !track;
-      // only services with a working link get a button; if any is missing, say so and keep Copy right there
+      // only services with a working link get a button. All three missing: the vinyl-only line. Some missing: one "Not on X" line each.
+      // Copy always shows when anything is missing.
       const items = [];
+      const notes = [];
       for (const [label, key] of SERVICES) {
-        if (!r[key]) continue;
+        if (!r[key]) { notes.push(el('p', 'vv-only', 'Not on ' + label + ' \u2014 try searching it by name.')); continue; }
         const a = el('a', 'vv-btn', label);
         a.href = r[key];
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         items.push(a);
       }
-      const missing = items.length < SERVICES.length;
+      const missing = notes.length > 0;
       if (missing) {
         if (items.length === 1) items[0].classList.add('vv-wide');
-        items.push(el('p', 'vv-only', "This one's only on vinyl — try searching it by name."));
+        if (!items.length) items.push(el('p', 'vv-only', "This one's only on vinyl \u2014 try searching it by name."));
+        else items.push(...notes);
       }
       copyBtn.classList.toggle('vv-wide', missing);
       items.push(copyBtn);

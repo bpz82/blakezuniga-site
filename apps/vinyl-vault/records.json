@@ -182,7 +182,7 @@
     "confidence": 1.0,
     "spotify": "https://open.spotify.com/album/50o7kf2wLwVmOTVYJOTplm",
     "apple": "https://music.apple.com/us/album/rubber-soul-2026-mix/6790866923",
-    "youtube": null,
+    "youtube": "https://www.youtube.com/playlist?list=PL0jp-uZ7a4g-i-6UoyDVhPcbCF_QKVuCu",
     "copyText": "The Beatles — Rubber Soul",
     "matchedAs": "The Beatles — Rubber Soul (2026 Mix)",
     "tracks": [
@@ -1599,10 +1599,22 @@
     "source": "coverartarchive",
     "confidence": 0.95,
     "spotify": "https://open.spotify.com/album/2WT1pbYjLJciAR26yMebkH",
-    "apple": null,
+    "apple": "https://music.apple.com/us/album/the-dark-side-of-the-moon/1065973699",
     "youtube": "https://www.youtube.com/watch?v=k9ynZnEBtvw",
     "copyText": "Pink Floyd — The Dark Side of the Moon",
-    "matchedAs": "Pink Floyd — The Dark Side of the Moon"
+    "matchedAs": "Pink Floyd — The Dark Side of the Moon",
+    "tracks": [
+      "Speak to Me",
+      "Breathe (In the Air)",
+      "On the Run",
+      "Time",
+      "The Great Gig In the Sky",
+      "Money",
+      "Us and Them",
+      "Any Colour You Like",
+      "Brain Damage",
+      "Eclipse"
+    ]
   },
   {
     "id": "062",
@@ -1706,11 +1718,25 @@
     "cover": "covers/065-america-history-america-s-greatest-hits.jpg",
     "source": "itunes",
     "confidence": 0.87,
-    "spotify": null,
-    "apple": null,
+    "spotify": "https://open.spotify.com/album/64sDz3NRE1xYuaIZWAyu4N",
+    "apple": "https://music.apple.com/us/album/americas-greatest-hits-history/297418495",
     "youtube": "https://www.youtube.com/watch?v=Euqn3ZHVB44",
     "copyText": "America — History: America's Greatest Hits",
-    "matchedAs": "America — America's Greatest Hits: History"
+    "matchedAs": "America — America's Greatest Hits: History",
+    "tracks": [
+      "A Horse With No Name",
+      "I Need You",
+      "Sandman (1987)",
+      "Ventura Highway",
+      "Don't Cross the River",
+      "Only In Your Heart",
+      "Muskrat Love",
+      "Tin Man",
+      "Lonely People",
+      "Sister Golden Hair",
+      "Daisy Jane",
+      "Woman Tonight"
+    ]
   },
   {
     "id": "066",
@@ -1797,11 +1823,31 @@
     "cover": "covers/069-wings-wings-at-the-speed-of-sound.jpg",
     "source": "itunes",
     "confidence": 0.922,
-    "spotify": null,
-    "apple": null,
+    "spotify": "https://open.spotify.com/album/3eN0kcFvDvdpjAvv1qZa4D",
+    "apple": "https://music.apple.com/us/album/at-the-speed-of-sound-archive-collection/1440951376",
     "youtube": null,
     "copyText": "Wings — Wings at the Speed of Sound",
-    "matchedAs": "Paul McCartney & Wings — At the Speed of Sound (Archive Collection)"
+    "matchedAs": "Paul McCartney & Wings — At the Speed of Sound (Archive Collection)",
+    "tracks": [
+      "Let 'Em In (Remastered 2014)",
+      "The Note You Never Wrote (Remastered 2014)",
+      "She’s My Baby (Remastered 2014)",
+      "Beware My Love (Remastered 2014)",
+      "Wino Junko (Remastered 2014)",
+      "Silly Love Songs (Remastered 2014)",
+      "Cook Of The House (Remastered 2014)",
+      "Time To Hide (Remastered 2014)",
+      "Must Do Something About It (Remastered 2014)",
+      "San Ferry Anne (Remastered 2014)",
+      "Warm And Beautiful (Remastered 2014)",
+      "Silly Love Songs (Demo)",
+      "She's My Baby (Demo)",
+      "Message To Joe (Demo / Remastered 2014)",
+      "Beware My Love (feat. John Bonham) [John Bonham Version / Remastered 2014]",
+      "Must Do Something About It (Paul's Version / Remastered 2014)",
+      "Let 'Em In (Demo / Remasterd 2014)",
+      "Warm And Beautiful (Instrumental Demo / Remasterd 2014)"
+    ]
   },
   {
     "id": "070",
@@ -1812,12 +1858,26 @@
     "source": "coverartarchive",
     "confidence": 0.88,
     "spotify": null,
-    "apple": null,
+    "apple": "https://music.apple.com/us/album/kristofferson/1011273584",
     "youtube": null,
     "copyText": "Kris Kristofferson — Me and Bobby McGee",
     "matchedAs": "Kris Kristofferson — Me and Bobby McGee",
     "flagged": true,
-    "flagReason": "Me and Bobby McGee (1971) is a retitled reissue of the debut album Kristofferson (1970). Cover is the later titled issue (bearded close-up), which matches typical copies of this release."
+    "flagReason": "Me and Bobby McGee (1971) is a retitled reissue of the debut album Kristofferson (1970). Cover is the later titled issue (bearded close-up), which matches typical copies of this release.",
+    "tracks": [
+      "Blame It on the Stones",
+      "To Beat the Devil",
+      "Me and Bobby McGee",
+      "Best of All Possible Worlds",
+      "Help Me Make It Through the Night",
+      "The Law Is for Protection of the People",
+      "Casey's Last Ride",
+      "Just the Other Side of Nowhere",
+      "Darby's Castle",
+      "For the Good Times",
+      "Duvalier's Dream",
+      "Sunday Mornin' Comin' Down"
+    ]
   },
   {
     "id": "071",
@@ -2206,7 +2266,7 @@
     "confidence": 1.0,
     "spotify": "https://open.spotify.com/album/6wCttLq0ADzkPgtRnUihLV",
     "apple": "https://music.apple.com/us/album/a-hard-days-night/1441164416",
-    "youtube": null,
+    "youtube": "https://www.youtube.com/playlist?list=PL0jp-uZ7a4g_4iMT5wmgU7YLqeNQiS1G_",
     "copyText": "The Beatles — A Hard Day's Night",
     "matchedAs": "The Beatles — A Hard Day's Night",
     "tracks": [
@@ -2486,9 +2546,9 @@
     "cover": "covers/094-frank-zappa-joe-s-garage.jpg",
     "source": "coverartarchive",
     "confidence": 0.9,
-    "spotify": null,
+    "spotify": "https://open.spotify.com/album/58vlZjXF95AYHwpTZKOP7a",
     "apple": "https://music.apple.com/us/album/joes-garage-acts-i-ii-iii/1443266937",
-    "youtube": null,
+    "youtube": "https://www.youtube.com/playlist?list=PL9uPsSPltFizH8EC1P70PPQ73A1nFD-Gr",
     "copyText": "Frank Zappa — Joe's Garage",
     "matchedAs": "Frank Zappa — Joe’s Garage: Act I",
     "flagged": true,
@@ -2918,7 +2978,7 @@
     "confidence": 1.0,
     "spotify": "https://open.spotify.com/album/5QkOpsZupEPLq186YOrBNe",
     "apple": "https://music.apple.com/us/album/night-moves/1440877183",
-    "youtube": null,
+    "youtube": "https://www.youtube.com/playlist?list=PLQMQ0pEi2Ffr1kFMqnD8w6sGoBTBG8pBN",
     "copyText": "Bob Seger & the Silver Bullet Band — Night Moves",
     "matchedAs": "Bob Seger & The Silver Bullet Band — Night Moves",
     "tracks": [
@@ -3024,10 +3084,24 @@
     "source": "coverartarchive",
     "confidence": 0.88,
     "spotify": "https://open.spotify.com/album/1IgZxMsdWaIoYyMUGrO53Y",
-    "apple": null,
+    "apple": "https://music.apple.com/us/album/violent-femmes/1576789411",
     "youtube": "https://www.youtube.com/watch?v=I7wCyv6MLRI",
     "copyText": "Violent Femmes — Violent Femmes",
-    "matchedAs": "Violent Femmes — Violent Femmes"
+    "matchedAs": "Violent Femmes — Violent Femmes",
+    "tracks": [
+      "Blister In The Sun",
+      "Kiss Off",
+      "Please Do Not Go",
+      "Add It Up",
+      "Confessions",
+      "Prove My Love",
+      "Promise",
+      "To The Kill",
+      "Gone Daddy Gone",
+      "Good Feeling",
+      "Ugly (1983 Rough Trade UK Single)",
+      "Gimme The Car (1983 Rough Trade UK Single)"
+    ]
   },
   {
     "id": "113",
