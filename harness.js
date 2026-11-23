@@ -640,8 +640,6 @@ function onSceneMode() {
 function layout() {
   vw = window.innerWidth || 1;
   vh = window.innerHeight || 1;
-  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp
-  root.style.setProperty('--zg-size', size + 'px');
   // safe-area insets come from the row container's own padding (harness.css: env(safe-area-inset-*))
   let sl = 0;
   let sb = 0;
@@ -653,6 +651,13 @@ function layout() {
     /* no insets */
   }
   const margin = vw < 600 ? 16 : 24;
+  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp
+  // Vinyl Vault (Blake, 23 Nov 2026): with 4+ tiles the row can overflow a narrow screen (4 x 106 + 3 x 16 > 393). Shrink the tiles
+  // only as much as needed so the row fits between the margins (and stays centered), never below 72. 3 tiles: unchanged (106 at 393).
+  const nTiles = Math.max(1, order.length);
+  const fit = Math.floor((vw - 2 * Math.max(margin, sl + margin) - (nTiles - 1) * GAP) / nTiles);
+  if (size > fit) size = Math.max(72, fit);
+  root.style.setProperty('--zg-size', size + 'px');
   // home-v2 (Blake, 23 Nov 2026): the apps row is CENTERED horizontally and always sits ABOVE the centered "Explore the Guitar"
   // button (button top is ~64 px + safe-area above the bottom edge): bottom pad 110 on a portrait phone, 88 elsewhere (a 20+ px gap).
   // When the row is wider than the viewport it starts at the left margin and scrolls (maxScroll below).
