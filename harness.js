@@ -51,6 +51,7 @@ const LOAD_MAX_MS = 60000;
 const TAP_PX = 10; // movement below this is a tap, not a swipe
 const INTRO_MS = 900; // slide-in window reported as data-state="intro"
 const REVEAL_FALLBACK_MS = 8000;
+const REVEAL_PENDING_MAX_MS = 180000; // intro-polish: cap on waiting for a live word (phase 'wait') before assuming it hung
 const GAP = 16; // px between tiles in the row
 
 const entries = new Map(); // id -> entry
@@ -809,8 +810,15 @@ function boot() {
     if (timer) clearInterval(timer);
     maybeShowRing();
     // If the word never announces a reveal (font failed), show the ring and arm the stepper.
-    setTimeout(() => {
+    const tFallback = Date.now();
+    const fallback = () => {
       if (revealPhase === 'done' || revealPhase === 'down') return;
+      // intro-polish: a live word still waiting for BOOT.ready (phase 'wait', no zg:reveal yet) is not a failed word.
+      // Keep waiting (hard cap) so the tiles never come up before the real 'down'; a failed word emits 'done' itself.
+      if (!revealPhase && window.__zgWordPending && Date.now() - tFallback < REVEAL_PENDING_MAX_MS) {
+        setTimeout(fallback, 1000);
+        return;
+      }
       if (!revealPhase) {
         revealPhase = 'done';
         maybeShowRing();
@@ -820,7 +828,8 @@ function boot() {
           /* ignore */
         }
       }
-    }, REVEAL_FALLBACK_MS);
+    };
+    setTimeout(fallback, REVEAL_FALLBACK_MS);
     return true;
   };
   if (!check()) timer = setInterval(check, LOAD_POLL_MS);

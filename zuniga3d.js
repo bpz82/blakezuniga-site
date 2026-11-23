@@ -9,9 +9,12 @@ const zgW = {
 };
 
 (function zgWordLoad() {
+  // intro-polish: the word is alive (loading / waiting for BOOT.ready) until it emits a phase or fails; harness.js and the amp start guards read this
+  window.__zgWordPending = true;
   const warn = (e) => {
     if (zgW.warned) return;
     zgW.warned = true;
+    window.__zgWordPending = false;
     console.warn('[zuniga3d] floating word disabled:', e && e.message ? e.message : e);
     try {
       document.body.classList.remove('zg-intro');
@@ -73,6 +76,8 @@ const zgW = {
     cx.fillRect(-128, -128, 256, 256);
     const tex = new THREE.CanvasTexture(cv);
     tex.colorSpace = THREE.SRGBColorSpace;
+    // call 3 (SM1): upload the blob-shadow canvas now (word load, before 'in'); it is never flagged needsUpdate again
+    try { if (typeof renderer !== 'undefined' && renderer && renderer.initTexture) renderer.initTexture(tex); } catch (_) { /* uploaded lazily instead */ }
 
     const smat = new THREE.MeshBasicMaterial({
       map: tex,
@@ -192,6 +197,7 @@ const zgW = {
     };
 
     function emit(p, extra) {
+      window.__zgWordPending = false;
       try {
         if (p === 'in' || p === 'hold') {
           document.body.classList.add('zg-intro');
@@ -269,7 +275,7 @@ const zgW = {
       // No extra world-Y lift here: fitGroupToFrustum keeps the group inside the frame.
       camera.getWorldDirection(look);
       center.copy(tgt);
-      center.addScaledVector(look, -L * 0.06);
+      center.addScaledVector(look, -L * 0.03);   // call 3: 0.06 -> 0.03 (smaller hold->rest perspective change on short views)
     }
     function recordPath() {
       zgW.path = window.__zgIntroPath = {
@@ -383,7 +389,7 @@ const zgW = {
     // Fit the ZUNIGA + Folk Blues group to the camera frustum with a comfortable
     // screen margin, stay clear of the guitar, and scale down on short aspects.
     // Replaces the fixed L*0.05 lift, which pushed the name out of the top of the frame.
-    function fitGroupToFrustum(camera, anchor, baseScale, yaw, dest) {
+    function fitGroupToFrustum(camera, anchor, baseScale, yaw, dest, noScale) {
       const W = Math.max(1, window.innerWidth || 1), H = Math.max(1, window.innerHeight || 1);
       const margin = Math.max(24, Math.round(Math.min(W, H) * 0.05));
       const gap = Math.max(16, Math.round(Math.min(W, H) * 0.03));
@@ -405,11 +411,11 @@ const zgW = {
         const ceil = margin;
         const roomH = floor - ceil, roomW = W - 2 * margin;
         let scaled = false;
-        if (roomH > 8 && textH > roomH && scale > minScale + 1e-4) {
+        if (!noScale && roomH > 8 && textH > roomH && scale > minScale + 1e-4) {
           scale = Math.max(minScale, scale * (roomH / textH) * 0.96);
           scaled = true;
         }
-        if (roomW > 8 && textW > roomW && scale > minScale + 1e-4) {
+        if (!noScale && roomW > 8 && textW > roomW && scale > minScale + 1e-4) {
           scale = Math.max(minScale, scale * (roomW / textW) * 0.96);
           scaled = true;
         }
@@ -422,7 +428,7 @@ const zgW = {
         if (!Number.isFinite(dBoxYdWorldY) || Math.abs(dBoxYdWorldY) < 1e-6) break;
         let desired = box.y;
         if (overflowTop > 0.75) desired = ceil;
-        else if (overflowBot > 0.75) desired = box.y - overflowBot;
+        else if (overflowBot > 0.75) desired = noScale ? Math.max(ceil, box.y - overflowBot) : box.y - overflowBot;   // call 3: locked-scale fit keeps the top margin ahead of guitar clearance (no up/down oscillation)
         y += (desired - box.y) / dBoxYdWorldY;
       }
       projectNameBox(camera, x, y, z, scale, yaw, box);
@@ -431,11 +437,29 @@ const zgW = {
       return scale;
     }
 
+    // intro-polish: lock the rest-pose fit scale for the visible intro (in/hold/down) so the name never re-zooms mid-fade.
+    // lockRatio = fitted rest scale / sc, measured once when 'in' starts (BOOT.ready: the guitar can be measured).
+    let lockRatio = 0, lockW = 0, lockH = 0;
+    const _lockDest = new THREE.Vector3();
+    function computeFitLock(camera) {
+      try {
+        const cp = camera.position;
+        const y0 = Math.atan2(cp.x - tgt.x, cp.z - tgt.z);
+        const s = fitGroupToFrustum(camera, tgt, sc, y0, _lockDest);
+        lockRatio = sc > 1e-6 ? s / sc : 0;
+        lockW = window.innerWidth; lockH = window.innerHeight;
+      } catch (_) { lockRatio = 0; }
+    }
+    // intro-polish: eased entry into the idle float / z-rotation / blob-shadow after 'done' (no pop on the first done frame)
+    let doneK = 0;
+    const smooth01 = (u) => { u = Math.min(1, Math.max(0, u)); return u * u * (3 - 2 * u); };
+
     function setDone(fromSkip) {
       if (phase === 'done') return;
       skipped = skipped || !!fromSkip;
       phase = 'done';
       phaseT = 0;
+      doneK = 0;
       veil.visible = false;
       veilMat.opacity = 0;
       try { G.visible = true; } catch (_) {}
@@ -553,7 +577,7 @@ const zgW = {
         veil.visible = true;
         veilMat.opacity = 1;
         introScale = reducedIntro ? 1 : 0.84;
-        if (typeof BOOT === 'undefined' || bootReady() || performance.now() - phaseAt > WAIT_FAILSAFE_MS) {
+        if (typeof BOOT === 'undefined' || bootReady()) {
           enterPhase('in');
           emit('in');
         }
@@ -566,7 +590,7 @@ const zgW = {
         }
 
         if (reducedIntro) {
-          const u = (typeof BOOT === 'undefined' || bootReady() || performance.now() - phaseAt > WAIT_FAILSAFE_MS) ? phaseU(QUICK_S) : (phaseAt = performance.now(), 0);
+          const u = (typeof BOOT === 'undefined' || bootReady()) ? phaseU(QUICK_S) : (phaseAt = performance.now(), 0);
           fade = Math.min(1, u);
           syncFade(fade);
           introScale = 1;
@@ -639,13 +663,21 @@ const zgW = {
       }
 
       // float (only once settled; keep the intro path clean)
-      const f = phase === 'done' ? Math.sin(t * 0.9) : 0;
-      const zRot = phase === 'done' ? Math.sin(t * 0.6) * 0.02 : 0;
+      if (phase === 'done') doneK = Math.min(1, doneK + dt / 1.2);
+      const dE = phase === 'done' ? smooth01(doneK) : 0;
+      const f = Math.sin(t * 0.9) * dE;
+      const zRot = Math.sin(t * 0.6) * 0.02 * dE;
       // intro-frame: fit the group to this camera frustum (margin + guitar clearance), then add the idle float.
       let placeSc = sc * introScale;
       _fitDest.copy(pos);
       if (mode !== 'walk') {
-        placeSc = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
+        const lockOn = phase !== 'done' && phase !== 'wait' && phase !== 'pending';
+        if (lockOn && (!lockRatio || lockW !== window.innerWidth || lockH !== window.innerHeight)) computeFitLock(camera);
+        if (lockOn && lockRatio) {
+          placeSc = fitGroupToFrustum(camera, pos, sc * lockRatio * introScale, yaw, _fitDest, true);
+        } else {
+          placeSc = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
+        }
       }
       mesh.position.set(_fitDest.x, _fitDest.y + f * L * 0.012, _fitDest.z);
       mesh.rotation.set(0, yaw, zRot);
