@@ -1911,6 +1911,30 @@ const zgW = {
     veil.visible = false;
     mesh.renderOrder = 11;
 
+    // Tagline "Folk Blues" (Blake, 23 Nov 2026): a CHILD of the ZUNIGA mesh, so it shares its material (fade), pose, scale and
+    // float, and scene.children.find(TextGeometry) still returns ZUNIGA. Own failure domain: a throw leaves ZUNIGA intact.
+    try {
+      const ssize = size * 0.34;
+      const sgeo = new TextGeometry('Folk Blues', {
+        font: font,
+        size: ssize,
+        depth: ssize * 0.2,
+        curveSegments: 3,
+        bevelEnabled: false,
+      });
+      sgeo.center();
+      const sub = new THREE.Mesh(sgeo, mat);
+      sub.name = 'zg-tagline';
+      sub.userData.text = 'Folk Blues';
+      sub.position.set(0, -size * 0.78, 0);
+      sub.castShadow = false;
+      sub.receiveShadow = false;
+      sub.renderOrder = 11;
+      mesh.add(sub);
+    } catch (e) {
+      console.warn('[zuniga3d] tagline disabled:', e && e.message ? e.message : e);
+    }
+
     scene.add(mesh);
     scene.add(shadow);
     scene.add(veil);
@@ -3043,6 +3067,7 @@ try { await bootFinish(); } catch (e) { console.warn('[zg] boot finish failed:',
 <button id="zg-home" type="button" aria-label="Back to home">Home</button>
 <div id="zg-root"></div>
 <script type="module" src="chrome.js"></script>
+<script type="module" src="walk-help.js"></script>
 <script type="module" src="harness.js"></script>
 <!-- amp6 hook (WEBSITE, Nov 16): amp6 module, computed placement beyond the headstock, Explore Amp pop + fly -->
 <!-- amp7 (Blake t164u): no "Explore the Amp" button on the home screen; the only way in is the neck-end pop-up -->
@@ -3060,8 +3085,8 @@ function amp11WidgetRow(W, H) {
   const n = Math.max(1, document.querySelectorAll('.zg-tile').length || 2), size = Math.round(Math.min(129, Math.max(106, W * 0.168))), GAP = 16;
   let sl = 0, sb = 0;
   try { const r = document.querySelector('.zg-ring'); if (r) { const cs = getComputedStyle(r); sl = parseFloat(cs.paddingLeft) || 0; sb = parseFloat(cs.paddingBottom) || 0; } } catch (_) { }
-  const margin = W < 600 ? 16 : 24, pad = H > W ? 110 : 24, x0 = Math.max(margin, sl + margin), y1 = H - (sb + pad), y0 = y1 - size;
-  const total = n * size + (n - 1) * GAP, x1 = x0 + Math.min(total, W - 2 * x0), circles = [];
+  const margin = W < 600 ? 16 : 24, pad = H > W ? 110 : 88, y1 = H - (sb + pad), y0 = y1 - size;   // home-v2: mirrors harness.js layout() (row centered, above Explore)
+  const total = n * size + (n - 1) * GAP, x0 = Math.max(Math.max(margin, sl + margin), (W - total) / 2), x1 = x0 + Math.min(total, W - 2 * x0), circles = [];
   for (let x = x0 + size / 2; x <= x1 - size / 2 + 0.5; x += size / 2) circles.push([x, (y0 + y1) / 2, size / 2]);
   return { x0, y0, x1, y1, size, circles };
 }

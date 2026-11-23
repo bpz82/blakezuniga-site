@@ -41,25 +41,8 @@ function init() {
   // amp7 (site1, Blake t164u): no home "Explore the Amp" button; the amp is entered from the neck-end pop-up only
   const explore = document.getElementById('zg-explore-amp');
   const home = makeButton('zg-home-amp', 'Home', 'Back to home');
-  const hint = makeHint();
-  let hintTimer = 0;
-
-  function showHint() {
-    const h = getHandle();
-    hint.textContent = h && h.driver ? HINT_WALK : HINT_ORBIT;
-    hint.classList.add('show');
-    clearTimeout(hintTimer);
-    hintTimer = setTimeout(hideHint, 6000);
-  }
-  function hideHint() {
-    clearTimeout(hintTimer);
-    hint.classList.remove('show');
-  }
-
-  document.addEventListener('zg:mode', (e) => {
-    if (e.detail === 'amp') showHint();
-    else hideHint();
-  });
+  // home-v2: the per-object amp how-to popup is RETIRED (makeHint / #zg-amp-hint are never created or shown).
+  // walk-help.js shows the one universal controls popup for every walk / explore mode.
 
   if (explore) explore.addEventListener('click', () => {
     const h = getHandle();

@@ -1,0 +1,427 @@
+/* Widget harness styles. Dark glass over a black stage with a cherry-red guitar. */
+
+@font-face {
+  font-family: 'Zuniga Mission';
+  src: url('assets/fonts/ZunigaMission-Regular-v3.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+#zg-root {
+  --zg-size: clamp(106px, 16.8vw, 129px);
+  --zg-font-title: 'Zuniga Mission', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --zg-accent: #ff6b5a;
+  --zg-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+}
+
+/* ---------- row (amp11 (Blake t206u) 11a: the ring is now one straight row; class names kept) ---------- */
+
+.zg-ring {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  /* safe-area insets, read by harness.js layout() to keep the row on screen */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  /* gentle linear slide-in from the left (rectangular motion only) */
+  transform: translate3d(-36px, 0, 0);
+  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.6s;
+}
+.zg-ring.zg-on {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+}
+/* back from walk: quicker fade-in */
+.zg-ring.zg-on.zg-ret {
+  transition: opacity 0.3s ease, visibility 0s;
+}
+/* walking: fade out fast, then hidden */
+.zg-ring.zg-on.zg-away {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+}
+.zg-ring.zg-away .zg-tile {
+  pointer-events: none;
+}
+/* amp11 (Blake t206u) 11a: on the amp (and while walking) the row is hidden outright, whatever class state the script is in:
+   no fade, no leftover transition, nothing to pop up */
+body[data-mode="amp"] .zg-ring,
+body[data-mode="walk"] .zg-ring {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+.zg-ring.zg-dragging,
+.zg-ring.zg-dragging .zg-tile {
+  cursor: grabbing;
+}
+
+/* ---------- tiles ---------- */
+
+.zg-tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--zg-size);
+  height: var(--zg-size);
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #141012;
+  /* amp9 (Blake t188u) 9d: "slightly see-through" squares - 78% white fill (was 0.9) + a light backdrop blur; the
+     icon/label stay fully opaque (#141012 on >= ~78% white keeps contrast > 10:1 over the dark scene) */
+  /* amp9 (Blake t188u) 9f: the ring's depth fade (harness.js render() writes --zg-fade = 0.85..1) now scales only the
+     fill alpha (0.663..0.78), not the whole tile, so the label / icon stay solid at every ring angle */
+  background: rgba(255, 255, 255, calc(0.78 * var(--zg-fade, 1)));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid #fff;
+  border-radius: 22%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  will-change: transform;   /* amp11: positioned by harness.js translate3d(x, rowY) (a straight row) */
+  contain: layout paint;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+.zg-tile::before,
+.zg-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--zg-grain);
+  background-size: 120px 120px;
+  opacity: 0.07;
+  pointer-events: none;
+}
+.zg-tile:hover {
+  background: rgba(232, 228, 226, calc(0.84 * var(--zg-fade, 1)));   /* amp9 (Blake t188u): was 0.95; same +0.06 step over the see-through fill; 9f: x depth fade */
+  border-color: #fff;
+}
+.zg-tile:active {
+  background: rgba(232, 228, 226, calc(0.84 * var(--zg-fade, 1)));   /* amp9 (Blake t188u); 9f: x depth fade */
+  border-color: var(--zg-accent);
+}
+.zg-tile:focus-visible {
+  outline: 2px solid var(--zg-accent);
+  outline-offset: 3px;
+}
+/* amp11 (Blake t206u) 11a: glimmer - a soft diagonal shine sweeps across each tile every ~5 s, staggered per tile (--zg-i).
+   CSS only: one transform + opacity animation on a pseudo-element (compositor, no layout / paint, no JS per frame). The tile's
+   contain: paint + radius clip it to the rounded square. Paused while the row is hidden (walk / amp), a panel is open, or the tab is hidden. */
+.zg-tile::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 70%;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transform: translate3d(-130%, 0, 0);
+  animation: zg-glimmer 5.2s linear infinite;
+  animation-delay: calc(var(--zg-i, 0) * 1.9s);
+  animation-play-state: paused;
+}
+.zg-ring.zg-on:not(.zg-away) .zg-tile::after {
+  animation-play-state: running;
+}
+#zg-root[data-state="paused"] .zg-tile::after,
+#zg-root[data-state="hidden"] .zg-tile::after {
+  animation-play-state: paused;
+}
+@keyframes zg-glimmer {
+  0% { transform: translate3d(-130%, 0, 0); opacity: 0; }
+  4% { opacity: 1; }
+  16% { opacity: 1; }
+  20% { transform: translate3d(190%, 0, 0); opacity: 0; }
+  100% { transform: translate3d(190%, 0, 0); opacity: 0; }
+}
+/* amp12 (Blake t208u): shake - every ~7.5 s the icon wiggles (a few degrees, +-2 px) for ~0.45 s and the label nudges 1-2 px, so the
+   squares read as tappable. Only the INNER icon / label move (individual `rotate` / `translate` properties, compositor-only): the tile
+   itself, its bounding rect, centre and the row's translate3d / slide-in are untouched (the 11a single-line check measures the tile
+   rects). Staggered per tile via --zg-i, paused with the glimmer (row hidden in walk / amp, panel open, tab hidden), none under
+   prefers-reduced-motion. */
+.zg-icon {
+  animation: zg-shake 7.5s linear infinite;
+  animation-delay: calc(1.3s + var(--zg-i, 0) * 2.3s);
+  animation-play-state: paused;
+}
+.zg-label {
+  animation: zg-shake-label 7.5s linear infinite;
+  animation-delay: calc(1.3s + var(--zg-i, 0) * 2.3s);
+  animation-play-state: paused;
+}
+.zg-ring.zg-on:not(.zg-away) .zg-icon,
+.zg-ring.zg-on:not(.zg-away) .zg-label {
+  animation-play-state: running;
+}
+#zg-root[data-state="paused"] .zg-icon,
+#zg-root[data-state="paused"] .zg-label,
+#zg-root[data-state="hidden"] .zg-icon,
+#zg-root[data-state="hidden"] .zg-label {
+  animation-play-state: paused;
+}
+@keyframes zg-shake {
+  0%, 6.7%, 100% { rotate: 0deg; translate: 0 0; }
+  1% { rotate: -7deg; translate: -2px 0; }
+  2% { rotate: 7deg; translate: 2px 0; }
+  3% { rotate: -6deg; translate: -2px 0; }
+  4% { rotate: 5deg; translate: 1px 0; }
+  5% { rotate: -3deg; translate: -1px 0; }
+  6% { rotate: 2deg; translate: 0 0; }
+}
+@keyframes zg-shake-label {
+  0%, 6.7%, 100% { translate: 0 0; }
+  1% { translate: -1.5px 0; }
+  2% { translate: 1.5px 0; }
+  3% { translate: -1.5px 0; }
+  4% { translate: 1px 0; }
+  5% { translate: -0.5px 0; }
+}
+.zg-icon,
+.zg-label {
+  z-index: 1;   /* amp11: label / icon stay above the glimmer */
+}
+.zg-icon {
+  position: relative;
+  font-size: calc(var(--zg-size) * 0.42);
+  line-height: 1;
+  color: #141012;
+  text-shadow: none;
+}
+.zg-icon:has(.zg-icon-img) {
+  width: calc(var(--zg-size) * 0.52);
+  height: calc(var(--zg-size) * 0.52);
+  font-size: 0;
+  text-shadow: none;
+}
+.zg-icon-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.zg-label {
+  position: relative;
+  box-sizing: border-box;
+  width: 94%;
+  max-width: 94%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  line-height: 1.15;
+  text-align: center;
+  font-family: var(--zg-font-title);
+  font-size: calc(var(--zg-size) * 0.11);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #141012;
+}
+.zg-tile--error {
+  border-color: rgba(255, 90, 70, 0.7);
+}
+.zg-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #d83a2c;
+  color: #fff;
+  font: 700 11px/16px system-ui, sans-serif;
+  text-align: center;
+}
+
+/* ---------- scrim + panel (above the scene's own buttons) ---------- */
+
+.zg-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: zg-fade 0.2s ease both;
+}
+.zg-panel {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 20;
+  box-sizing: border-box;
+  width: min(92vw, 560px);
+  height: min(78vh, 640px);
+  height: min(78dvh, 640px);
+  display: flex;
+  flex-direction: column;
+  color: #f4ecea;
+  background: rgba(18, 12, 14, 0.72);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 24px 70px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  outline: none;
+  animation: zg-pop 0.22s ease both;
+}
+.zg-head,
+.zg-body,
+.zg-error {
+  position: relative;
+}
+.zg-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 12px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.zg-title {
+  margin: 0;
+  font-family: var(--zg-font-title);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.zg-close {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f4ecea;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  font: 300 28px/1 system-ui, sans-serif;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.18s ease;
+}
+.zg-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+.zg-close:active {
+  background: rgba(255, 107, 90, 0.35);
+}
+.zg-close:focus-visible {
+  outline: 2px solid var(--zg-accent);
+  outline-offset: 2px;
+}
+.zg-body,
+.zg-error {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+.zg-error {
+  padding: 22px;
+  font: 15px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: #ffb4a8;
+}
+.zg-error p {
+  margin: 0 0 8px;
+}
+.zg-error code {
+  font-size: 13px;
+  color: rgba(244, 236, 234, 0.6);
+}
+
+@keyframes zg-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes zg-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zg-scrim,
+  .zg-panel {
+    animation: none;
+  }
+  /* amp11 (Blake t206u) 11a: no sweep, no slide; a static soft highlight on the tile's upper-left corner instead */
+  .zg-ring,
+  .zg-ring.zg-on {
+    transform: none;
+    transition: opacity 0.2s ease, visibility 0s;
+  }
+  .zg-icon,
+  .zg-label {
+    animation: none;   /* amp12 (Blake t208u): no shake */
+  }
+  .zg-tile::after {
+    animation: none;
+    width: 100%;
+    transform: none;
+    opacity: 0.5;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 45%);
+  }
+  .zg-tile,
+  .zg-close {
+    transition: none;
+  }
+}
+
+/* amp12 (Blake t208u): wide panel (Photos only; Contact / Collab keep the normal size). Phone: near full screen. Desktop: big, centred. */
+.zg-panel--wide {
+  width: min(97vw, 1100px);
+  height: min(94vh, 820px);
+  height: min(94dvh, 820px);
+}
+@media (min-width: 700px) {
+  .zg-panel--wide {
+    width: min(94vw, 1100px);
+    height: min(90vh, 820px);
+    height: min(90dvh, 820px);
+  }
+}
+
+/* contact form: let the panel shrink with the visual viewport (iPhone keyboard) */
+.zg-panel--form {
+  max-height: 100dvh;
+}

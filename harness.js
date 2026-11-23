@@ -1,7 +1,8 @@
 /**
- * Widget harness: app-tiles laid out in ONE straight row over the 3D scene.
+ * Apps harness (home-v2: what were called widgets are now "apps"; ids in widget-ids.js are app ids, permanent):
+ * app tiles laid out in ONE straight row over the 3D scene. Each app is an individual module and its own failure domain.
  * amp11 (Blake t206u) 11a: the ring / ellipse carousel (orbit, depth scaling, intro loops, 6 s step, swipe
- * inertia) is gone. The tiles sit in a clean horizontal row at the bottom-left of the home view; the only motion
+ * inertia) is gone. The tiles sit in a clean horizontal row, centered at the bottom of the home view just above Explore; the only motion
  * is a gentle linear slide-in (CSS, on the row) and, when more tiles exist than fit across, a linear drag-scroll
  * along the row. Each tile has a CSS-only periodic glimmer (harness.css .zg-tile::after, animation zg-glimmer).
  *
@@ -129,7 +130,13 @@ export function register(def) {
   if (!def2) return false;
   const entry = { def: def2, el: null, built: false };
   entries.set(def2.id, entry);
-  if (ring) addTile(entry);
+  if (ring) {
+    try {
+      addTile(entry);
+    } catch (err) {
+      console.error('[zg] adding the tile for app "' + def2.id + '" failed', err);
+    }
+  }
   return true;
 }
 
@@ -176,7 +183,7 @@ function buildErrorTile(entry) {
   b.type = 'button';
   b.className = 'zg-tile zg-tile--error';
   b.dataset.id = entry.def.id;
-  b.setAttribute('aria-label', 'Widget failed to load');
+  b.setAttribute('aria-label', 'App failed to load');
   const ic = span('zg-icon', '!');
   ic.setAttribute('aria-hidden', 'true');
   b.append(ic, span('zg-label', 'Error'));
@@ -464,7 +471,7 @@ function openPanel(entry, returnFocus) {
 
 function failSession(session, err) {
   const id = session.entry.def.id;
-  console.error('[zg] widget "' + id + '" failed', err);
+  console.error('[zg] app "' + id + '" failed', err);
   session.failed = true;
   markTileError(session.entry);
   if (session.closed || session.errEl) return;
@@ -473,7 +480,7 @@ function failSession(session, err) {
     e.className = 'zg-error';
     e.setAttribute('role', 'alert');
     const p = document.createElement('p');
-    p.textContent = 'This widget failed to load.';
+    p.textContent = 'This app failed to load.';
     const code = document.createElement('code');
     code.textContent = id;
     e.append(p, code);
@@ -646,10 +653,13 @@ function layout() {
     /* no insets */
   }
   const margin = vw < 600 ? 16 : 24;
-  // amp11: bottom-left row. On a portrait phone it sits above the Explore the Guitar button (bottom pad 110, button top is
-  // ~64 px + 24 px above the bottom edge), under the guitar. On landscape / desktop it sits in the free bottom-left corner.
-  const pad = vh > vw ? 110 : 24;
-  rowX = Math.max(margin, sl + margin);
+  // home-v2 (Blake, 23 Nov 2026): the apps row is CENTERED horizontally and always sits ABOVE the centered "Explore the Guitar"
+  // button (button top is ~64 px + safe-area above the bottom edge): bottom pad 110 on a portrait phone, 88 elsewhere (a 20+ px gap).
+  // When the row is wider than the viewport it starts at the left margin and scrolls (maxScroll below).
+  const pad = vh > vw ? 110 : 88;
+  const rowMin = Math.max(margin, sl + margin);
+  const total0 = order.length * size + Math.max(0, order.length - 1) * GAP;
+  rowX = Math.max(rowMin, (vw - total0) / 2);
   rowY = Math.max(0, vh - (sb + pad) - size);
   const total = order.length * size + Math.max(0, order.length - 1) * GAP;
   maxScroll = Math.max(0, total - (vw - rowX * 2));
@@ -698,17 +708,24 @@ function boot() {
   ring = document.createElement('div');
   ring.className = 'zg-ring';
   ring.setAttribute('role', 'group');
-  ring.setAttribute('aria-label', 'Site sections');
+  ring.setAttribute('aria-label', 'Apps');
   ring.dataset.layout = 'row';   // amp11 (Blake t206u) 11a
   root.appendChild(ring);
 
-  for (const e of entries.values()) addTile(e); // registered before boot
+  // Each app is its own failure domain: one app's tile failing to build never stops the others.
+  for (const e of entries.values()) {
+    try {
+      addTile(e); // registered before boot
+    } catch (err) {
+      console.error('[zg] adding the tile for app "' + (e && e.def && e.def.id) + '" failed', err);
+    }
+  }
 
   for (const w of widgets) {
     try {
       register(w);
     } catch (err) {
-      console.error('[zg] registering a widget failed', err);
+      console.error('[zg] registering an app failed', err);
     }
   }
   try {

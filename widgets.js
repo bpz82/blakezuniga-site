@@ -1,5 +1,6 @@
 /*
- * Site widgets. Each one follows the harness module contract:
+ * Site apps (home-v2: formerly "widgets"; ids are app ids, permanent). Each app is an individual module and its own
+ * failure domain (a throw in one never touches the others or the scene). Each follows the harness module contract:
  *   { id, title, icon, iconSrc?, mount(el, api), unmount? }
  * Retired placeholders stay in this file (no deleting) but are not in the
  * exported `widgets` list, so they do not appear on the home ring.

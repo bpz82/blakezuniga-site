@@ -104,6 +104,30 @@ const zgW = {
     veil.visible = false;
     mesh.renderOrder = 11;
 
+    // Tagline "Folk Blues" (Blake, 23 Nov 2026): a CHILD of the ZUNIGA mesh, so it shares its material (fade), pose, scale and
+    // float, and scene.children.find(TextGeometry) still returns ZUNIGA. Own failure domain: a throw leaves ZUNIGA intact.
+    try {
+      const ssize = size * 0.34;
+      const sgeo = new TextGeometry('Folk Blues', {
+        font: font,
+        size: ssize,
+        depth: ssize * 0.2,
+        curveSegments: 3,
+        bevelEnabled: false,
+      });
+      sgeo.center();
+      const sub = new THREE.Mesh(sgeo, mat);
+      sub.name = 'zg-tagline';
+      sub.userData.text = 'Folk Blues';
+      sub.position.set(0, -size * 0.78, 0);
+      sub.castShadow = false;
+      sub.receiveShadow = false;
+      sub.renderOrder = 11;
+      mesh.add(sub);
+    } catch (e) {
+      console.warn('[zuniga3d] tagline disabled:', e && e.message ? e.message : e);
+    }
+
     scene.add(mesh);
     scene.add(shadow);
     scene.add(veil);
