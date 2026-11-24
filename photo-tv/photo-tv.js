@@ -136,13 +136,13 @@ void main(){
 
 /* ---------- model ---------- */
 // local units: pedestal width ~1.06, facing +z, y = 0 at the floor (feet). Total height (tubes incl.) ~1.13.
-const STAND = false;   // photo-tv (Blake 6:10 approved): the TV floats, no pedestal/legs
-const TV_B = 0.35;     // lowest local y of the floating TV (the bottom of the neon plate); TV_H = the tube tops
+const STAND = true;    // P3 (Blake 7:54, grounded hero TV): pedestal + legs restored, the TV stands on the floor plane (the 6:10 floating variant stays behind this switch)
+const TV_B = 0;    // lowest local y of the floating TV (the bottom of the neon plate); TV_H = the tube tops
 const TV_H = 1.13, TV_BOX = { x: 0.54, z0: -0.34, z1: 0.14 };
 const PY = 0.10;          // pedestal group offset (its local y = 0 is the lowest edge of the boomerang)
 const HEAD_Y = 0.74;      // head centre
 const NECK_Y = 0.46;
-const SIGN = { w: 0.62, y: 0.31 };   // neon plane width / centre height in pedestal-local coords
+const SIGN = { w: 0.76, y: 0.252 };   // neon plane width / centre height in pedestal-local coords
 
 function rrPath(p, hw, hh, r) {
   p.moveTo(-hw + r, -hh); p.lineTo(hw - r, -hh); p.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
@@ -218,7 +218,7 @@ function buildTV(tex) {
   }   // end STAND
   // photo-tv (Blake 6:10 approved): the neon hangs under the head on a slim dark plate (two short brass hangers), no stand
   const ph = SIGN.w * NEON_CH / NEON_CW;
-  { const PLH = ph / 2 + 0.028, PLW = SIGN.w / 2 + 0.03, pl = ext(rrShape(PLW, PLH, 0.045), { depth: 0.03, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
+  if (!STAND) { const PLH = ph / 2 + 0.028, PLW = SIGN.w / 2 + 0.03, pl = ext(rrShape(PLW, PLH, 0.045), { depth: 0.03, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
     pl.translate(0, 0, 0.09); add(pl, plateM, 0, SIGN.y, 0, ped);
     const tb = new THREE.TorusGeometry(1, 0.0035, 4, 40); tb.scale(PLW - 0.004, PLH - 0.004, 1); tb.translate(0, 0, 0.1245); add(tb, brass, 0, SIGN.y, 0, ped);
     const hg = []; for (const sx of [-1, 1]) { const c = new THREE.CylinderGeometry(0.007, 0.007, 0.05, 8); c.translate(sx * PLW * 0.62, SIGN.y + PLH + 0.012, 0.02); hg.push(c); }
@@ -226,8 +226,8 @@ function buildTV(tex) {
   // neon sign planes (under the screen, centred): halo (additive) under a bright-cored text layer
   const haloM = new THREE.MeshBasicMaterial({ map: tex.neonHalo, color: new THREE.Color().setRGB(1.7, 1.05, 0.46), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0 });
   const coreM = new THREE.MeshBasicMaterial({ map: tex.neonCore, color: new THREE.Color().setRGB(2.1, 1.85, 1.5), transparent: true, depthWrite: false, toneMapped: false, opacity: 0 });
-  const haloMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), haloM, 0, SIGN.y, 0.1265, ped); haloMesh.renderOrder = 6;
-  const coreMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), coreM, 0, SIGN.y, 0.1278, ped); coreMesh.renderOrder = 7;
+  const haloMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), haloM, 0, SIGN.y, STAND ? PFZ + 0.007 : 0.1265, ped); haloMesh.renderOrder = 6;
+  const coreMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), coreM, 0, SIGN.y, STAND ? PFZ + 0.0085 : 0.1278, ped); coreMesh.renderOrder = 7;
 
   /* ----- legs: 4 tapered brass, splayed, ball feet ----- */
   const legs = [];
@@ -259,7 +259,7 @@ function buildTV(tex) {
   const pvG = new THREE.CylinderGeometry(0.03, 0.03, 0.045, 18); pvG.rotateZ(Math.PI / 2);
   const capG = new THREE.CylinderGeometry(0.02, 0.02, 0.012, 14); capG.rotateZ(Math.PI / 2);
   for (const sx of [-1, 1]) {
-    add(pvG, chrome, sx * 0.385, 0.03, 0.02, head); add(capG, brass, sx * 0.41, 0.03, 0.02, head);
+    if (STAND) { add(pvG, chrome, sx * 0.385, 0.03, 0.02, head); add(capG, brass, sx * 0.41, 0.03, 0.02, head); }   // P: floating TV has no pivots (slimmer head: screen fills more of the box)
     const c = new THREE.CatmullRomCurve3([[0.40, 0.03], [0.425, -0.08], [0.385, -0.195], [0.29, -0.245], [0.17, -0.268], [0.07, -0.275]].map(p => new THREE.Vector3(sx * p[0], p[1], 0.02)));
     if (STAND) add(new THREE.TubeGeometry(c, 24, 0.0075, 6, false), brass, 0, 0, 0, head);
   }
@@ -478,14 +478,14 @@ async function computePlacement(scene, camera, ampMissing, S) {
   const q = new Float64Array(24), qb = new Float64Array(12), qk = new Float64Array(12), SC4 = [[-SCR_W / 2, -SCR_H / 2], [SCR_W / 2, -SCR_H / 2], [SCR_W / 2, SCR_H / 2], [-SCR_W / 2, SCR_H / 2]];
   const FS = [3.0, 2.7, 2.4, 2.15, 1.9, 1.7, 1.5, 1.3, 1.15, 1.0, 0.85, 0.7];   // tv height as a multiple of the amp's height
   const M = 3;
-  const SG = [[-0.34, 0.25], [0.34, 0.25], [0.34, 0.37], [-0.34, 0.37]];   // the neon sign's quad on the pedestal front (local x, y)
+  const SG = [[-0.40, 0.30], [0.40, 0.30], [0.40, 0.40], [-0.40, 0.40]];   // the neon sign's quad on the pedestal front (local x, y)
   const evalCand = (x, z, yaw, sc, yb) => {   // yb = world y of the TV's lowest point (the neon plate); the TV floats   // -> { v: hard violations (0 = ok), soft: box overlap share, m: size margin (1 = target) }
     const cy = Math.cos(yaw), sy = Math.sin(yaw);
     let wx0 = 1e9, wx1 = -1e9, wz0 = 1e9, wz1 = -1e9;
-    for (const lx of [-0.42, 0.42]) for (const lz of [-0.35, 0.15]) { const X = x + (lx * cy + lz * sy) * sc, Z = z + (-lx * sy + lz * cy) * sc; wx0 = Math.min(wx0, X); wx1 = Math.max(wx1, X); wz0 = Math.min(wz0, Z); wz1 = Math.max(wz1, Z); }
+    for (const lx of [-0.55, 0.55]) for (const lz of [-0.35, 0.15]) { const X = x + (lx * cy + lz * sy) * sc, Z = z + (-lx * sy + lz * cy) * sc; wx0 = Math.min(wx0, X); wx1 = Math.max(wx1, X); wz0 = Math.min(wz0, Z); wz1 = Math.max(wz1, Z); }
     let i = 0; for (const X of [wx0, wx1]) for (const Y of [yb, yb + (TV_H - TV_B) * sc]) for (const Z of [wz0, wz1]) { q[i++] = X; q[i++] = Y; q[i++] = Z; }
     for (let k = 0; k < 4; k++) { const lx = SC4[k][0], ly = SC4[k][1]; qb[k * 3] = x + (lx * cy + 0.13 * sy) * sc; qb[k * 3 + 1] = yb + (HEAD_Y + ly - TV_B) * sc; qb[k * 3 + 2] = z + (-lx * sy + 0.13 * cy) * sc; }
-    for (let k = 0; k < 4; k++) { const lx = SG[k][0], ly = SG[k][1]; qk[k * 3] = x + (lx * cy + 0.16 * sy) * sc; qk[k * 3 + 1] = yb + (PY + ly - TV_B) * sc; qk[k * 3 + 2] = z + (-lx * sy + 0.16 * cy) * sc; }
+    for (let k = 0; k < 4; k++) { const lx = SG[k][0], ly = SG[k][1]; qk[k * 3] = x + (lx * cy + 0.135 * sy) * sc; qk[k * 3 + 1] = yb + (PY + ly - TV_B) * sc; qk[k * 3 + 2] = z + (-lx * sy + 0.135 * cy) * sc; }
     let v = 0, soft = 0, m = 9, late = 0, nh = 0;
     for (const sm of samples) {
       let pv = 0, ps = 0; const hard = sm.hard; if (hard) nh++;
@@ -504,7 +504,9 @@ async function computePlacement(scene, camera, ampMissing, S) {
       if (sm.title) { let tov = 0; for (const o of sm.title) tov += chk(o, PTV_GAP); pv += tov / area * 6 + (tov > 0 ? 0.05 : 0); }   // M4: hard clear of the title
       const cx = (x0 + x1) / 2;   // left of the amp's and the guitar's projected centres
       // M4: a TV wholly ABOVE the guitar's top edge (phones: the band over the title) may sit up to 0.22 vw right of the guitar's centre (still left of the amp)
-      for (const o of [sm.amp, sm.gu]) if (o) { const oc = (o[0] + o[2]) / 2 + (o === sm.gu && y1 < o[1] ? 0.22 * CW : 0); if (cx > oc) pv += 0.3 + (cx - oc) / CW; }
+      // P (Blake 7:52): a TV wholly above the guitar, the amp AND the title may sit anywhere across the top (floating in the empty upper space)
+      let above = true; for (const o of [sm.amp, sm.gu]) if (o && y1 >= o[1]) above = false; if (sm.title) for (const o of sm.title) if (y1 >= o[1] - PTV_GAP) above = false;
+      if (!above) for (const o of [sm.amp, sm.gu]) if (o) { const oc = (o[0] + o[2]) / 2 + (o === sm.gu && y1 < o[1] ? 0.22 * CW : 0); if (cx > oc) pv += 0.3 + (cx - oc) / CW; }
       // the picture + the sign (key rect): hard clear
       let kx0 = 1e9, kx1 = -1e9, ky0 = 1e9, ky1 = -1e9, sx0 = 1e9, sx1 = -1e9, sy0 = 1e9, sy1 = -1e9;
       for (let k = 0; k < 12; k += 3) {
@@ -527,7 +529,7 @@ async function computePlacement(scene, camera, ampMissing, S) {
   };
   let best = null, n = 0;
   // photo-tv (Blake 6:10 approved): the TV floats; its lowest point is hb x the amp's height above the floor (0 = floor level)
-  const NU = 17, NW = 8, HBS = [0, 0.6, 1.2, 1.8, 2.4, 3.0, 3.6, 4.2, 4.8, 5.6];   // M4: + 3.6, 4.6 (above the title on phones)
+  const NU = 17, NW = 8, HBS = [0];   // P3: on the floor   // M4: + 3.6, 4.6 (above the title on phones)
   for (const thd of [24, 34]) for (let iu = 0; iu < NU; iu++) for (let iw = 0; iw < NW; iw++) {
     const u = -3.9 + iu * 0.24, w = -0.5 + iw * 0.5;   // in units of L (the guitar's size) from the guitar's centre; w > 0 = farther from the camera
     const x = bc.x + (rx * u + fx * w) * L, z = bc.z + (rz * u + fz * w) * L;
