@@ -137,6 +137,8 @@ void main(){
 /* ---------- model ---------- */
 // local units: pedestal width ~1.06, facing +z, y = 0 at the floor (feet). Total height (tubes incl.) ~1.13.
 const STAND = true;    // P3 (Blake 7:54, grounded hero TV): pedestal + legs restored, the TV stands on the floor plane (the 6:10 floating variant stays behind this switch)
+const BOXY = true;   // Blake 8:38: boxy cabinet whose front face mirrors the amp's face (no pedestal / legs / pill head)
+const CAB = { w: 1.0, h: 0.86, d: 0.46, fz: 0.10, scrW: 0.84, neonY: 0.125 };
 const TV_B = 0;    // lowest local y of the floating TV (the bottom of the neon plate); TV_H = the tube tops
 const TV_H = 1.13, TV_BOX = { x: 0.54, z0: -0.34, z1: 0.14 };
 const PY = 0.10;          // pedestal group offset (its local y = 0 is the lowest edge of the boomerang)
@@ -184,7 +186,7 @@ function buildTV(tex) {
   /* ----- pedestal (boomerang capsule, ends curve down) ----- */
   const ped = new THREE.Group(); ped.position.y = PY; root.add(ped);
   const PFZ = 0.135;
-  if (STAND) {   // photo-tv (Blake 6:10 approved: suspend the TV, no stand): pedestal / grille / knobs / legs / neck / arms are not built (code kept, switch STAND)
+  if (STAND && !BOXY) {   // photo-tv (Blake 6:10 approved: suspend the TV, no stand): pedestal / grille / knobs / legs / neck / arms are not built (code kept, switch STAND)
   const top = spl([[-0.5, 0.14], [-0.47, 0.23], [-0.38, 0.30], [-0.2, 0.335], [0, 0.34], [0.2, 0.335], [0.38, 0.30], [0.47, 0.23], [0.5, 0.14]], 36);
   const bot = spl([[0.485, 0.075], [0.42, 0.025], [0.31, 0.0], [0.2, 0.02], [0, 0.075], [-0.2, 0.02], [-0.31, 0.0], [-0.42, 0.025], [-0.485, 0.075]], 36);
   const pg = ext(new THREE.Shape(top.concat(bot)), { depth: 0.18, bevelThickness: 0.045, bevelSize: 0.03, bevelSegments: 4 });
@@ -218,7 +220,7 @@ function buildTV(tex) {
   }   // end STAND
   // photo-tv (Blake 6:10 approved): the neon hangs under the head on a slim dark plate (two short brass hangers), no stand
   const ph = SIGN.w * NEON_CH / NEON_CW;
-  if (!STAND) { const PLH = ph / 2 + 0.028, PLW = SIGN.w / 2 + 0.03, pl = ext(rrShape(PLW, PLH, 0.045), { depth: 0.03, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
+  if (!STAND && !BOXY) { const PLH = ph / 2 + 0.028, PLW = SIGN.w / 2 + 0.03, pl = ext(rrShape(PLW, PLH, 0.045), { depth: 0.03, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
     pl.translate(0, 0, 0.09); add(pl, plateM, 0, SIGN.y, 0, ped);
     const tb = new THREE.TorusGeometry(1, 0.0035, 4, 40); tb.scale(PLW - 0.004, PLH - 0.004, 1); tb.translate(0, 0, 0.1245); add(tb, brass, 0, SIGN.y, 0, ped);
     const hg = []; for (const sx of [-1, 1]) { const c = new THREE.CylinderGeometry(0.007, 0.007, 0.05, 8); c.translate(sx * PLW * 0.62, SIGN.y + PLH + 0.012, 0.02); hg.push(c); }
@@ -231,18 +233,29 @@ function buildTV(tex) {
 
   /* ----- legs: 4 tapered brass, splayed, ball feet ----- */
   const legs = [];
-  if (STAND) for (const sx of [-1, 1]) for (const sz of [-1, 1]) legs.push(legGeo([sx * 0.30, 0.118, sz * 0.06], [sx * 0.44, 0.014, sz * 0.13]));
-  if (STAND) add(mergeGeometries(legs), brass, 0, 0, 0);
+  if (STAND && !BOXY) for (const sx of [-1, 1]) for (const sz of [-1, 1]) legs.push(legGeo([sx * 0.30, 0.118, sz * 0.06], [sx * 0.44, 0.014, sz * 0.13]));
+  if (STAND && !BOXY) add(mergeGeometries(legs), brass, 0, 0, 0);
 
   /* ----- neck: brass trumpet foot ----- */
   const neckPts = [[0.09, 0], [0.086, 0.006], [0.07, 0.014], [0.046, 0.032], [0.033, 0.056], [0.031, 0.09]].map(p => new THREE.Vector2(p[0], p[1]));
-  if (STAND) add(new THREE.LatheGeometry(neckPts, 20), brass, 0, NECK_Y, 0);
+  if (STAND && !BOXY) add(new THREE.LatheGeometry(neckPts, 20), brass, 0, NECK_Y, 0);
 
   /* ----- head: cream pill hood + tapered rear bell + bezel ring + pivots + arms ----- */
   const head = new THREE.Group(); head.position.set(0, HEAD_Y, 0); root.add(head);
   const HF = 0.11;   // front cap z
-  add(ext(rrShape(0.33, 0.20, 0.12), { depth: 0.06, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 4 }), cream, 0, 0, 0, head);
-  { const bg = ext(rrShape(0.22, 0.12, 0.09), { depth: 0.1, bevelThickness: 0.1, bevelSize: 0.06, bevelSegments: 4 }); bg.translate(0, -0.01, -0.24); add(bg, cream, 0, 0, 0, head); }
+  const HS = BOXY ? CAB.scrW / SCR_W : 1;
+  if (BOXY) {   // cabinet: rounded cream box, front face at CAB.fz; screen (scaled head) in the upper face, neon strip below it
+    const bw = CAB.w / 2 - 0.025, bh = CAB.h / 2 - 0.025, bd = CAB.d - 0.05;
+    const bg = ext(rrShape(bw, bh, 0.05), { depth: bd, bevelThickness: 0.025, bevelSize: 0.025, bevelSegments: 3 }); bg.translate(0, CAB.h / 2, CAB.fz - bd - 0.025); add(bg, cream, 0, 0, 0);
+    const sy = CAB.h - 0.07 - 0.205 * HS;
+    head.position.set(0, sy, CAB.fz - HF * HS + 0.002); head.scale.setScalar(HS);
+    add(new THREE.ShapeGeometry(rrShape(0.29 * HS, 0.198 * HS, 0.1 * HS)), panelM, 0, sy, CAB.fz + 0.001);   // dark well behind the glass corners
+    const nh = SIGN.w * NEON_CH / NEON_CW + 0.03, ns = rrShape(CAB.w / 2 - 0.06, nh / 2, 0.03);
+    add(new THREE.ShapeGeometry(ns), panelM, 0, CAB.neonY, CAB.fz + 0.002);
+    { const pts = ns.getPoints(8).map(p => new THREE.Vector3(p.x, p.y, 0)); add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 64, 0.0035, 4, true), brass, 0, CAB.neonY, CAB.fz + 0.004); }
+  }
+  if (!BOXY) add(ext(rrShape(0.33, 0.20, 0.12), { depth: 0.06, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 4 }), cream, 0, 0, 0, head);
+  if (!BOXY) { const bg = ext(rrShape(0.22, 0.12, 0.09), { depth: 0.1, bevelThickness: 0.1, bevelSize: 0.06, bevelSegments: 4 }); bg.translate(0, -0.01, -0.24); add(bg, cream, 0, 0, 0, head); }
   { const rs = rrShape(0.31, 0.205, 0.12); rs.holes.push(rrPath(new THREE.Path(), 0.283, 0.193, 0.1)); add(ext(rs, { depth: 0.012, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 2 }), brass, 0, 0, HF, head); }
   // curved glass: plane bulged toward the viewer, rounded corners cut in the shader
   const sg = new THREE.PlaneGeometry(SCR_W, SCR_H, 18, 12);
@@ -259,9 +272,9 @@ function buildTV(tex) {
   const pvG = new THREE.CylinderGeometry(0.03, 0.03, 0.045, 18); pvG.rotateZ(Math.PI / 2);
   const capG = new THREE.CylinderGeometry(0.02, 0.02, 0.012, 14); capG.rotateZ(Math.PI / 2);
   for (const sx of [-1, 1]) {
-    if (STAND) { add(pvG, chrome, sx * 0.385, 0.03, 0.02, head); add(capG, brass, sx * 0.41, 0.03, 0.02, head); }   // P: floating TV has no pivots (slimmer head: screen fills more of the box)
+    if (STAND && !BOXY) { add(pvG, chrome, sx * 0.385, 0.03, 0.02, head); add(capG, brass, sx * 0.41, 0.03, 0.02, head); }   // P: floating TV has no pivots (slimmer head: screen fills more of the box)
     const c = new THREE.CatmullRomCurve3([[0.40, 0.03], [0.425, -0.08], [0.385, -0.195], [0.29, -0.245], [0.17, -0.268], [0.07, -0.275]].map(p => new THREE.Vector3(sx * p[0], p[1], 0.02)));
-    if (STAND) add(new THREE.TubeGeometry(c, 24, 0.0075, 6, false), brass, 0, 0, 0, head);
+    if (STAND && !BOXY) add(new THREE.TubeGeometry(c, 24, 0.0075, 6, false), brass, 0, 0, 0, head);
   }
 
   /* ----- tubes (job B6, pick T2): a chrome rail on the head with 2 tall EL34 (ends, bakelite base) + 4 short 12AX7 on ivory
@@ -288,7 +301,7 @@ function buildTV(tex) {
   // crisp vertical specular stripes (additive, vertex-colour taper) just inside the glass front
   const stripeM = reg(new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }), 't');
   stripeM.renderOrder = 5;
-  const sprites = [], topY = HEAD_Y + 0.24, BASE_Y = topY + 0.002;
+  const sprites = [], topY = BOXY ? CAB.h + 0.004 : HEAD_Y + 0.24, BASE_Y = topY + 0.002;
   const cyl = (r0, r1, h, y, seg = 14) => { const g = new THREE.CylinderGeometry(r0, r1, h, seg, 1); g.translate(0, y, 0); return g; };
   const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); return g; };
   // glass profile -> lathe with vertex colours; tall=true is the EL34 bottle (straight body, shoulder, narrower dome)
@@ -348,6 +361,7 @@ function buildTV(tex) {
   tubeAt(0.043, 0.0235, 0.065, false, GS);
   tubeAt(0.128, 0.0235, 0.065, false, GS);
   tubeAt(0.215, 0.036, 0.108, true, GT);
+  if (BOXY) { ped.position.y = 0; haloMesh.position.set(0, CAB.neonY, CAB.fz + 0.006); coreMesh.position.set(0, CAB.neonY, CAB.fz + 0.0075); }
   glowM.opacity = 0;
   return { root, fade, meshes, screen, screenU, filM, glowM, sprites, haloM, coreM, neonMesh: coreMesh, ped };
 }

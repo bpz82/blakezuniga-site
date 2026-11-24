@@ -1,8 +1,8 @@
 // photo-tv SPEED LAYOUT (Blake 7:52-7:59 AM, hand-set by Grok): fixed home view — guitar lying flat, neck straight away from the camera
 // (bridge nearest), centred; amp right; hero TV left; title top centre. Stops the slow home orbit and overrides the auto placement.
 // Constants per form factor; applied once the TV is on and again after a resize. Fails soft (console.warn) like the rest of photo-tv.
-const PHONE = { k: 2.0, oz: -65, pitch: 0.62, amp: [44, 0, -40], ampRy: -0.85, tv: [-22, 0, -150], tvRy: 0.7, tvS: 118, tDist: 420, tUp: 0.43 };   // Blake 8:27: TV + amp yawed in toward the guitar
-const DESK  = { k: 1.85, oz: 15, pitch: 0.5, amp: [68, 0, -65], ampRy: -0.8, tv: [-72, 0, -70], tvRy: 0.8, tvS: 75, tDist: 230, tUp: 0.33 };
+const PHONE = { k: 2.3, oz: -65, pitch: 0.62, amp: [42, 0, -100], ampRy: -0.85, tv: [-42, 0, -100], tvRy: 0.85, tvS: 74, tDist: 420, tUp: 0.43 };   // Blake 8:27: TV + amp yawed in toward the guitar
+const DESK  = { k: 1.85, oz: 15, pitch: 0.5, amp: [68, 0, -65], ampRy: -0.8, tv: [-64, 0, -65], tvRy: 0.8, tvS: 74, tDist: 230, tUp: 0.33 };
 let C = null, title = null, hooked = false;
 function apply() {
   try {
