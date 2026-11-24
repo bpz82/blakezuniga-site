@@ -167,9 +167,15 @@ function findTitle() {
   titleMesh = null;
   const d = window.__dbg;
   if (!d || !d.scene) return null;
+  let tag = null, named = null, any = null;
   d.scene.traverse((o) => {
-    if (!titleMesh && o.isMesh && o.geometry && o.geometry.type === 'TextGeometry' && o.name === '') titleMesh = o;
+    if (o.name === 'zg-tagline') tag = o;
+    if (o.isMesh && o.geometry && (o.geometry.type === 'TextGeometry' || o.geometry.type === 'ExtrudeGeometry')) {
+      if (!named && (o.userData && o.userData.text === 'ZUNIGA' || o.name === 'ZUNIGA')) named = o;
+      if (!any && o.name !== 'zg-tagline' && o.name !== 'zg-tagline-shadow') any = o;
+    }
   });
+  titleMesh = (tag && tag.parent && tag.parent.isMesh) ? tag.parent : (named || any);
   return titleMesh;
 }
 

@@ -98,10 +98,16 @@ function startEditor() {
     return { core: core || halo, halo, plate, group: [plate, halo, core].filter(Boolean) };
   }
   function title() {
-    let t = null;
     const d = window.__dbg; if (!d || !d.scene) return null;
-    d.scene.traverse((o) => { if (!t && o.isMesh && o.geometry && o.geometry.type === 'TextGeometry' && o.name === '') t = o; });
-    return t;
+    let tag = null, named = null, any = null;
+    d.scene.traverse((o) => {
+      if (o.name === 'zg-tagline') tag = o;
+      if (o.isMesh && o.geometry && (o.geometry.type === 'TextGeometry' || o.geometry.type === 'ExtrudeGeometry')) {
+        if (!named && ((o.userData && o.userData.text === 'ZUNIGA') || o.name === 'ZUNIGA')) named = o;
+        if (!any && o.name !== 'zg-tagline' && o.name !== 'zg-tagline-shadow') any = o;
+      }
+    });
+    return (tag && tag.parent && tag.parent.isMesh) ? tag.parent : (named || any);
   }
   function tilesEl() { return document.getElementById('zg-root'); }
   function exploreEl() { return document.getElementById('zg-explore'); }
@@ -187,12 +193,30 @@ function startEditor() {
     }
     if (id === 'title') {
       const t = title(); if (!t) return null;
-      const b = new THREE.Box3().setFromObject(t);
-      if (b.isEmpty()) return null;
-      return worldCornersRect([
-        [b.min.x, b.min.y, b.min.z], [b.max.x, b.min.y, b.min.z], [b.min.x, b.max.y, b.min.z], [b.max.x, b.max.y, b.min.z],
-        [b.min.x, b.min.y, b.max.z], [b.max.x, b.min.y, b.max.z], [b.min.x, b.max.y, b.max.z], [b.max.x, b.max.y, b.max.z]
+      // Tight local box of ZUNIGA + Folk Blues (world AABB of extruded 3D text is loose and easy to miss)
+      const box = new THREE.Box3();
+      t.updateMatrixWorld(true);
+      t.traverse((o) => {
+        if (!o.isMesh || !o.geometry) return;
+        if (o.name === 'zg-tagline-shadow') return;
+        if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+        const lb = o.geometry.boundingBox; if (!lb) return;
+        const c = [lb.min, lb.max];
+        for (let i = 0; i < 8; i++) {
+          tmp.set(c[i & 1].x, c[(i >> 1) & 1].y, c[(i >> 2) & 1].z);
+          o.localToWorld(tmp);
+          box.expandByPoint(tmp);
+        }
+      });
+      if (box.isEmpty()) box.setFromObject(t);
+      if (box.isEmpty()) return null;
+      const r = worldCornersRect([
+        [box.min.x, box.min.y, box.min.z], [box.max.x, box.min.y, box.min.z], [box.min.x, box.max.y, box.min.z], [box.max.x, box.max.y, box.min.z],
+        [box.min.x, box.min.y, box.max.z], [box.max.x, box.min.y, box.max.z], [box.min.x, box.max.y, box.max.z], [box.max.x, box.max.y, box.max.z]
       ], cam, el);
+      if (!r) return null;
+      const pad = 28;
+      return { x: r.x - pad, y: r.y - pad, w: r.w + pad * 2, h: r.h + pad * 2 };
     }
     if (id === 'guitar' || id === 'amp') {
       const obj = id === 'guitar' ? guitar() : amp();
@@ -207,13 +231,28 @@ function startEditor() {
     return null;
   }
 
-  function hitTest(x, y) {
+  function contains(r, x, y, pad) {
+    if (!r) return false;
+    pad = pad || 0;
+    return x >= r.x - pad && x <= r.x + r.w + pad && y >= r.y - pad && y <= r.y + r.h + pad;
+  }
+
+  function hitsAt(x, y) {
+    const out = [];
     for (const id of ITEMS) {
       const r = itemRect(id);
-      if (!r) continue;
-      if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return id;
+      if (r && contains(r, x, y, 0)) out.push({ id, a: r.w * r.h, r });
     }
-    return null;
+    out.sort((a, b) => a.a - b.a);
+    return out;
+  }
+
+  function hitTest(x, y) {
+    const hits = hitsAt(x, y);
+    if (!hits.length) return null;
+    // A selected chip's item wins even if a huge box (the scaled-up guitar) also covers the click.
+    if (selected && hits.some((h) => h.id === selected)) return selected;
+    return hits[0].id;   // smallest box, so the title / sign win over the guitar
   }
 
   function poseOf(obj) {
@@ -300,13 +339,17 @@ function startEditor() {
 
   function select(id) {
     selected = id || null;
+    if (selected && selected !== 'camera') {
+      try { ensureItem(selected); } catch (_) { }
+    }
     updateBox();
     emit();
   }
 
   function updateBox() {
     if (!selected || selected === 'camera') { box.hidden = true; return; }
-    const r = itemRect(selected);
+    let r = null;
+    try { r = itemRect(selected); } catch (_) { r = null; }
     if (!r || r.w < 2 || r.h < 2) { box.hidden = true; return; }
     box.hidden = false;
     box.style.left = r.x + 'px';
@@ -353,10 +396,21 @@ function startEditor() {
       e.preventDefault();
       return;
     }
-    const id = hitTest(e.clientX, e.clientY);
-    if (id) select(id);
-    else if (selected !== 'camera') select(null);
-    if (!selected || selected === 'camera') { dragging = null; return; }
+    // Selected chip takes priority: start a drag on that item unless the click is
+    // clearly on a *smaller* other item (and not inside the selected box).
+    const hits = hitsAt(e.clientX, e.clientY);
+    const sr = selected && selected !== 'camera' ? itemRect(selected) : null;
+    const inSelected = !!(sr && contains(sr, e.clientX, e.clientY, 48));
+    let id = null;
+    if (inSelected) id = selected;
+    else if (selected && selected !== 'camera') {
+      const smallest = hits[0];
+      // Switch only for a clearly smaller other item (tiles, sign). A huge guitar/panel box must not steal the chip.
+      if (smallest && smallest.id !== selected && sr && smallest.a < sr.a * 0.85) id = smallest.id;
+      else id = selected;
+    } else if (hits.length) id = hits[0].id;
+    if (!id || id === 'camera') { if (!id && selected !== 'camera') select(null); dragging = null; return; }
+    if (id !== selected) select(id);
     ensureItem(selected);
     const it = Object.assign({}, R.active()[selected] || {});
     const obj = selected === 'guitar' ? guitar() : selected === 'amp' ? amp() : null;
