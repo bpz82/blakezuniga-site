@@ -561,10 +561,17 @@ function closePanel(session) {
 function render() {
   const n = order.length;
   if (!n) return;
+  // layout editor: optional pixel offset / scale from window.__homeLayout.tiles (never transform #zg-root —
+  // that made this position:fixed row collapse). Missing or empty values keep the automatic row.
+  const off = (window.__homeLayout && window.__homeLayout.tiles) || {};
+  const ox = +off.x || 0, oy = +off.y || 0;
+  let sc = off.s != null ? +off.s : 1;
+  if (!(sc >= 0.4)) sc = off.s != null ? 0.4 : 1;
+  if (sc > 3) sc = 3;
   for (let i = 0; i < n; i++) {
     const e = order[i];
-    const tf = 'translate3d(' + (rowX + i * (size + GAP) - scroll).toFixed(1) + 'px,' + rowY.toFixed(1) + 'px,0)';
-    if (tf !== e.tf) { e.tf = tf; e.el.style.transform = tf; }
+    const tf = 'translate3d(' + (rowX + i * (size + GAP) - scroll + ox).toFixed(1) + 'px,' + (rowY + oy).toFixed(1) + 'px,0)' + (sc !== 1 ? ' scale(' + sc.toFixed(3) + ')' : '');
+    if (tf !== e.tf) { e.tf = tf; e.el.style.transform = tf; e.el.style.transformOrigin = 'center bottom'; }
   }
 }
 
@@ -784,6 +791,7 @@ function boot() {
   else if (mq.addListener) mq.addListener(onMq);
 
   window.addEventListener('resize', layout);
+  document.addEventListener('zg:layout-tiles', () => { try { render(); } catch (err) { console.warn('[zg] layout-tiles render failed', err); } });
   window.addEventListener('orientationchange', layout);
   document.addEventListener('visibilitychange', sync);
   document.addEventListener('zg:mode', onSceneMode);

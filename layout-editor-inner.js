@@ -375,15 +375,56 @@ function startEditor() {
     return 1;
   }
 
-  function applyScale(id, start, factor, startW, startH) {
-    const f = Math.max(0.25, Math.min(4, factor));
+
+  function clampItem(id) {
+    if (!id || id === 'camera') return;
+    const it = R.active()[id];
+    if (!it) return;
+    if (it.s != null && it.s < 0.4) R.setItem(id, { s: 0.4 }, true);
     if (id === 'panel') {
-      const w = Math.max(0.12, Math.min(1.2, (startW || start) * f));
-      const h = Math.max(0.08, Math.min(1.2, (startH || start * 0.7) * f));
+      const p = {};
+      if (it.w != null && it.w < 0.18) p.w = 0.18;
+      if (it.h != null && it.h < 0.12) p.h = 0.12;
+      if (p.w != null || p.h != null) R.setItem(id, p, true);
+    }
+    const r = itemRect(id);
+    if (!r) return;
+    const n = R.nudgeIntoView(r, innerWidth, innerHeight, 12);
+    if (!n.dx && !n.dy) return;
+    if (id === 'tiles' || id === 'explore') {
+      const cur = R.active()[id] || it;
+      R.setItem(id, { x: (cur.x || 0) + n.dx, y: (cur.y || 0) + n.dy }, true);
+    } else if (id === 'panel' || id === 'title') {
+      const cur = R.active()[id] || it;
+      R.setItem(id, { cx: (cur.cx || 0) + n.dx / innerWidth, cy: (cur.cy || 0) - n.dy / innerHeight }, true);
+    } else if (id === 'neon') {
+      const cur = R.active()[id] || it;
+      const pr = itemRect('panel');
+      if (pr && pr.w > 1 && pr.h > 1) R.setItem(id, { lx: (cur.lx || 0) + n.dx / pr.w, ly: (cur.ly || 0) - n.dy / pr.h }, true);
+    } else if (id === 'guitar' || id === 'amp') {
+      const obj = id === 'guitar' ? guitar() : amp();
+      if (!obj) return;
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      const a = eventToPlane({ clientX: cx, clientY: cy }, obj.position);
+      const b = eventToPlane({ clientX: cx + n.dx, clientY: cy + n.dy }, obj.position);
+      if (a && b) { obj.position.add(b.sub(a)); R.setItem(id, poseOf(obj), true); }
+    }
+  }
+
+  function clampAll() {
+    ['guitar', 'amp', 'panel', 'title', 'neon', 'tiles', 'explore'].forEach(clampItem);
+  }
+
+  function applyScale(id, start, factor, startW, startH) {
+    const f = Math.max(0.25, Math.min(3, factor));
+    if (id === 'panel') {
+      const w = Math.max(0.18, Math.min(1.1, (startW || start) * f));
+      const h = Math.max(0.12, Math.min(1.0, (startH || start * 0.7) * f));
       R.setItem(id, { w, h }, true);
     } else if (id === 'guitar' || id === 'amp' || id === 'title' || id === 'neon' || id === 'tiles' || id === 'explore') {
-      R.setItem(id, { s: Math.max(0.2, Math.min(5, start * f)) }, true);
+      R.setItem(id, { s: Math.max(0.4, Math.min(3, start * f)) }, true);
     }
+    clampItem(id);
     emit();
   }
 
@@ -424,12 +465,14 @@ function startEditor() {
         obj.position.copy(dragging.startPos).add(now.sub(dragging.startHit));
       }
       R.setItem(id, poseOf(obj), true);
+      clampItem(id);
       emit();
       return;
     }
     if (id === 'panel' || id === 'title') {
       const st = dragging.start;
       R.setItem(id, { cx: (st.cx || 0) + dx / innerWidth, cy: (st.cy || 0) - dy / innerHeight }, true);
+      clampItem(id);
       emit();
       return;
     }
@@ -442,12 +485,14 @@ function startEditor() {
       } else {
         R.setItem(id, { lx: (st.lx || 0) + dx / innerWidth, ly: (st.ly || 0) - dy / innerHeight }, true);
       }
+      clampItem(id);
       emit();
       return;
     }
     if (id === 'tiles' || id === 'explore') {
       const st = dragging.start;
       R.setItem(id, { x: (st.x || 0) + dx, y: (st.y || 0) + dy }, true);
+      clampItem(id);
       emit();
     }
   }
@@ -488,6 +533,7 @@ function startEditor() {
         if (m.id === 'guitar' && guitar()) applyLivePose(guitar(), R.active().guitar);
         if (m.id === 'amp' && amp()) applyLivePose(amp(), R.active().amp);
       }
+      clampItem(m.id);
       emit();
     }
     if (m.type === 'le:reset') {
@@ -522,6 +568,7 @@ function startEditor() {
     if (!sceneReady() || !window.__layoutRuntime) { setTimeout(wait, 300); emit(); return; }
     freezeOrbit();
     R.applyNow();
+    clampAll();
     emit({ type: 'le:state', boot: true });
     try { parent.postMessage({ type: 'le:ready', viewport: R.activeViewport(), vw: innerWidth, vh: innerHeight }, '*'); } catch (_) { }
     window.__layoutEditor = { ready: true, selected, doc: R.getDoc(), viewport: R.activeViewport() };
