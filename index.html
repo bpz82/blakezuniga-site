@@ -2199,10 +2199,58 @@ const zgW = {
       } catch (_) { /* guitar not ready */ }
       return top;
     }
+    // photo-tv job K (Blake 4:34 "Folk Blues disappears into the amp"): projected top of the amp (screen px) so the
+    // name can sit fully above it. World bbox corners of every amp mesh are cached (the amp is static in the home view)
+    // and only re-projected here: no allocation, no traverse per frame. ampK eases the lift in while the amp fades in.
+    let _ampPts = null, _ampKey = '', ampK = 0;
+    const _ampRect = { x: 0, y: 0, right: 0, bottom: 0 };
+    function ampScreenRect(camera) {
+      try {
+        const A = window.__amp8, h = window.__ampHandle, o = h && h.object3d;
+        if (!A || A.modelShownT === null || !o || o.visible === false) return null;
+        const e = o.matrixWorld.elements;
+        const key = e[0].toFixed(3) + e[2].toFixed(3) + e[12].toFixed(3) + e[13].toFixed(3) + e[14].toFixed(3);
+        if (!_ampPts || key !== _ampKey) {
+          const pts = [];
+          o.updateWorldMatrix(true, true);
+          o.traverse((m) => {
+            if (!m.geometry || m.visible === false) return;
+            if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+            const bb = m.geometry.boundingBox; if (!bb) return;
+            const w = m.matrixWorld.elements;
+            for (let i = 0; i < 8; i++) {
+              const lx = i & 1 ? bb.max.x : bb.min.x, ly = i & 2 ? bb.max.y : bb.min.y, lz = i & 4 ? bb.max.z : bb.min.z;
+              pts.push(w[0] * lx + w[4] * ly + w[8] * lz + w[12], w[1] * lx + w[5] * ly + w[9] * lz + w[13], w[2] * lx + w[6] * ly + w[10] * lz + w[14]);
+            }
+          });
+          _ampPts = pts; _ampKey = key;
+        }
+        camera.updateMatrixWorld(true);
+        const W = window.innerWidth || 1, H = window.innerHeight || 1;
+        const iv = camera.matrixWorldInverse.elements, pj = camera.projectionMatrix.elements;
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, n = 0;
+        for (let i = 0; i < _ampPts.length; i += 3) {
+          const wx = _ampPts[i], wy = _ampPts[i + 1], wz = _ampPts[i + 2];
+          const vx = iv[0] * wx + iv[4] * wy + iv[8] * wz + iv[12];
+          const vy = iv[1] * wx + iv[5] * wy + iv[9] * wz + iv[13];
+          const vz = iv[2] * wx + iv[6] * wy + iv[10] * wz + iv[14];
+          const vw = iv[3] * wx + iv[7] * wy + iv[11] * wz + iv[15];
+          const cx = pj[0] * vx + pj[4] * vy + pj[8] * vz + pj[12] * vw;
+          const cy = pj[1] * vx + pj[5] * vy + pj[9] * vz + pj[13] * vw;
+          const cw = pj[3] * vx + pj[7] * vy + pj[11] * vz + pj[15] * vw;
+          if (cw <= 0) continue;
+          const sx = (cx / cw + 1) / 2 * W, sy = (1 - cy / cw) / 2 * H;
+          if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy; n++;
+        }
+        if (!n) return null;
+        _ampRect.x = x0; _ampRect.y = y0; _ampRect.right = x1; _ampRect.bottom = y1;
+        return _ampRect;
+      } catch (_) { return null; }
+    }
     // Fit the ZUNIGA + Folk Blues group to the camera frustum with a comfortable
     // screen margin, stay clear of the guitar, and scale down on short aspects.
     // Replaces the fixed L*0.05 lift, which pushed the name out of the top of the frame.
-    function fitGroupToFrustum(camera, anchor, baseScale, yaw, dest, noScale) {
+    function fitGroupToFrustum(camera, anchor, baseScale, yaw, dest, noScale, useAmp) {
       const W = Math.max(1, window.innerWidth || 1), H = Math.max(1, window.innerHeight || 1);
       const margin = Math.max(24, Math.round(Math.min(W, H) * 0.05));
       // call 7 (CE2): on a tall portrait phone (393x852) the guitar clearance is 6px so the name can sit at ~28% down; shorter/landscape views keep 16px
@@ -2239,12 +2287,22 @@ const zgW = {
         const needX = centerX();
         if (needX) { projectNameBox(camera, x, y, z, scale, yaw, box); }
         const gTop = guitarScreenTop(camera, box.x, box.right);
-        const floor = Math.min(H - margin, Number.isFinite(gTop) ? gTop - gap : H - margin);
+        const floorG = Math.min(H - margin, Number.isFinite(gTop) ? gTop - gap : H - margin);
         const ceil = margin;
-        const roomH = floor - ceil, roomW = W - 2 * margin;
+        const roomH = floorG - ceil, roomW = W - 2 * margin;
+        // job K: rest pose only - sit fully above the amp (eased in by ampK), never above the CE2 floor (cy >= 28% of vh on phones)
+        let floor = floorG, ceilA = ceil, ampLim = false;
+        if (useAmp && ampK > 0) {
+          const ar = ampScreenRect(camera);
+          if (ar && ar.right > box.x && ar.x < box.right) {
+            const fa = floorG + (Math.min(floorG, ar.y - (portrait ? gap : 8)) - floorG) * ampK;
+            if (fa < floorG - 0.01) { floor = fa; ampLim = true; ceilA = portrait ? ceil : Math.min(ceil, 24); }   // photo-tv (Blake 6:03 approved: CE2 28% title-height cap lifted on phones; top margin only, was max(ceil, 0.28H - textH/2))
+          }
+        }
         let scaled = false;
-        if (!noScale && roomH > 8 && textH > roomH && scale > minScale + 1e-4) {
-          scale = Math.max(minScale, scale * (roomH / textH) * 0.96);
+        const roomHA = ampLim && !portrait ? floor - ceilA : roomH;   // job K: wide views shrink the name a little to fit above the amp (phones: CE2 floor, no shrink)
+        if (!noScale && roomHA > 8 && textH > roomHA && scale > minScale + 1e-4) {
+          scale = Math.max(minScale, scale * (roomHA / textH) * 0.96);
           scaled = true;
         }
         if (!noScale && roomW > 8 && textW > roomW && scale > minScale + 1e-4) {
@@ -2252,7 +2310,7 @@ const zgW = {
           scaled = true;
         }
         if (scaled) continue;
-        const overflowTop = ceil - box.y;
+        const overflowTop = (ampLim ? ceilA : ceil) - box.y;
         const overflowBot = box.bottom - floor;
         const lowT = portrait ? Math.min(Math.max(ceil, H * 0.31 - textH / 2), Math.max(ceil, floor - textH)) : null;
         const wantLower = lowT !== null && box.y < lowT - 0.75;
@@ -2262,9 +2320,10 @@ const zgW = {
         const dBoxYdWorldY = (_fitProbe.y - box.y) / -1;
         if (!Number.isFinite(dBoxYdWorldY) || Math.abs(dBoxYdWorldY) < 1e-6) break;
         let desired = box.y;
-        if (overflowTop > 0.75) desired = ceil;
+        if (overflowTop > 0.75) desired = ampLim ? ceilA : ceil;
         else if (overflowBot > 0.75) desired = noScale ? Math.max(ceil, box.y - overflowBot) : box.y - overflowBot;
         else if (wantLower) desired = lowT;   // call 3: locked-scale fit keeps the top margin ahead of guitar clearance (no up/down oscillation)
+        if (ampLim && desired < ceilA) desired = ceilA;
         y += (desired - box.y) / dBoxYdWorldY;
       }
       for (let i = 0; i < 3; i++) if (!centerX()) break;
@@ -2505,6 +2564,8 @@ const zgW = {
       const f = Math.sin(t * 0.9) * dE;
       const zRot = Math.sin(t * 0.6) * 0.02 * dE;
       // intro-frame: fit the group to this camera frustum (margin + guitar clearance), then add the idle float.
+      // job K: ease the amp-clear lift in once the amp is shown (rest pose only)
+      if (phase === 'done' && window.__amp8 && window.__amp8.modelShownT !== null) ampK = Math.min(1, ampK + dt / 1.6);
       let placeSc = sc * introScale;
       _fitDest.copy(pos);
       if (mode !== 'walk') {
@@ -2515,12 +2576,12 @@ const zgW = {
         } else if (phase === 'done' && lockRatio && doneK < 1 && lockW === window.innerWidth && lockH === window.innerHeight) {
           // call 7 (SM6): ease from the locked-scale pose used during 'down' to the free rest pose (no world-position / scale jump on the first done frame)
           const sL = fitGroupToFrustum(camera, pos, sc * lockRatio, yaw, _fitDest2, true);
-          const sF = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
+          const sF = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest, false, true);
           const w = smooth01(doneK);
           _fitDest.lerpVectors(_fitDest2, _fitDest, w);
           placeSc = sL + (sF - sL) * w;
         } else {
-          placeSc = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
+          placeSc = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest, false, true);
         }
       }
       mesh.position.set(_fitDest.x, _fitDest.y + f * L * 0.012, _fitDest.z);
@@ -3906,7 +3967,8 @@ function* amp7PlaceAutoGen(THREE, box, qs, why) {   // amp8: generator form (sam
 // guitarCutMax: how much of the guitar's bbox may leave the frame at the worst yaw (portrait: its neck already left a
 // 393 px wide frame at some yaws in amp8, 7%, so a little more is allowed there to keep it big)
 const AMP9_RULE = { gapMaxL: 0.35, areaMax: 0.35, cutMax: 1 / 3, distMin: 1.5, guitarCutMax: 0.08, guitarCutMaxPortrait: 0.2, N: 36, startCut: 0.02, centreF: 0.35,
-  centreFs: [0.15, 0.3, 0.45, 0.6], hero: 0.85, heroK: { landscape: 1.75, portrait: 1.35 },
+  cutMaxOrbit: 0.5, cutPoses: 4,   // photo-tv (Blake 6:03 approved: amp orbit cut relaxed): was cut <= 1/3 on every pose
+  centreFs: [0, 0.08, 0.15, 0.3, 0.45, 0.6], hero: 0.85, heroK: { landscape: 1.75, portrait: 1.35 },
   K: [1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.35, 2.5] };
 // home-orbit poses (start yaw first) for pull-back k round centre (cx, bcY, cz), same camera as tick(): viewProj + cam xyz
 function amp9Poses(THREE, cx, bcY, cz, L, W, H, k, n) {
@@ -3950,7 +4012,7 @@ function amp9Rect(ps, pose, W, H, r) {
 function amp9Orbit(poses, lb, x, y, z, yaw, W, H, cs, rc, gcs) {   // gcs: the guitar's 8 bbox corners (cut check)
   amp9Corners(lb, x, y, z, yaw, cs);
   const c = Math.cos(yaw), s = Math.sin(yaw), size = Math.max(lb.x1 - lb.x0, lb.y1 - lb.y0, lb.z1 - lb.z0);
-  let area = 0, cut = 0, dist = Infinity, startCut = 0, gCut = 0;
+  let area = 0, cut = 0, dist = Infinity, startCut = 0, gCut = 0, cutN = 0;
   for (let i = 0; i < poses.length; i++) {
     const p = poses[i], dx = p.x - x, dz = p.z - z, lx = dx * c - dz * s, lz = dx * s + dz * c, ly = p.y - y;
     const qx = lx - Math.min(lb.x1, Math.max(lb.x0, lx)), qy = ly - Math.min(lb.y1, Math.max(lb.y0, ly)), qz = lz - Math.min(lb.z1, Math.max(lb.z0, lz));
@@ -3963,6 +4025,7 @@ function amp9Orbit(poses, lb, x, y, z, yaw, W, H, cs, rc, gcs) {   // gcs: the g
       a = vis / (W * H); k = 1 - vis / full;
     }
     area = Math.max(area, a); cut = Math.max(cut, k); if (i === 0) startCut = k;
+    if (i > 0 && k > AMP9_RULE.cutMax) cutN++;   // photo-tv (Blake 6:03 approved: amp orbit cut relaxed)
     if (gcs) {   // the guitar (hero) must stay in frame too
       const g = amp9Rect(gcs, p, W, H, rc);
       if (!g) gCut = 1;
@@ -3970,9 +4033,11 @@ function amp9Orbit(poses, lb, x, y, z, yaw, W, H, cs, rc, gcs) {   // gcs: the g
     }
   }
   const gMax = W >= H ? AMP9_RULE.guitarCutMax : AMP9_RULE.guitarCutMaxPortrait;
-  const ok = area <= AMP9_RULE.areaMax && cut <= AMP9_RULE.cutMax && dist >= AMP9_RULE.distMin && startCut <= AMP9_RULE.startCut && gCut <= gMax;
-  return { ok, areaFrac: area, cutFrac: cut, camDistOverAmpSize: dist, startCut, guitarCut: gCut,
-    bad: Math.max(0, area - AMP9_RULE.areaMax) * 4 + Math.max(0, cut - AMP9_RULE.cutMax) * 3 + Math.max(0, AMP9_RULE.distMin - dist) + Math.max(0, startCut - AMP9_RULE.startCut) + Math.max(0, gCut - gMax) * 3 };
+  // photo-tv (Blake 6:03 approved: amp orbit cut relaxed): cutMax 1/3 -> up to cutMaxOrbit (0.5) on at most cutPoses (4 of 36) orbit poses; the start pose keeps startCut 0.02
+  const cutOk = cut <= AMP9_RULE.cutMaxOrbit && cutN <= AMP9_RULE.cutPoses;
+  const ok = area <= AMP9_RULE.areaMax && cutOk && dist >= AMP9_RULE.distMin && startCut <= AMP9_RULE.startCut && gCut <= gMax;
+  return { ok, areaFrac: area, cutFrac: cut, cutPoses: cutN, camDistOverAmpSize: dist, startCut, guitarCut: gCut,
+    bad: Math.max(0, area - AMP9_RULE.areaMax) * 4 + Math.max(0, cut - AMP9_RULE.cutMaxOrbit) * 3 + Math.max(0, cutN - AMP9_RULE.cutPoses) * 0.05 + Math.max(0, AMP9_RULE.distMin - dist) + Math.max(0, startCut - AMP9_RULE.startCut) + Math.max(0, gCut - gMax) * 3 };
 }
 function amp9GuitarCorners(bb) { const o = []; for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const z of [bb.min.z, bb.max.z]) o.push(x, y, z); return new Float64Array(o); }
 // 2D distance between the guitar's bbox (xz rect) and the amp's rotated footprint (4 corners, xz)
@@ -4131,7 +4196,7 @@ function* amp9PlaceGen(THREE, box, qs, why) {
     const c0 = ctrOf(cd.x, cd.z, F);
     const ps = amp9Poses(THREE, c0[0], bc.y, c0[1], L, W, H, k), yaw = Math.atan2(ps[0].x - cd.x, ps[0].z - cd.z) + (dy || 0);
     const hero = gW(ps[0]) / Math.max(1, heroRef);   // guitar start width vs the amp8 framing (shrinks as k grows)
-    const total = cd.cost + Math.max(0, 1.15 - hero) * 120 + F * 10;
+    const total = cd.cost + Math.max(0, 1.15 - hero) * 120 + F * 90;   // photo-tv (Blake 6:03): guitar in the middle -> prefer a small centre shift (was F*10)
     if (best && total >= best.total && hero < 1.15) return 'skip';
     const o = amp9Orbit(ps, lb, cd.x, floorY, cd.z, yaw, W, H, cs, rc, gcs);
     o.hero = hero;

@@ -136,11 +136,13 @@ void main(){
 
 /* ---------- model ---------- */
 // local units: pedestal width ~1.06, facing +z, y = 0 at the floor (feet). Total height (tubes incl.) ~1.13.
+const STAND = false;   // photo-tv (Blake 6:10 approved): the TV floats, no pedestal/legs
+const TV_B = 0.35;     // lowest local y of the floating TV (the bottom of the neon plate); TV_H = the tube tops
 const TV_H = 1.13, TV_BOX = { x: 0.54, z0: -0.34, z1: 0.14 };
 const PY = 0.10;          // pedestal group offset (its local y = 0 is the lowest edge of the boomerang)
 const HEAD_Y = 0.74;      // head centre
 const NECK_Y = 0.46;
-const SIGN = { w: 0.76, y: 0.252 };   // neon plane width / centre height in pedestal-local coords
+const SIGN = { w: 0.62, y: 0.31 };   // neon plane width / centre height in pedestal-local coords
 
 function rrPath(p, hw, hh, r) {
   p.moveTo(-hw + r, -hh); p.lineTo(hw - r, -hh); p.absarc(hw - r, -hh + r, r, -Math.PI / 2, 0, false);
@@ -181,10 +183,12 @@ function buildTV(tex) {
 
   /* ----- pedestal (boomerang capsule, ends curve down) ----- */
   const ped = new THREE.Group(); ped.position.y = PY; root.add(ped);
+  const PFZ = 0.135;
+  if (STAND) {   // photo-tv (Blake 6:10 approved: suspend the TV, no stand): pedestal / grille / knobs / legs / neck / arms are not built (code kept, switch STAND)
   const top = spl([[-0.5, 0.14], [-0.47, 0.23], [-0.38, 0.30], [-0.2, 0.335], [0, 0.34], [0.2, 0.335], [0.38, 0.30], [0.47, 0.23], [0.5, 0.14]], 36);
   const bot = spl([[0.485, 0.075], [0.42, 0.025], [0.31, 0.0], [0.2, 0.02], [0, 0.075], [-0.2, 0.02], [-0.31, 0.0], [-0.42, 0.025], [-0.485, 0.075]], 36);
   const pg = ext(new THREE.Shape(top.concat(bot)), { depth: 0.18, bevelThickness: 0.045, bevelSize: 0.03, bevelSegments: 4 });
-  pg.translate(0, 0, -0.09); const PFZ = 0.135;
+  pg.translate(0, 0, -0.09);
   add(pg, cream, 0, 0, 0, ped);
   // dark inset front panel + brass trim line
   const pT = spl([[-0.46, 0.17], [-0.44, 0.24], [-0.37, 0.295], [-0.2, 0.315], [0, 0.32], [0.2, 0.315], [0.37, 0.295], [0.44, 0.24], [0.46, 0.17]], 20);
@@ -211,21 +215,28 @@ function buildTV(tex) {
     const mark = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.02, 0.004), panelM); mark.position.set(0, 0.016, 0.0165); mark.rotation.z = sx * 0.5; k.add(mark);
     add(bt, chrome, kx, 0.10, PFZ + 0.008, ped);
   }
-  // neon sign planes (above the grille, between the knobs): halo (additive) under a bright-cored text layer
+  }   // end STAND
+  // photo-tv (Blake 6:10 approved): the neon hangs under the head on a slim dark plate (two short brass hangers), no stand
   const ph = SIGN.w * NEON_CH / NEON_CW;
+  { const PLH = ph / 2 + 0.028, PLW = SIGN.w / 2 + 0.03, pl = ext(rrShape(PLW, PLH, 0.045), { depth: 0.03, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 });
+    pl.translate(0, 0, 0.09); add(pl, plateM, 0, SIGN.y, 0, ped);
+    const tb = new THREE.TorusGeometry(1, 0.0035, 4, 40); tb.scale(PLW - 0.004, PLH - 0.004, 1); tb.translate(0, 0, 0.1245); add(tb, brass, 0, SIGN.y, 0, ped);
+    const hg = []; for (const sx of [-1, 1]) { const c = new THREE.CylinderGeometry(0.007, 0.007, 0.05, 8); c.translate(sx * PLW * 0.62, SIGN.y + PLH + 0.012, 0.02); hg.push(c); }
+    add(mergeGeometries(hg), brass, 0, 0, 0, ped); }
+  // neon sign planes (under the screen, centred): halo (additive) under a bright-cored text layer
   const haloM = new THREE.MeshBasicMaterial({ map: tex.neonHalo, color: new THREE.Color().setRGB(1.7, 1.05, 0.46), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0 });
   const coreM = new THREE.MeshBasicMaterial({ map: tex.neonCore, color: new THREE.Color().setRGB(2.1, 1.85, 1.5), transparent: true, depthWrite: false, toneMapped: false, opacity: 0 });
-  const haloMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), haloM, 0, SIGN.y, PFZ + 0.007, ped); haloMesh.renderOrder = 6;
-  const coreMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), coreM, 0, SIGN.y, PFZ + 0.0085, ped); coreMesh.renderOrder = 7;
+  const haloMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), haloM, 0, SIGN.y, 0.1265, ped); haloMesh.renderOrder = 6;
+  const coreMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), coreM, 0, SIGN.y, 0.1278, ped); coreMesh.renderOrder = 7;
 
   /* ----- legs: 4 tapered brass, splayed, ball feet ----- */
   const legs = [];
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) legs.push(legGeo([sx * 0.30, 0.118, sz * 0.06], [sx * 0.44, 0.014, sz * 0.13]));
-  add(mergeGeometries(legs), brass, 0, 0, 0);
+  if (STAND) for (const sx of [-1, 1]) for (const sz of [-1, 1]) legs.push(legGeo([sx * 0.30, 0.118, sz * 0.06], [sx * 0.44, 0.014, sz * 0.13]));
+  if (STAND) add(mergeGeometries(legs), brass, 0, 0, 0);
 
   /* ----- neck: brass trumpet foot ----- */
   const neckPts = [[0.09, 0], [0.086, 0.006], [0.07, 0.014], [0.046, 0.032], [0.033, 0.056], [0.031, 0.09]].map(p => new THREE.Vector2(p[0], p[1]));
-  add(new THREE.LatheGeometry(neckPts, 20), brass, 0, NECK_Y, 0);
+  if (STAND) add(new THREE.LatheGeometry(neckPts, 20), brass, 0, NECK_Y, 0);
 
   /* ----- head: cream pill hood + tapered rear bell + bezel ring + pivots + arms ----- */
   const head = new THREE.Group(); head.position.set(0, HEAD_Y, 0); root.add(head);
@@ -250,7 +261,7 @@ function buildTV(tex) {
   for (const sx of [-1, 1]) {
     add(pvG, chrome, sx * 0.385, 0.03, 0.02, head); add(capG, brass, sx * 0.41, 0.03, 0.02, head);
     const c = new THREE.CatmullRomCurve3([[0.40, 0.03], [0.425, -0.08], [0.385, -0.195], [0.29, -0.245], [0.17, -0.268], [0.07, -0.275]].map(p => new THREE.Vector3(sx * p[0], p[1], 0.02)));
-    add(new THREE.TubeGeometry(c, 24, 0.0075, 6, false), brass, 0, 0, 0, head);
+    if (STAND) add(new THREE.TubeGeometry(c, 24, 0.0075, 6, false), brass, 0, 0, 0, head);
   }
 
   /* ----- tubes (job B6, pick T2): a chrome rail on the head with 2 tall EL34 (ends, bakelite base) + 4 short 12AX7 on ivory
@@ -466,14 +477,14 @@ async function computePlacement(scene, camera, ampMissing, S) {
   const q = new Float64Array(24), qb = new Float64Array(12), qk = new Float64Array(12), SC4 = [[-SCR_W / 2, -SCR_H / 2], [SCR_W / 2, -SCR_H / 2], [SCR_W / 2, SCR_H / 2], [-SCR_W / 2, SCR_H / 2]];
   const FS = [3.0, 2.7, 2.4, 2.15, 1.9, 1.7, 1.5, 1.3, 1.15, 1.0, 0.85, 0.7];   // tv height as a multiple of the amp's height
   const M = 3;
-  const SG = [[-0.40, 0.30], [0.40, 0.30], [0.40, 0.40], [-0.40, 0.40]];   // the neon sign's quad on the pedestal front (local x, y)
-  const evalCand = (x, z, yaw, sc) => {   // -> { v: hard violations (0 = ok), soft: box overlap share, m: size margin (1 = target) }
+  const SG = [[-0.34, 0.25], [0.34, 0.25], [0.34, 0.37], [-0.34, 0.37]];   // the neon sign's quad on the pedestal front (local x, y)
+  const evalCand = (x, z, yaw, sc, yb) => {   // yb = world y of the TV's lowest point (the neon plate); the TV floats   // -> { v: hard violations (0 = ok), soft: box overlap share, m: size margin (1 = target) }
     const cy = Math.cos(yaw), sy = Math.sin(yaw);
     let wx0 = 1e9, wx1 = -1e9, wz0 = 1e9, wz1 = -1e9;
-    for (const lx of [-0.55, 0.55]) for (const lz of [-0.35, 0.15]) { const X = x + (lx * cy + lz * sy) * sc, Z = z + (-lx * sy + lz * cy) * sc; wx0 = Math.min(wx0, X); wx1 = Math.max(wx1, X); wz0 = Math.min(wz0, Z); wz1 = Math.max(wz1, Z); }
-    let i = 0; for (const X of [wx0, wx1]) for (const Y of [floorY, floorY + TV_H * sc]) for (const Z of [wz0, wz1]) { q[i++] = X; q[i++] = Y; q[i++] = Z; }
-    for (let k = 0; k < 4; k++) { const lx = SC4[k][0], ly = SC4[k][1]; qb[k * 3] = x + (lx * cy + 0.13 * sy) * sc; qb[k * 3 + 1] = floorY + (HEAD_Y + ly) * sc; qb[k * 3 + 2] = z + (-lx * sy + 0.13 * cy) * sc; }
-    for (let k = 0; k < 4; k++) { const lx = SG[k][0], ly = SG[k][1]; qk[k * 3] = x + (lx * cy + 0.16 * sy) * sc; qk[k * 3 + 1] = floorY + (PY + ly) * sc; qk[k * 3 + 2] = z + (-lx * sy + 0.16 * cy) * sc; }
+    for (const lx of [-0.42, 0.42]) for (const lz of [-0.35, 0.15]) { const X = x + (lx * cy + lz * sy) * sc, Z = z + (-lx * sy + lz * cy) * sc; wx0 = Math.min(wx0, X); wx1 = Math.max(wx1, X); wz0 = Math.min(wz0, Z); wz1 = Math.max(wz1, Z); }
+    let i = 0; for (const X of [wx0, wx1]) for (const Y of [yb, yb + (TV_H - TV_B) * sc]) for (const Z of [wz0, wz1]) { q[i++] = X; q[i++] = Y; q[i++] = Z; }
+    for (let k = 0; k < 4; k++) { const lx = SC4[k][0], ly = SC4[k][1]; qb[k * 3] = x + (lx * cy + 0.13 * sy) * sc; qb[k * 3 + 1] = yb + (HEAD_Y + ly - TV_B) * sc; qb[k * 3 + 2] = z + (-lx * sy + 0.13 * cy) * sc; }
+    for (let k = 0; k < 4; k++) { const lx = SG[k][0], ly = SG[k][1]; qk[k * 3] = x + (lx * cy + 0.16 * sy) * sc; qk[k * 3 + 1] = yb + (PY + ly - TV_B) * sc; qk[k * 3 + 2] = z + (-lx * sy + 0.16 * cy) * sc; }
     let v = 0, soft = 0, m = 9, late = 0, nh = 0;
     for (const sm of samples) {
       let pv = 0, ps = 0; const hard = sm.hard; if (hard) nh++;
@@ -512,33 +523,38 @@ async function computePlacement(scene, camera, ampMissing, S) {
     return { v, soft: soft / Math.max(1, nh), m, late: late / Math.max(1, samples.length - nh) };
   };
   let best = null, n = 0;
-  const NU = 20, NW = 15;
-  for (const thd of [22, 28, 34]) for (let iu = 0; iu < NU; iu++) for (let iw = 0; iw < NW; iw++) {
-    const u = -3.8 + iu * 0.2, w = -0.5 + iw * 0.25;   // in units of L (the guitar's size) from the guitar's centre; w > 0 = farther from the camera
+  // photo-tv (Blake 6:10 approved): the TV floats; its lowest point is hb x the amp's height above the floor (0 = floor level)
+  const NU = 17, NW = 8, HBS = [0, 0.6, 1.2, 1.9, 2.7];
+  for (const thd of [24, 34]) for (let iu = 0; iu < NU; iu++) for (let iw = 0; iw < NW; iw++) {
+    const u = -3.9 + iu * 0.24, w = -0.5 + iw * 0.5;   // in units of L (the guitar's size) from the guitar's centre; w > 0 = farther from the camera
     const x = bc.x + (rx * u + fx * w) * L, z = bc.z + (rz * u + fz * w) * L;
-    let near = false;
-    for (let i = 0; i < gws.length; i += 2) if (Math.hypot(gws[i] - x, gws[i + 1] - z) < L * 0.1) { near = true; break; }
-    if (near) continue;
     // facing the start camera, then turned thd degrees toward the guitar centre
     const yc = Math.atan2(s0.cam.x - x, s0.cam.z - z);
     let yt = Math.atan2(bc.x - x, bc.z - z) - yc; yt = Math.atan2(Math.sin(yt), Math.cos(yt));
     const yaw = yc + Math.sign(yt || 1) * thd * Math.PI / 180;
-    for (const f of FS) {
-      const sc = f * H / TV_H, wd = 0.55 * sc;
-      if (aBox && x > aBox.min.x - wd && x < aBox.max.x + wd && z > aBox.min.z - wd && z < aBox.max.z + wd) continue;   // not inside the amp
-      n++;
-      const e = evalCand(x, z, yaw, sc);
-      // picture + sign clear everywhere: reach the size target first (m capped a little above 1), then the least box overlap; otherwise the least violation
-      const score = e.v > 0.0005 ? 100 + e.v * 50 + Math.min(e.late, 4) * 0.15 - Math.min(e.m, 2) : -Math.min(e.m, 1.15) + e.soft * 1.5 + Math.min(e.late, 4) * 0.15;
-      if (!best || score < best.score) best = { score, x, z, yaw, sc, f, th: thd, v: e.v, m: e.m, soft: e.soft, late: e.late };
-      if (e.v <= 0.0005 && e.soft < 0.002) break;   // larger scales first: the first fully clear one is the biggest at this spot
+    for (const hb of HBS) {
+      if (hb < 0.8) {   // low: keep off the guitar's floor footprint and out of the amp's box
+        let near = false;
+        for (let i = 0; i < gws.length; i += 2) if (Math.hypot(gws[i] - x, gws[i + 1] - z) < L * 0.1) { near = true; break; }
+        if (near) continue;
+      }
+      for (const f of FS) {
+        const sc = f * H / TV_H, wd = 0.55 * sc;
+        if (hb < 0.8 && aBox && x > aBox.min.x - wd && x < aBox.max.x + wd && z > aBox.min.z - wd && z < aBox.max.z + wd) continue;   // not inside the amp
+        n++;
+        const yb = floorY + hb * H, e = evalCand(x, z, yaw, sc, yb);
+        // picture + sign clear everywhere: reach the size target first (m capped a little above 1), then the least box overlap; otherwise the least violation
+        const score = e.v > 0.0005 ? 100 + e.v * 50 + Math.min(e.late, 4) * 0.15 - Math.min(e.m, 2) : -Math.min(e.m, 1.6) + e.soft * 1.5 + Math.min(e.late, 4) * 0.15 + hb * 0.02;
+        if (!best || score < best.score) best = { score, x, z, yb, yaw, sc, f, th: thd, hb, v: e.v, m: e.m, soft: e.soft, late: e.late };
+        if (e.v <= 0.0005 && e.soft < 0.002) break;   // larger scales first: the first fully clear one is the biggest at this spot
+      }
     }
     await slice();
   }
   cpu += performance.now() - tS;
-  if (!best) best = { score: 1e9, x: bc.x - L * 1.1, z: bc.z - L * 0.4, yaw: 0, sc: 0.8 * H / TV_H, f: 0.8, th: 0, v: 9, m: 0 };
+  if (!best) best = { score: 1e9, x: bc.x - L * 1.1, z: bc.z - L * 0.4, yb: floorY + 0.5 * H, yaw: 0, sc: 0.8 * H / TV_H, f: 0.8, th: 0, v: 9, m: 0 };
   S.placeCpuMs = +cpu.toFixed(1);
-  return { T: new V(best.x, floorY, best.z), yaw: best.yaw, sc: best.sc, info: { f: +best.f.toFixed(2), th: best.th, v: +best.v.toFixed(4), m: +best.m.toFixed(2), soft: +(best.soft || 0).toFixed(3), late: +(best.late || 0).toFixed(3), n, amp: !!aBox, hard: best.v > 0.0005 } };
+  return { T: new V(best.x, (best.yb === undefined ? floorY : best.yb) - TV_B * best.sc, best.z), yaw: best.yaw, sc: best.sc, info: { f: +best.f.toFixed(2), hb: best.hb, th: best.th, v: +best.v.toFixed(4), m: +best.m.toFixed(2), soft: +(best.soft || 0).toFixed(3), late: +(best.late || 0).toFixed(3), n, amp: !!aBox, hard: best.v > 0.0005 } };
 }
 
 /* ---------- mount ---------- */
