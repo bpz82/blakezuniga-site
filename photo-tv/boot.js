@@ -26,7 +26,7 @@ const S = window.__photoTV = { state: 'waiting', bootT: Math.round(performance.n
         const m = await import('./photo-tv.js');
         S.importT = Math.round(performance.now());
         await m.mountPhotoTV({ manifestUrl: new URL('./photos.json', import.meta.url).href, base: new URL('./', import.meta.url).href, ampMissing });
-        import('./speed-layout.js').then((L) => L.startSpeedLayout()).catch((e) => console.warn('[photo-tv] speed layout', e));   // Blake 7:59 speed layout
+        if (S.mode !== 'panel') import('./speed-layout.js').then((L) => L.startSpeedLayout()).catch((e) => console.warn('[photo-tv] speed layout', e));   // Blake 7:59 speed layout (TV mode only; Blake 9:50 panel mode keeps the live guitar / amp / orbit)
       } catch (e) { fail(e); }
     };
     setTimeout(poll, 250);

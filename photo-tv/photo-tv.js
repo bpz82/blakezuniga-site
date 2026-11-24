@@ -120,6 +120,7 @@ void main(){
   float n = hash(floor(p * vec2(220.0, 170.0)) + floor(uT * 60.0) * 7.13);
   pic = mix(pic, vec3(n * 0.9), uSwitch * 0.75);
   pic *= vec3(1.05, 1.0, 0.88);                                     // warm phosphor
+  pic += (hash(floor(p * vec2(900.0, 620.0)) + fract(uT * 23.0) * 91.7) - 0.5) * 0.11;   // Blake 9:50: analog TV grain (always on)
   vec2 c = (p - 0.5) * 2.0;
   float scan = 0.84 + 0.16 * sin(p.y * 520.0);                       // scanlines
   float vig = clamp(1.0 - dot(c * vec2(0.8, 0.95), c * vec2(0.8, 0.95)) * 0.34, 0.0, 1.0);
@@ -164,6 +165,14 @@ function legGeo(top, foot) {
   return mergeGeometries([g, s]);
 }
 
+function panelGlowTexture() {   // Blake 9:50: soft glow around the photo panel (the plane is 1.3 x 1.42 of the screen; the screen covers the middle)
+  return canvasTex(512, 512, (g, w, h) => {
+    const iw = w / 1.3, ih = h / 1.42, x = (w - iw) / 2, y = (h - ih) / 2, r = iw * 0.18;
+    g.clearRect(0, 0, w, h); g.shadowColor = 'rgba(255,255,255,1)'; g.shadowBlur = 46; g.fillStyle = '#fff';
+    for (let k = 0; k < 2; k++) { g.beginPath(); g.roundRect(x, y, iw, ih, r); g.fill(); }
+    g.shadowBlur = 0; g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.roundRect(x - 2, y - 2, iw + 4, ih + 4, iw * SCR_R / SCR_W); g.fill();   // glow only outside the frame
+  }, true, false);
+}
 function buildTV(tex) {
   const root = new THREE.Group(); root.name = 'photo-tv';
   const fade = [];     // { m, c0, env0, op0, kind }
@@ -601,8 +610,47 @@ export async function mountPhotoTV(opts) {
   const tex = { grille: grilleTexture(), glow: glowTexture(), neonCore: nt.core, neonHalo: nt.halo };
   const ink = nt.ink;
   const tv = buildTV(tex);
+  // Blake 9:50: the home scene shows a large photo PANEL in the dark background (behind the guitar and amp) instead of the TV
+  // model. The TV code stays (?panel=0 brings it back). The panel is the same CRT screen material (photos, scanlines, grain),
+  // camera-locked far behind the scene, drawn right after the floor and before the guitar / amp / title.
+  const PANEL = qs.get('panel') !== '0';
+  S.mode = PANEL ? 'panel' : 'tv';
+  let panel = null, panelGlowM = null;
+  if (PANEL) {
+    tv.root.traverse(o => { if ((o.isMesh || o.isSprite) && o !== tv.screen) o.visible = false; });
+    tv.meshes.length = 0; tv.meshes.push(tv.screen);
+    panel = new THREE.Group(); panel.name = 'photo-panel';
+    tv.screen.parent.remove(tv.screen); panel.add(tv.screen); tv.screen.position.set(0, 0, 0); tv.screen.scale.set(1, 1, 1);
+    tv.screen.material.depthTest = false; tv.screen.material.depthWrite = false; tv.screen.renderOrder = -1;
+    panelGlowM = new THREE.MeshBasicMaterial({ map: panelGlowTexture(), color: new THREE.Color(1.0, 0.72, 0.42), blending: THREE.AdditiveBlending, transparent: false, depthTest: false, depthWrite: false, toneMapped: false, opacity: 0 });
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 1.3, SCR_H * 1.42), panelGlowM); glow.renderOrder = -1.5; glow.position.z = -0.01; panel.add(glow);
+    const fw = new THREE.Vector3(), up = new THREE.Vector3();
+    const place = (r, s, c) => {   // camera-locked: upper-middle of the view on desktop, a wide band behind the scene on phones
+      if (!c || !c.isPerspectiveCamera) return;
+      const D = 600, th = Math.tan(c.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * c.aspect, ph = innerWidth < 600 || innerWidth < innerHeight;
+      let w = Wv * (ph ? 0.96 : 0.5), h = w * SCR_H / SCR_W; const hm = Hv * (ph ? 0.4 : 0.56); if (h > hm) { h = hm; w = h * SCR_W / SCR_H; }
+      fw.set(0, 0, -1).applyQuaternion(c.quaternion); up.set(0, 1, 0).applyQuaternion(c.quaternion);
+      panel.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * (ph ? -0.01 : 0.0));
+      panel.quaternion.copy(c.quaternion); panel.scale.setScalar(w / SCR_W); panel.updateMatrixWorld(true);
+    };
+    glow.onBeforeRender = place; tv.screen.onBeforeRender = place;
+    // Blake 9:53: the Precious Memories neon straddles the panel's bottom border (half over the frame edge), same glowing look
+    let haloMesh = null; tv.root.traverse(o => { if (o.isMesh && o.material === tv.haloM) haloMesh = o; });
+    const NS = (SCR_W * 0.46) / SIGN.w;
+    { const bk = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 0.42, SCR_H * 0.11), new THREE.MeshBasicMaterial({ color: 0x050403, depthTest: false, depthWrite: false, toneMapped: false })); bk.position.set(SCR_W * 0.24, SCR_H / 2, 0.01); bk.renderOrder = -0.5; panel.add(bk); }   // dark strip behind the neon so it reads over a bright photo
+    for (const [m, ro] of [[haloMesh, -0.4], [tv.neonMesh, -0.3]]) {
+      if (!m) continue; m.parent.remove(m); panel.add(m); m.visible = true; m.position.set(SCR_W * 0.24, SCR_H / 2, 0.02); m.scale.setScalar(NS); m.renderOrder = ro;
+      m.material.depthTest = false; m.material.depthWrite = false; m.material.transparent = false; m.material.blending = THREE.AdditiveBlending; m.material.needsUpdate = true;
+    }
+    scene.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'CircleGeometry' && o.material && o.material.emissiveMap) o.renderOrder = -2; });   // the floor glow first, the panel over it
+    panel.traverse(o => { o.layers.set(1); });
+    scene.add(panel);
+    S.panel = panel;
+    const vis = () => { panel.visible = document.body.dataset.mode === 'show' || !document.body.dataset.mode; };
+    vis(); document.addEventListener('zg:mode', vis);
+  }
   const tP = performance.now();
-  const pl = await computePlacement(scene, camera, !!opts.ampMissing, S);
+  const pl = PANEL ? { T: new THREE.Vector3(0, -9999, 0), yaw: 0, sc: 1, info: { panel: true } } : await computePlacement(scene, camera, !!opts.ampMissing, S);
   S.placeMs = S.placeCpuMs; S.placeWallMs = +(performance.now() - tP).toFixed(1); S.placement = pl.info;
   tv.root.position.copy(pl.T); tv.root.rotation.y = pl.yaw; tv.root.scale.setScalar(pl.sc);
   tv.root.traverse(o => { o.layers.set(1); });
@@ -615,7 +663,7 @@ export async function mountPhotoTV(opts) {
       if (e.kind === 't') e.m.opacity = e.op0 * k;
       else { if (e.c0) e.m.color.copy(e.c0).multiplyScalar(k); if (e.env0 !== undefined) e.m.envMapIntensity = e.env0 * k; if (e.em0) e.m.emissiveIntensity = e.em0 * k; }
     }
-    U.uFade.value = k; fadeK = k;
+    U.uFade.value = k * (panelGlowM ? 0.72 : 1); fadeK = k; if (panelGlowM) panelGlowM.opacity = 0.42 * k;
   };
   let fadeK = 0; setFade(0);
 
@@ -654,6 +702,7 @@ export async function mountPhotoTV(opts) {
   // compile + upload off-screen, then show
   const first = loadNext();   // first photo loads while the materials compile
   try {
+    if (panel) { panel.traverse(o => { o.layers.set(0); }); await Promise.race([renderer.compileAsync(panel, camera, scene), new Promise(r => setTimeout(r, 30000))]); panel.traverse(o => { o.layers.set(1); }); }
     await Promise.race([renderer.compileAsync(tv.root, camera, scene), new Promise(r => setTimeout(r, 30000))]);
     for (const t of [tex.grille, tex.glow, tex.neonCore, tex.neonHalo]) renderer.initTexture(t);
   } catch (e) { console.warn('[photo-tv] precompile skipped', e); }
@@ -661,7 +710,7 @@ export async function mountPhotoTV(opts) {
 
   const R = reduced();
   S.state = 'fading';
-  tv.root.traverse(o => { o.layers.set(0); });
+  tv.root.traverse(o => { o.layers.set(0); }); if (panel) panel.traverse(o => { o.layers.set(0); });
   await new Promise((res) => {
     const t0 = performance.now(), dur = R ? 1 : 700;
     const step = () => { const u = Math.min(1, (performance.now() - t0) / dur); setFade(sstep(u)); if (u < 1) requestAnimationFrame(step); else res(); };
