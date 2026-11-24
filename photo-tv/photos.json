@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 183,
+ "count": 171,
  "photos": [
   {
    "id": "2g0a5608",
@@ -858,42 +858,6 @@
    "alt": "Amp in a dim room, black and white, Blake Zuniga"
   },
   {
-   "id": "dscn0050",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0050.webp",
-   "full": "photo-tv/photos/full/dscn0050.webp",
-   "alt": "Friends crowding together for a living room selfie, Blake Z music photo"
-  },
-  {
-   "id": "dscn0054",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0054.webp",
-   "full": "photo-tv/photos/full/dscn0054.webp",
-   "alt": "Friends smiling in a cozy living room, Blake Zuniga photo"
-  },
-  {
-   "id": "dscn0060",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0060.webp",
-   "full": "photo-tv/photos/full/dscn0060.webp",
-   "alt": "Friends relaxing on a couch in a dim room, Blake Z music photo"
-  },
-  {
-   "id": "dscn0061",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0061.webp",
-   "full": "photo-tv/photos/full/dscn0061.webp",
-   "alt": "Friends sitting together on a couch in a dark room, Blake Zuniga photo"
-  },
-  {
    "id": "dscn0062",
    "src": "thecurltapes.com",
    "w": 1400,
@@ -901,15 +865,6 @@
    "tv": "photo-tv/photos/tv/dscn0062.webp",
    "full": "photo-tv/photos/full/dscn0062.webp",
    "alt": "Friend on a yellow chair in a room with a patterned tapestry, Blake Z music"
-  },
-  {
-   "id": "dscn0066",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0066.webp",
-   "full": "photo-tv/photos/full/dscn0066.webp",
-   "alt": "Person in a cap reaching toward the camera in a dark room, Blake Z music"
   },
   {
    "id": "blake-8376b-23",
@@ -930,51 +885,6 @@
    "alt": "Turntable and guitar in a colorful room with orange walls, Blake Z music"
   },
   {
-   "id": "dscn0079",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0079.webp",
-   "full": "photo-tv/photos/full/dscn0079.webp",
-   "alt": "Friend in a cap flashing a peace sign in a kitchen, Blake Zuniga"
-  },
-  {
-   "id": "dscn0087",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0087.webp",
-   "full": "photo-tv/photos/full/dscn0087.webp",
-   "alt": "Close-up selfie of a friend in a dim room, Blake Z music"
-  },
-  {
-   "id": "dscn0092",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0092.webp",
-   "full": "photo-tv/photos/full/dscn0092.webp",
-   "alt": "Friend flashing a peace sign in a dim room, Blake Zuniga"
-  },
-  {
-   "id": "dscn0093",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0093.webp",
-   "full": "photo-tv/photos/full/dscn0093.webp",
-   "alt": "Two friends smiling on a couch, Blake Z music"
-  },
-  {
-   "id": "dscn0108",
-   "src": "thecurltapes.com",
-   "w": 1050,
-   "h": 1400,
-   "tv": "photo-tv/photos/tv/dscn0108.webp",
-   "full": "photo-tv/photos/full/dscn0108.webp",
-   "alt": "Two friends leaning together on a couch, Blake Zuniga"
-  },
-  {
    "id": "blake-8376b-27",
    "src": "blake",
    "w": 1067,
@@ -982,24 +892,6 @@
    "tv": "photo-tv/photos/tv/blake-8376b-27.webp",
    "full": "photos/full/8376b-27.webp",
    "alt": "Dark shot of a person sitting on a bench, Blake Z music"
-  },
-  {
-   "id": "dscn0120",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0120.webp",
-   "full": "photo-tv/photos/full/dscn0120.webp",
-   "alt": "Two girls posing together in a living room, one in a cap, Blake Zuniga"
-  },
-  {
-   "id": "dscn0125",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 1050,
-   "tv": "photo-tv/photos/tv/dscn0125.webp",
-   "full": "photo-tv/photos/full/dscn0125.webp",
-   "alt": "Friends gathered in a room with a tapestry, one in a white cap, Blake Zuniga photo"
   },
   {
    "id": "duo-acoustics",
