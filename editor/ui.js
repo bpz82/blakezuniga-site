@@ -154,6 +154,8 @@ btnSnap.addEventListener('click', () => send({ type: T.snap, on: !snapOn }));
 btnDesk.addEventListener('click', () => setView('desktop'));
 btnPhone.addEventListener('click', () => setView('phone'));
 addEventListener('resize', sizeFrame);
+// the selected-object panel appears / disappears and changes the room left for the stage: re-fit the scaled iframe
+try { new ResizeObserver(sizeFrame).observe($('stage-wrap')); } catch (_) { }
 addEventListener('orientationchange', () => setTimeout(sizeFrame, 200));
 addEventListener('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z' || /^(INPUT|TEXTAREA)$/.test((e.target || {}).tagName || '')) return;
