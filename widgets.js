@@ -202,12 +202,9 @@ function collaborativeProjectsWidget() {
     title: 'Collaborative Projects',
     icon: '◎',
     iconSrc: 'assets/curl-tapes-faces.png',
-    mount(el) {
-      const p = document.createElement('p');
-      p.textContent = 'Opening The Curl Tapes…';
-      el.append(p);
-      location.assign('https://thecurltapes.com');
-    },
+    href: 'https://thecurltapes.com',
+    // The tile is a real <a target=_blank rel=noopener>. mount is unused (the harness never opens a panel).
+    mount() { /* no in-page popup */ },
   };
 }
 
@@ -250,10 +247,49 @@ function photosWidget() {
   };
 }
 
+// Vinyl Vault (Blake, 23 Nov 2026): thin stub like photosWidget(). The UI, its CSS and records.json live in apps/vinyl-vault/ and are
+// loaded only on first open (dynamic import inside mount). Failures are shown in the panel + console.warn, never thrown.
+function vinylVaultWidget() {
+  let handle = null;
+  let gone = false;
+  return {
+    id: 'vinyl-vault',
+    title: 'Vinyl Vault',
+    icon: '◉',
+    iconSrc: 'apps/vinyl-vault/icon.svg',
+    panel: 'wide',
+    async mount(el, api) {
+      gone = false;
+      handle = null;
+      try {
+        const mod = await import('./apps/vinyl-vault/vinyl-vault.js');
+        if (gone) return;
+        handle = mod.mountVinylVault(el, { recordsUrl: new URL('apps/vinyl-vault/records.json', import.meta.url).href, onBack: () => api.close() });
+      } catch (err) {
+        console.warn('[vinyl-vault] could not load the module', err);
+        if (gone) return;
+        const p = document.createElement('p');
+        p.setAttribute('role', 'status');
+        p.textContent = 'Vinyl Vault is not available right now. Please try again later.';
+        el.append(p);
+      }
+    },
+    unmount() {
+      gone = true;
+      if (handle && typeof handle.unmount === 'function') {
+        try { handle.unmount(); } catch (err) { console.warn('[vinyl-vault] unmount failed', err); }
+      }
+      handle = null;
+    },
+  };
+}
+
 export const widgets = [
   contactWidget(),
   collaborativeProjectsWidget(),
   // photosWidget() retired t307u, unhooked, files kept (the 3D photo TV in photo-tv/ replaces it)
+  vinylVaultWidget(),   // Vinyl Vault (Blake, 23 Nov 2026)
+
 ];
 
 // TEST-ONLY: deliberately broken widget, registered only with ?selftest=1.

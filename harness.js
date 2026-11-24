@@ -51,6 +51,7 @@ const LOAD_MAX_MS = 60000;
 const TAP_PX = 10; // movement below this is a tap, not a swipe
 const INTRO_MS = 900; // slide-in window reported as data-state="intro"
 const REVEAL_FALLBACK_MS = 8000;
+const REVEAL_PENDING_MAX_MS = 180000; // intro-polish: cap on waiting for a live word (phase 'wait') before assuming it hung
 const GAP = 16; // px between tiles in the row
 
 const entries = new Map(); // id -> entry
@@ -110,13 +111,28 @@ function snapshot(def) {
   if (unmount !== undefined && unmount !== null && typeof unmount !== 'function') {
     return reject('unmount must be a function for "' + id + '"');
   }
+  let href = '';
+  if (def.href !== undefined && def.href !== null && def.href !== '') {
+    if (!validHref(def.href)) return reject('href must be an https URL for "' + id + '"');
+    href = def.href;
+  }
   // amp12 (Blake t208u): optional panel:'wide' (large panel, used by Photos); anything else = the normal panel
-  return { id, title, icon: icon || '', iconSrc, mount, unmount: unmount || null, wide: def.panel === 'wide' };
+  // intro-polish: optional href (https only) makes the tile a new-tab link and skips the in-page panel
+  return { id, title, icon: icon || '', iconSrc, href, mount, unmount: unmount || null, wide: def.panel === 'wide' };
 }
 
 const ICON_SRC_RE = /^(\.\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\.(png|webp|jpe?g|gif|svg)$/i;
 function validIconSrc(src) {
   return typeof src === 'string' && src.length <= 200 && !src.includes('..') && ICON_SRC_RE.test(src);
+}
+function validHref(h) {
+  if (typeof h !== 'string' || h.length > 200) return false;
+  try {
+    const u = new URL(h);
+    return u.protocol === 'https:' && u.username === '' && u.password === '';
+  } catch (_) {
+    return false;
+  }
 }
 
 export function register(def) {
@@ -152,9 +168,15 @@ function span(cls, text) {
 }
 
 function buildTile(entry) {
-  const { id, title, icon, iconSrc } = entry.def;
-  const b = document.createElement('button');
-  b.type = 'button';
+  const { id, title, icon, iconSrc, href } = entry.def;
+  const b = href ? document.createElement('a') : document.createElement('button');
+  if (href) {
+    b.href = href;
+    b.target = '_blank';
+    b.rel = 'noopener noreferrer';
+  } else {
+    b.type = 'button';
+  }
   b.className = 'zg-tile';
   b.dataset.id = id;
   b.setAttribute('aria-label', title);
@@ -206,7 +228,14 @@ function addTile(entry) {
     }
   }
   const el = entry.el;
-  bindRowPointer(el, () => openPanel(entry, el));   // amp11 (Blake t206u) 11a
+  bindRowPointer(el, () => {
+    if (entry.def.href) {
+      // Synchronous window.open inside the tap/click gesture so iOS Safari does not block the tab.
+      try { window.open(entry.def.href, '_blank', 'noopener,noreferrer'); } catch (_) { /* ignore */ }
+      return;
+    }
+    openPanel(entry, el);
+  });   // amp11 (Blake t206u) 11a
   el.addEventListener('pointerenter', (e) => {
     if (e.pointerType === 'mouse') {
       hovered.add(el);
@@ -344,6 +373,11 @@ function bindRowPointer(el, fn) {
   // Pointer-originated clicks (detail > 0) are already handled by the tap path.
   el.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (el.tagName === 'A') {
+      // Pointer tap already called window.open; prevent a second tab. Keyboard uses the real <a> default.
+      if (performance.now() - lastTap < 800) e.preventDefault();
+      return;
+    }
     if (e.detail !== 0) return;
     if (performance.now() - lastTap < 800) return;
     fn();
@@ -640,8 +674,6 @@ function onSceneMode() {
 function layout() {
   vw = window.innerWidth || 1;
   vh = window.innerHeight || 1;
-  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp
-  root.style.setProperty('--zg-size', size + 'px');
   // safe-area insets come from the row container's own padding (harness.css: env(safe-area-inset-*))
   let sl = 0;
   let sb = 0;
@@ -653,6 +685,13 @@ function layout() {
     /* no insets */
   }
   const margin = vw < 600 ? 16 : 24;
+  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp
+  // Vinyl Vault (Blake, 23 Nov 2026): with 4+ tiles the row can overflow a narrow screen (4 x 106 + 3 x 16 > 393). Shrink the tiles
+  // only as much as needed so the row fits between the margins (and stays centered), never below 72. 3 tiles: unchanged (106 at 393).
+  const nTiles = Math.max(1, order.length);
+  const fit = Math.floor((vw - 2 * Math.max(margin, sl + margin) - (nTiles - 1) * GAP) / nTiles);
+  if (size > fit) size = Math.max(72, fit);
+  root.style.setProperty('--zg-size', size + 'px');
   // home-v2 (Blake, 23 Nov 2026): the apps row is CENTERED horizontally and always sits ABOVE the centered "Explore the Guitar"
   // button (button top is ~64 px + safe-area above the bottom edge): bottom pad 110 on a portrait phone, 88 elsewhere (a 20+ px gap).
   // When the row is wider than the viewport it starts at the left margin and scrolls (maxScroll below).
@@ -776,8 +815,15 @@ function boot() {
     if (timer) clearInterval(timer);
     maybeShowRing();
     // If the word never announces a reveal (font failed), show the ring and arm the stepper.
-    setTimeout(() => {
+    const tFallback = Date.now();
+    const fallback = () => {
       if (revealPhase === 'done' || revealPhase === 'down') return;
+      // intro-polish: a live word still waiting for BOOT.ready (phase 'wait', no zg:reveal yet) is not a failed word.
+      // Keep waiting (hard cap) so the tiles never come up before the real 'down'; a failed word emits 'done' itself.
+      if (!revealPhase && window.__zgWordPending && Date.now() - tFallback < REVEAL_PENDING_MAX_MS) {
+        setTimeout(fallback, 1000);
+        return;
+      }
       if (!revealPhase) {
         revealPhase = 'done';
         maybeShowRing();
@@ -787,7 +833,8 @@ function boot() {
           /* ignore */
         }
       }
-    }, REVEAL_FALLBACK_MS);
+    };
+    setTimeout(fallback, REVEAL_FALLBACK_MS);
     return true;
   };
   if (!check()) timer = setInterval(check, LOAD_POLL_MS);
