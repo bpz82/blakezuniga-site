@@ -323,6 +323,24 @@ function open({ photos, startIndex = 0, base, originRect, onClose }) {
   root.classList.add('ptv-ready');
   try { bClose.focus({ preventScroll: true }); } catch (_) {}
 
+  // b6b: Escape removes the dialog at once (a starved main thread, e.g. a heavy WebGL frame, can delay the close animation's timers by
+  // seconds); a light ghost veil fades out in the dialog's place so the exit still reads as a fade.
+  function closeNow() {
+    if (closed) return;
+    closed = true; token++;
+    clearTimeout(openTimer);
+    try {
+      const gh = document.createElement('div');
+      gh.id = 'ptv-ghost';
+      gh.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#050403;pointer-events:none;opacity:.97;transition:opacity .35s ease';
+      document.body.appendChild(gh);
+      void gh.offsetWidth; gh.style.opacity = '0';
+      const rm = () => { try { gh.remove(); } catch (_) {} };
+      setTimeout(rm, 420);
+      gh.addEventListener('transitionend', rm);
+    } catch (_) {}
+    finish();
+  }
   function close() {
     if (closed) return;
     closed = true;
@@ -367,7 +385,7 @@ function open({ photos, startIndex = 0, base, originRect, onClose }) {
     try {
       const k = e.key, isEsc = k === 'Escape' || k === 'Esc' || e.code === 'Escape' || e.keyCode === 27;
       const swallow = () => { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); };
-      if (isEsc) { swallow(); close(); }
+      if (isEsc) { swallow(); closeNow(); }
       else if (k === 'ArrowLeft') { swallow(); go(-1); }
       else if (k === 'ArrowRight') { swallow(); go(1); }
       else if (k === 'Tab') {

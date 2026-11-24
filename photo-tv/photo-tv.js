@@ -259,10 +259,24 @@ function buildTV(tex) {
   const glowM = new THREE.SpriteMaterial({ map: tex.glow, color: 0xff8a3a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0, toneMapped: false });
   const ivory = reg(new THREE.MeshStandardMaterial({ color: 0xf2e6c6, roughness: 0.35, metalness: 0, envMapIntensity: 1.2 }), 'o');
   const bakeM = reg(new THREE.MeshStandardMaterial({ color: 0x6a2f16, roughness: 0.3, metalness: 0.15, envMapIntensity: 1.3 }), 'o');
-  const anodeM = reg(new THREE.MeshStandardMaterial({ color: 0x4a4b4f, roughness: 0.5, metalness: 0.7, envMapIntensity: 0.6 }), 'o');
+  const anodeM = reg(new THREE.MeshStandardMaterial({ color: 0x3a3b3f, roughness: 0.45, metalness: 0.6, envMapIntensity: 0.9, emissive: new THREE.Color(0x2a2b2e), emissiveIntensity: 0.5 }), 'o');
   const micaM = reg(new THREE.MeshStandardMaterial({ color: 0xe9e0c9, roughness: 0.55, metalness: 0, envMapIntensity: 0.6 }), 'o');
   const getterM = reg(new THREE.MeshStandardMaterial({ color: 0xa4a8ae, roughness: 0.12, metalness: 1, envMapIntensity: 1.7 }), 'o');
   glassM.renderOrder = 4;
+  // b6b: clear glass (body alpha ~.12) with a cheap fresnel: alpha and a pale emissive rise toward the silhouette (patched into the same material, no extra pass)
+  glassM.opacity = 0.12; glassM.emissive = new THREE.Color(0xffeedd); glassM.emissiveIntensity = 0.85; glassM.envMapIntensity = 2.2;
+  glassM.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('vec4 diffuseColor = vec4( diffuse, opacity );', 'vec4 diffuseColor = vec4( diffuse, opacity * (0.55 + 3.4 * pow(1.0 - abs(normalize( vNormal ).z), 2.0)) );'); };
+  glassM.customProgramCacheKey = () => 'ptv-glass-fresnel';
+  for (const e of fade) if (e.m === glassM) e.op0 = 0.12;
+  const stripeG = (r, h) => {
+    const mkS = (x, w, y0, y1, a) => { const g = new THREE.PlaneGeometry(w, y1 - y0, 1, 4), p = g.attributes.position, c = new Float32Array(p.count * 3);
+      for (let i = 0; i < p.count; i++) { const t = (p.getY(i) + (y1 - y0) / 2) / (y1 - y0), k = a * Math.sin(Math.PI * Math.min(1, Math.max(0, t))) ** 0.6; c[i * 3] = k; c[i * 3 + 1] = k * 0.97; c[i * 3 + 2] = k * 0.92; }
+      g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.rotateY(-Math.asin(x / r)); g.translate(x, (y0 + y1) / 2, Math.sqrt(1 - (x / r) ** 2) * r * 0.97); return g; };
+    return mergeGeometries([mkS(-r * 0.56, r * 0.1, h * 0.12, h * 0.8, 1), mkS(r * 0.66, r * 0.05, h * 0.2, h * 0.7, 0.45)]);
+  };
+  // crisp vertical specular stripes (additive, vertex-colour taper) just inside the glass front
+  const stripeM = reg(new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }), 't');
+  stripeM.renderOrder = 5;
   const sprites = [], topY = HEAD_Y + 0.24, BASE_Y = topY + 0.002;
   const cyl = (r0, r1, h, y, seg = 14) => { const g = new THREE.CylinderGeometry(r0, r1, h, seg, 1); g.translate(0, y, 0); return g; };
   const box = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); return g; };
@@ -288,8 +302,11 @@ function buildTV(tex) {
       glass: glassGeo(r, h, tall),
       anode: mergeGeometries([box(w, ah, r * 0.95, -r * 0.22, ay, 0), box(w, ah, r * 0.95, r * 0.22, ay, 0)]),
       mica: mergeGeometries([box(r * 1.6, h * 0.014, r * 0.9, 0, h * 0.77, 0), box(r * 1.6, h * 0.014, r * 0.9, 0, h * 0.33, 0), box(r * 0.16, h * 0.4, r * 0.1, 0, ay, -r * 0.5)]),
-      getter: cyl(r * 0.66, r * 0.74, h * 0.07, h * 0.87, 12),
-      fil: box(r * 0.3, h * 0.13, r * 0.12, 0, h * 0.24, 0),
+      getter: (() => { const d = new THREE.SphereGeometry(r * 0.72, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2); d.scale(1, 0.6, 1); d.translate(0, h * 0.88, 0); return mergeGeometries([cyl(r * 0.72, r * 0.72, h * 0.07, h * 0.845, 12).toNonIndexed(), d.toNonIndexed()]); })(),
+      edges: mergeGeometries([box(r * 0.05, ah, r * 0.05, -r * 0.22 - w / 2, ay, r * 0.47), box(r * 0.05, ah, r * 0.05, r * 0.22 + w / 2, ay, r * 0.47), box(r * 0.05, ah, r * 0.05, -r * 0.22 + w / 2, ay, r * 0.47), box(r * 0.05, ah, r * 0.05, r * 0.22 - w / 2, ay, r * 0.47)]),
+      stripe: stripeG(r, h),
+      // heater: two bright posts + a cross bar (a tiny "m" like the real filament)
+      fil: mergeGeometries([box(r * 0.07, h * 0.12, r * 0.07, -r * 0.13, h * 0.24, 0), box(r * 0.07, h * 0.12, r * 0.07, r * 0.13, h * 0.24, 0), box(r * 0.34, h * 0.025, r * 0.07, 0, h * 0.30, 0), box(r * 0.07, h * 0.12, r * 0.07, 0, h * 0.24, 0)]),
     };
   };
   const GT = mk(0.036, 0.108, true), GS = mk(0.0235, 0.065, false);
@@ -303,7 +320,9 @@ function buildTV(tex) {
     add(G.glass, glassM, 0, y0, 0, grp);
     add(G.anode, anodeM, 0, y0, 0, grp); add(G.mica, micaM, 0, y0, 0, grp); add(G.getter, getterM, 0, y0, 0, grp);
     add(G.fil, filM, 0, y0, 0, grp);
-    const sp = new THREE.Sprite(glowM); sp.position.set(0, y0 + h * 0.3, r * 0.2); sp.scale.setScalar(r * 8.5); sp.renderOrder = 5; grp.add(sp); sprites.push(sp);
+    add(G.edges, getterM, 0, y0, 0, grp);
+    add(G.stripe, stripeM, 0, y0, 0, grp).renderOrder = 5;
+    const sp = new THREE.Sprite(glowM); sp.position.set(0, y0 + h * 0.26, r * 0.25); sp.scale.setScalar(r * 4.2); sp.renderOrder = 5; grp.add(sp); sprites.push(sp);
     return grp;
   };
   // rail: rounded chrome bar + small bolts
@@ -673,8 +692,8 @@ export async function mountPhotoTV(opts) {
     if (tuneOn) {
       const warm = sstep((t - warmT0) / (R ? 200 : 1500));
       const fl = 1 + 0.05 * Math.sin(t * 0.0021) + 0.035 * Math.sin(t * 0.0067 + 1.3) + 0.02 * Math.sin(t * 0.017);
-      tv.filM.emissiveIntensity = 3.2 * warm * fl * fadeK;
-      tv.glowM.opacity = 0.5 * warm * fl * fadeK;
+      tv.filM.emissiveIntensity = 6 * warm * fl * fadeK;
+      tv.glowM.opacity = 0.42 * warm * fl * fadeK;
     }
   };
   requestAnimationFrame(tick);
