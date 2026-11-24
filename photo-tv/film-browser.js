@@ -17,9 +17,9 @@ function css() {
   background:radial-gradient(ellipse at 50% 50%,rgba(190,225,255,.55),rgba(120,170,220,.22) 55%,rgba(0,0,0,0) 80%);transition:opacity .5s ${EASE}}
 #ptv-browser.ptv-glowing .ptv-glow{opacity:1}
 #ptv-browser .ptv-slot{position:absolute;left:var(--ptv-px);right:var(--ptv-px);top:var(--ptv-pt);bottom:var(--ptv-pb);
-  display:grid;will-change:transform}
-#ptv-browser .ptv-slip{display:grid;grid-area:1/1;width:100%;height:100%;will-change:transform,opacity}
-#ptv-browser .ptv-slip>img{grid-area:1/1;width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+  display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);will-change:transform}
+#ptv-browser .ptv-slip{display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);grid-area:1/1;width:100%;height:100%;min-width:0;min-height:0;will-change:transform,opacity}
+#ptv-browser .ptv-slip>img{grid-area:1/1;width:100%;height:100%;min-width:0;min-height:0;max-width:100%;max-height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
 #ptv-browser .ptv-thumb{filter:blur(7px);transform:scale(1.03);opacity:.85}
 #ptv-browser .ptv-photo{opacity:0;transition:opacity .25s ease}
 #ptv-browser .ptv-photo.ptv-loaded{opacity:1}

@@ -439,7 +439,7 @@ async function computePlacement(scene, camera, ampMissing, S) {
     for (let k = 0; k < 24; k += 3) { tmp.set(c8[k], c8[k + 1], c8[k + 2]).applyMatrix4(mw); if (tmp.z > -cam2.near * 1.5) return null; tmp.applyMatrix4(cam2.projectionMatrix); const px = OX + (tmp.x * 0.5 + 0.5) * CW, py = OY + (-tmp.y * 0.5 + 0.5) * CH; if (px < x0) x0 = px; if (px > x1) x1 = px; if (py < y0) y0 = py; if (py > y1) y1 = py; }
     out[0] = x0; out[1] = y0; out[2] = x1; out[3] = y1; return out;
   };
-  const samples = [];
+  const samples = [], realTitle = [];   // M4: the real title rect(s) at the start camera are a HARD obstacle at every orbit pose (the title is a camera-facing billboard, its screen rect barely moves)
   for (const d of OFFS) {
     const ox = pos0.x - tx, oz = pos0.z - tz, c = Math.cos(d), s = Math.sin(d);
     cam2.position.set(tx + ox * c + oz * s, pos0.y, tz - ox * s + oz * c); cam2.lookAt(tx, ty, tz); cam2.updateMatrixWorld(true);
@@ -452,7 +452,7 @@ async function computePlacement(scene, camera, ampMissing, S) {
       const tcx = bc.x + dx * D * 0.2, tcy = bc.y + D * 0.17, tcz = bc.z + dz * D * 0.2, a = Math.atan2(p1.x - tcx, p1.z - tcz);
       const hx = tw * sc / 2 * 1.02, hy = th * sc / 2 + L * 0.012 + hx * 0.02, hz = td * sc / 2, ca = Math.cos(a), sa = Math.sin(a); let i = 0;
       for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) { c8[i++] = tcx + ca * sx * hx + sa * sz * hz; c8[i++] = tcy + sy * hy; c8[i++] = tcz - sa * sx * hx + ca * sz * hz; }
-      const r = rectOf8(mw, [0, 0, 0, 0]); if (r) o.obs.push(r);
+      const r = rectOf8(mw, [0, 0, 0, 0]); if (r) o.mt = r;   // M4: model rect only used when the real title meshes are not found
     }
     if (d < 0.1) { // the real title meshes (ZUNIGA, Folk Blues) as on screen now (current camera only)
       try {
@@ -461,12 +461,13 @@ async function computePlacement(scene, camera, ampMissing, S) {
           tm.geometry.computeBoundingBox(); tm.updateWorldMatrix(true, false);
           const b = tm.geometry.boundingBox; let i = 0;
           for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { tmp.set(x, y, z).applyMatrix4(tm.matrixWorld); c8[i++] = tmp.x; c8[i++] = tmp.y; c8[i++] = tmp.z; }
-          const r = rectOf8(mw, [0, 0, 0, 0]); if (r) o.obs.push(r);
+          const r = rectOf8(mw, [0, 0, 0, 0]); if (r) { o.obs.push(r); realTitle.push(r); }
         }
       } catch (_) { }
     }
     samples.push(o);
   }
+  for (const sm of samples) { sm.title = realTitle.length ? realTitle : null; if (sm.title) for (const r of sm.title) { if (!sm.obs.includes(r)) sm.obs.push(r); } else if (sm.mt) sm.obs.push(sm.mt); }
   await slice();
   // targets for the screen's on-screen size (t325u): >= 35 % of the width on phones, >= 22 % (and >= 160 px tall) on desktop; 8 % headroom
   const portrait = CW < CH * 0.9, tgtW = (portrait ? 0.35 : 0.22) * CW * 1.08, tgtH = portrait ? 0 : 160 * 1.08;
@@ -500,8 +501,10 @@ async function computePlacement(scene, camera, ampMissing, S) {
       const chk = (o, gap) => { if (!o) return 0; const ox = Math.min(x1, o[2] + gap) - Math.max(x0, o[0] - gap), oy = Math.min(y1, o[3] + gap) - Math.max(y0, o[1] - gap); return ox > 0 && oy > 0 ? ox * oy : 0; };
       ov += chk(sm.amp, PTV_GAP) + chk(sm.gu, PTV_GAP); for (const o of sm.obs) ov += chk(o, PTV_GAP);
       ps += ov / area;
+      if (sm.title) { let tov = 0; for (const o of sm.title) tov += chk(o, PTV_GAP); pv += tov / area * 6 + (tov > 0 ? 0.05 : 0); }   // M4: hard clear of the title
       const cx = (x0 + x1) / 2;   // left of the amp's and the guitar's projected centres
-      for (const o of [sm.amp, sm.gu]) if (o) { const oc = (o[0] + o[2]) / 2; if (cx > oc) pv += 0.3 + (cx - oc) / CW; }
+      // M4: a TV wholly ABOVE the guitar's top edge (phones: the band over the title) may sit up to 0.22 vw right of the guitar's centre (still left of the amp)
+      for (const o of [sm.amp, sm.gu]) if (o) { const oc = (o[0] + o[2]) / 2 + (o === sm.gu && y1 < o[1] ? 0.22 * CW : 0); if (cx > oc) pv += 0.3 + (cx - oc) / CW; }
       // the picture + the sign (key rect): hard clear
       let kx0 = 1e9, kx1 = -1e9, ky0 = 1e9, ky1 = -1e9, sx0 = 1e9, sx1 = -1e9, sy0 = 1e9, sy1 = -1e9;
       for (let k = 0; k < 12; k += 3) {
@@ -524,7 +527,7 @@ async function computePlacement(scene, camera, ampMissing, S) {
   };
   let best = null, n = 0;
   // photo-tv (Blake 6:10 approved): the TV floats; its lowest point is hb x the amp's height above the floor (0 = floor level)
-  const NU = 17, NW = 8, HBS = [0, 0.6, 1.2, 1.9, 2.7];
+  const NU = 17, NW = 8, HBS = [0, 0.6, 1.2, 1.8, 2.4, 3.0, 3.6, 4.2, 4.8, 5.6];   // M4: + 3.6, 4.6 (above the title on phones)
   for (const thd of [24, 34]) for (let iu = 0; iu < NU; iu++) for (let iw = 0; iw < NW; iw++) {
     const u = -3.9 + iu * 0.24, w = -0.5 + iw * 0.5;   // in units of L (the guitar's size) from the guitar's centre; w > 0 = farther from the camera
     const x = bc.x + (rx * u + fx * w) * L, z = bc.z + (rz * u + fz * w) * L;
