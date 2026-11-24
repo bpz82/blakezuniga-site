@@ -3126,7 +3126,7 @@ function zgPrStep(now, rawMs) {
 function tick(now) {   // amp10 (Blake t196u) 10e: driven by loop() below (rAF is requested there)
   const raw = (now - last) / 1000; last = now; const dt = Math.min(Math.max(raw, 0), DT_MAX);
   if (flipV !== flipTarget) { flipV = flipTarget > flipV ? Math.min(1, flipV + raw / 1.1) : Math.max(0, flipV - raw / 1.1); applyFlip(flipV); if (flipV === flipTarget) setSide(flipTarget); }
-  const turning = flipV !== 0 && flipV !== 1;
+  const turning = (flipV !== 0 && flipV !== 1) || !!window.__homeWalkHold;   // layout/pose.js: also paused while the guitar eases flat for Explore
   frames++; if (raw > .034) slow++;
   zgPrStep(now, raw * 1000);   // amp10 (Blake t196u) 10e
   if (frames >= 120) { if (slow > 80 && pr > 1 && now - lastPR > 4000 && document.body.classList.contains('zg-reveal-done')) {   // amp10 (Blake t196u) 10e: never during the intro / reveal
@@ -3249,6 +3249,8 @@ const dbg = window.__dbg = {
   odo(reset) { const r = { ...ODO }; if (reset) { ODO.pred = ODO.path = ODO.t = 0; ODO.frames = 0; } return r; },
   probe(lx, lz) { const w = G.localToWorld(new V3(lx, 0, lz)); return { foot: onFootprint(w.x, w.z), ground: G.worldToLocal(new V3(w.x, groundAt(w.x, w.z, P.pos.y), w.z)).y, wall: wallAt(w.x, w.z, P.pos.y), feetLocalY: G.worldToLocal(P.pos.clone()).y }; },
   orbit(yaw, pitch) { showYaw = sYaw = yaw; showPitch = sPitch = pitch; showT = -1e9; },
+  get showT() { return showT; },   // layout/camera.js: tells a user drag (showT = 0) from its own hold (showT = -1e9)
+  releaseOrbit() { showT = 3; },   // layout/camera.js: start the home spin ramp now (the same ease-in as a fresh load)
   lookTarget(yaw, pitch) { LK.yaw = P.yaw = yaw; LK.pitch = P.pitch = pitch; camY = P.pos.y + EYE; },
   setWalk(eye, fov) { if (eye) EYE = eye; if (fov) WALK_FOV = fov; },
   input() { return { joy: [IN.jx, IN.jy], joyId: IN.joyId, looks: IN.looks.size, jump: IN.jumpIds.size, vel: P.vel.length(), yaw: P.yaw, keys: Object.keys(K).filter(k => K[k]),
@@ -3441,7 +3443,7 @@ try { await bootFinish(); } catch (e) { console.warn('[zg] boot finish failed:',
 <button id="zg-home-amp" type="button" aria-label="Back to home">Home</button>
 <script type="module" src="amp-chrome.js"></script>
 <script type="module" src="photo-tv/boot.js"></script>
-<script type="module" src="layout-runtime.js"></script>
+<script type="module" src="layout/index.js"></script>
 <script type="module">if (new URLSearchParams(location.search).get('edit') === '1') import('./layout-editor-inner.js');</script>
 <script type="module">
 /* Lazy-load the amp after the guitar's first frame. A failure leaves the guitar running. */

@@ -863,11 +863,11 @@ export async function mountPhotoTV(opts) {
   };
   const modeOk = () => { const m = document.body.dataset.mode; return m === 'show' || m === 'amp'; };
   let down = null, handle = null, lastMove = 0, hovering = false, cursorWas = '';
-  const onDown = (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId }; };
+  const onDown = (e) => { down = { x: e.clientX, y: e.clientY, t: e.timeStamp, id: e.pointerId }; };   // t = event time, not handler time: a busy frame between down and up must not turn a tap into a long press
   const onUp = (e) => {
     const d = down; down = null;
     if (!d || d.id !== e.pointerId) return;
-    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 8 || performance.now() - d.t >= 500) return;
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 8 || e.timeStamp - d.t >= 500) return;
     if (document.body.dataset.edit === '1' || S._leBlock) return;
     if (!modeOk() || S.browserOpen || document.querySelector('.zg-panel') || S.state !== 'on') return;
     try { if (hit(e.clientX, e.clientY)) open(); } catch (err) { console.warn('[photo-tv] click failed', err); }
