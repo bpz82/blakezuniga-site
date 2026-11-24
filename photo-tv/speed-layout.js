@@ -1,7 +1,7 @@
 // photo-tv SPEED LAYOUT (Blake 7:52-7:59 AM, hand-set by Grok): fixed home view — guitar lying flat, neck straight away from the camera
 // (bridge nearest), centred; amp right; hero TV left; title top centre. Stops the slow home orbit and overrides the auto placement.
 // Constants per form factor; applied once the TV is on and again after a resize. Fails soft (console.warn) like the rest of photo-tv.
-const PHONE = { k: 1.75, oz: -30, pitch: 0.62, amp: [34, 0, -92], ampS: 2.45, ampRy: -0.9, tv: [-40, 0, -95], tvRy: 0.55, tvS: 60, gTilt: 0.22, gLift: 4, tDist: 420, tUp: 0.43 };   // Blake 9:09: TV + amp down beside the guitar neck (a bit smaller so they fit the width; amp fully on screen)
+const PHONE = { k: 1.75, oz: -30, pitch: 0.62, amp: [33, 0, -36], ampS: 2.1, ampRy: -1.1, tv: [-46, 0, -165], tvRy: 0, tvRx: -0.3, tvS: 72, gTilt: 0.35, gLift: 6, tDist: 420, tUp: 0.43 };   // Blake 9:31: amp down + closer (right of the guitar body), TV straight to camera (no yaw, leaned back to face it), up + bigger, guitar tilted up more; was 9:09: TV + amp down beside the guitar neck (a bit smaller so they fit the width; amp fully on screen)
 const SHORT = Object.assign({}, PHONE, { k: 2.15, oz: -5 });   // Blake 9:04: short phones (height < 760): camera back, row clear of the title and tiles
 const DESK  = { k: 1.85, oz: 15, pitch: 0.5, gTilt: 0.12, gLift: 2, amp: [64, 0, -52], ampRy: -0.8, tv: [-64, 0, -65], tvRy: 0.8, tvS: 74, tDist: 230, tUp: 0.40, tSc: 0.83 };   // tSc: Blake 9:04, title size of 6368f15 (the scene's own fit shrank it once the headstock rose)
 let C = null, title = null, hooked = false, gB = null;
@@ -21,7 +21,7 @@ function apply() {
     window.__amp7SetHome(C.k, false, 0, C.oz); d.orbit(0, C.pitch);
     if (a) { a.position.set(...C.amp); a.rotation.y = C.ampRy; a.scale.setScalar(C.ampS || 3); }
     tilt(true);
-    t.position.set(...C.tv); t.rotation.y = C.tvRy; t.scale.setScalar(C.tvS);
+    t.position.set(...C.tv); t.rotation.y = C.tvRy; t.rotation.x = C.tvRx || 0; t.scale.setScalar(C.tvS);
     if (!title) d.scene.traverse((o) => { if (!title && o.isMesh && o.geometry && o.geometry.type === 'TextGeometry' && o.name === '') title = o; });
     if (!hooked && title) {
       hooked = true; const r = d.renderer, orig = r.render.bind(r), V = d.camera.position.constructor, f = new V(), u = new V();
