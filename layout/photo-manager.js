@@ -487,17 +487,17 @@
     const adds = [];
     const files = [];
     for (const a of state.adds) {
-      const raw = new Uint8Array(await a.file.arrayBuffer());
-      const ext = extOf(a.name, a.file.type);
-      const fileName = 'adds/' + a.id + ext;
+      const packed = await packAddFile(a);
+      const fileName = 'adds/' + a.id + packed.ext;
       adds.push({
         id: a.id,
         file: fileName,
         originalName: a.name,
         alt: String(a.alt || '').slice(0, ALT_MAX + 20),
-        insertAfter: previousId(a)
+        insertAfter: previousId(a),
+        transcoded: packed.transcoded || false
       });
-      files.push({ name: fileName, data: raw });
+      files.push({ name: fileName, data: packed.data });
     }
     const changes = {
       version: 1,
@@ -521,6 +521,31 @@
       if (order[i].kind === 'photo' && !state.removals.has(order[i].id)) return order[i].id;
     }
     return null;
+  }
+
+  function isSimpleImage(name, type) {
+    return /\.(jpe?g|png|webp|gif)$/i.test(name || '') || /^image\/(jpeg|png|webp|gif)$/i.test(type || '');
+  }
+
+  async function packAddFile(add) {
+    const raw = new Uint8Array(await add.file.arrayBuffer());
+    if (isSimpleImage(add.name, add.file.type)) {
+      return { data: raw, ext: extOf(add.name, add.file.type), transcoded: false };
+    }
+    try {
+      const bitmap = await createImageBitmap(add.file);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext('2d').drawImage(bitmap, 0, 0);
+      if (bitmap.close) bitmap.close();
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error('jpeg encode failed')), 'image/jpeg', 0.92);
+      });
+      return { data: new Uint8Array(await blob.arrayBuffer()), ext: '.jpg', transcoded: true };
+    } catch (_) {
+      return { data: raw, ext: extOf(add.name, add.file.type), transcoded: false };
+    }
   }
 
   function extOf(name, type) {
