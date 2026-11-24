@@ -624,21 +624,32 @@ export async function mountPhotoTV(opts) {
     tv.screen.material.depthTest = false; tv.screen.material.depthWrite = false; tv.screen.renderOrder = -1;
     panelGlowM = new THREE.MeshBasicMaterial({ map: panelGlowTexture(), color: new THREE.Color(1.0, 0.72, 0.42), blending: THREE.AdditiveBlending, transparent: false, depthTest: false, depthWrite: false, toneMapped: false, opacity: 0 });
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 1.3, SCR_H * 1.42), panelGlowM); glow.renderOrder = -1.5; glow.position.z = -0.01; panel.add(glow);
-    const fw = new THREE.Vector3(), up = new THREE.Vector3();
+    const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
     const place = (r, s, c) => {   // camera-locked: upper-middle of the view on desktop, a wide band behind the scene on phones
       if (!c || !c.isPerspectiveCamera) return;
-      const D = 600, th = Math.tan(c.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * c.aspect, ph = innerWidth < 600 || innerWidth < innerHeight;
-      let w = Wv * (ph ? 0.96 : 0.5), h = w * SCR_H / SCR_W; const hm = Hv * (ph ? 0.4 : 0.56); if (h > hm) { h = hm; w = h * SCR_W / SCR_H; }
-      fw.set(0, 0, -1).applyQuaternion(c.quaternion); up.set(0, 1, 0).applyQuaternion(c.quaternion);
-      panel.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * (ph ? -0.01 : 0.0));
-      if (ph !== neonPh) {   // Blake 10:18: on phones the sign sits in the right corner of the top border, a bit smaller, drawn over the amp (never covered); desktop unchanged
-        neonPh = ph;
+      const L = window.__homeLayout || {}, P = L.panel || {}, N = L.neon;
+      const D = P.depth || 600, th = Math.tan(c.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * c.aspect, ph = innerWidth < 600 || innerWidth < innerHeight;
+      let w = P.w != null ? Wv * P.w : Wv * (ph ? 0.96 : 0.5), h = P.h != null ? Hv * P.h : w * SCR_H / SCR_W;
+      if (P.w == null || P.h == null) { const hm = Hv * (ph ? 0.4 : 0.56); if (h > hm) { h = hm; w = h * SCR_W / SCR_H; } }
+      fw.set(0, 0, -1).applyQuaternion(c.quaternion); up.set(0, 1, 0).applyQuaternion(c.quaternion); rt.set(1, 0, 0).applyQuaternion(c.quaternion);
+      const cy = P.cy != null ? P.cy : (ph ? -0.01 : 0.0), cx = P.cx != null ? P.cx : 0;
+      panel.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * cy).addScaledVector(rt, Wv * cx);
+      if (N && N.lx != null) {
         for (const [m, ro, z] of neonParts) {
-          m.position.set(ph ? SCR_W * 0.285 : SCR_W * 0.24, SCR_H / 2, z); m.scale.setScalar(m.userData.s0 * (ph ? 0.82 : 1));
+          m.position.set(N.lx * SCR_W, N.ly * SCR_H, z); m.scale.setScalar(m.userData.s0 * (N.s != null ? N.s : 1));
+          if (N.rz) m.rotation.z = N.rz; else m.rotation.z = 0;
+          m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true;
+        }
+      } else {   // Blake 10:18: on phones the sign sits in the right corner of the top border, a bit smaller, drawn over the amp (never covered); desktop unchanged
+        for (const [m, ro, z] of neonParts) {
+          m.position.set(ph ? SCR_W * 0.285 : SCR_W * 0.24, SCR_H / 2, z); m.scale.setScalar(m.userData.s0 * (ph ? 0.82 : 1)); m.rotation.z = 0;
           m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true;
         }
       }
-      panel.quaternion.copy(c.quaternion); panel.scale.setScalar(w / SCR_W); panel.updateMatrixWorld(true);
+      panel.quaternion.copy(c.quaternion);
+      if (P.w != null && P.h != null) panel.scale.set(w / SCR_W, h / SCR_H, 1); else panel.scale.setScalar(w / SCR_W);
+      if (P.rz) panel.rotateZ(P.rz);
+      panel.updateMatrixWorld(true);
     };
     glow.onBeforeRender = place; tv.screen.onBeforeRender = place;
     // Blake 9:53: the Precious Memories neon straddles the panel's bottom border (half over the frame edge), same glowing look
@@ -835,6 +846,7 @@ export async function mountPhotoTV(opts) {
     const d = down; down = null;
     if (!d || d.id !== e.pointerId) return;
     if (Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 8 || performance.now() - d.t >= 500) return;
+    if (document.body.dataset.edit === '1' || S._leBlock) return;
     if (!modeOk() || S.browserOpen || document.querySelector('.zg-panel') || S.state !== 'on') return;
     try { if (hit(e.clientX, e.clientY)) open(); } catch (err) { console.warn('[photo-tv] click failed', err); }
   };

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Home layout editor — Blake Zuniga</title>
+  <link rel="preload" href="assets/fonts/ZunigaMission-Regular-v3.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="layout-editor.css">
+</head>
+<body>
+  <header id="bar">
+    <div class="row">
+      <h1>Layout editor</h1>
+      <div class="seg" role="tablist" aria-label="View">
+        <button type="button" id="btn-desk" class="on" aria-pressed="true">Desktop</button>
+        <button type="button" id="btn-phone" aria-pressed="false">Phone</button>
+      </div>
+      <p class="hint">Drag to move. Pinch, drag a corner, or use Size to resize. Place Desktop and Phone separately, then Copy JSON and send it back so it can go on the site.</p>
+    </div>
+    <div class="row chips" id="chips" role="tablist" aria-label="Item"></div>
+    <div class="row sliders" id="sliders" hidden></div>
+    <div class="row">
+      <button type="button" class="btn primary" id="btn-copy">Copy JSON</button>
+      <button type="button" class="btn" id="btn-dl">Download</button>
+      <button type="button" class="btn warn" id="btn-reset">Reset this view</button>
+      <span id="status">Loading the scene…</span>
+    </div>
+  </header>
+  <div id="stage-wrap"><div id="stage-clip"><iframe id="stage" title="Home scene"></iframe></div></div>
+  <script src="layout-editor.js" defer></script>
+</body>
+</html>

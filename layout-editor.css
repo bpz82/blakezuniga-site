@@ -1,0 +1,48 @@
+@font-face {
+  font-family: 'Zuniga Mission';
+  src: url('assets/fonts/ZunigaMission-Regular-v3.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root { --gold: #e8c47a; --ink: #f3ece4; --dim: #9a8f84; --bg: #0b0a0c; --panel: rgba(16,14,12,.92); --line: rgba(255,255,255,.16); }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font-family: 'Zuniga Mission', system-ui, sans-serif; overflow: hidden; }
+body { display: flex; flex-direction: column; min-height: 100dvh; min-height: 100svh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+#bar { flex: 0 0 auto; background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: 10px 12px 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.row + .row { margin-top: 8px; }
+h1 { margin: 0 10px 0 0; font-size: 16px; font-weight: 400; letter-spacing: .1em; }
+.hint { margin: 0; color: var(--dim); font-size: 13px; letter-spacing: .02em; line-height: 1.3; flex: 1 1 180px; }
+.btn, .seg button, .chip {
+  appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--ink);
+  font-family: inherit; font-size: 15px; letter-spacing: .04em; min-height: 44px; padding: 0 14px;
+  border-radius: 999px; cursor: pointer; touch-action: manipulation; }
+.btn:active, .seg button:active, .chip:active { transform: scale(.97); }
+.btn.primary { background: var(--gold); color: #1a1208; border-color: var(--gold); }
+.btn.warn { background: transparent; }
+.seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; min-width: 88px; }
+.seg button.on { background: var(--gold); color: #1a1208; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 40px; padding: 0 12px; font-size: 14px; }
+.chip.on { background: var(--gold); color: #1a1208; border-color: var(--gold); }
+.sliders { display: flex; flex-wrap: wrap; gap: 10px 16px; width: 100%; }
+.sl { display: flex; align-items: center; gap: 8px; flex: 1 1 200px; min-width: 180px; }
+.sl label { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); min-width: 58px; }
+.sl input[type=range] { flex: 1; height: 32px; accent-color: var(--gold); }
+.sl .val { font-size: 13px; color: var(--gold); min-width: 3.2em; }
+#status { font-size: 13px; color: var(--dim); letter-spacing: .03em; }
+#status.ok { color: var(--gold); }
+#stage-wrap { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0;
+  background: #050506; padding: 8px; }
+#stage-clip { overflow: hidden; background: #000; box-shadow: 0 0 0 1px rgba(232,196,122,.35), 0 12px 40px rgba(0,0,0,.55); }
+#stage { border: 0; display: block; background: #000; transform-origin: 0 0; }
+@media (max-width: 700px) {
+  h1 { font-size: 15px; }
+  .hint { font-size: 12px; flex-basis: 100%; }
+  .btn, .seg button { font-size: 14px; padding: 0 12px; }
+}

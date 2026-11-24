@@ -3441,6 +3441,8 @@ try { await bootFinish(); } catch (e) { console.warn('[zg] boot finish failed:',
 <button id="zg-home-amp" type="button" aria-label="Back to home">Home</button>
 <script type="module" src="amp-chrome.js"></script>
 <script type="module" src="photo-tv/boot.js"></script>
+<script type="module" src="layout-runtime.js"></script>
+<script type="module">if (new URLSearchParams(location.search).get('edit') === '1') import('./layout-editor-inner.js');</script>
 <script type="module">
 /* Lazy-load the amp after the guitar's first frame. A failure leaves the guitar running. */
 window.__ampFail = 0;
