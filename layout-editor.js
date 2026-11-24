@@ -99,7 +99,7 @@
       if (id === 'k') props.k = value;
       if (id === 'pitch') props.pitch = value;
       if (id === 'yaw') props.yaw = value;
-    } else if (selected === 'panel' && (id === 'w' || id === 'h' || id === 'rz')) {
+    } else if (selected === 'panel' && (id === 'w' || id === 'h' || id === 'rz' || id === 'ry' || id === 'rx')) {
       props[id] = value;
     } else if (id === 's') props.s = value;
     else if (id === 'ry' || id === 'rz' || id === 'rx') props[id] = value;
@@ -120,7 +120,8 @@
     if (selected === 'panel') {
       sliders.appendChild(sliderRow('w', 'Width', 0.15, 1.1, 0.01, v.w != null ? v.w : 0.5));
       sliders.appendChild(sliderRow('h', 'Height', 0.1, 1.0, 0.01, v.h != null ? v.h : 0.35));
-      sliders.appendChild(sliderRow('rz', 'Rotate', -1, 1, 0.01, v.rz || 0));
+      sliders.appendChild(sliderRow('rz', 'Tilt', -1, 1, 0.01, v.rz || 0));
+      sliders.appendChild(sliderRow('ry', 'Turn', -1.2, 1.2, 0.01, v.ry || 0));
       return;
     }
     if (selected === 'guitar' || selected === 'amp') {

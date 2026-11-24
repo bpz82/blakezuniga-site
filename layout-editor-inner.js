@@ -292,7 +292,7 @@ function startEditor() {
       let w, h;
       if (r) { w = r.w / innerWidth; h = r.h / innerHeight; }
       else { w = ph ? 0.96 : 0.5; h = w * (SCR_H / SCR_W) * (innerWidth / innerHeight); }
-      seed = { cx: c.cx, cy: c.cy, w, h, depth: 600, rz: 0 };
+      seed = { cx: c.cx, cy: c.cy, w, h, depth: 600, rz: 0, ry: 0, rx: 0 };
     } else if (id === 'title') {
       const t = title(), r = itemRect('title');
       const c = viewCenterOf(r);

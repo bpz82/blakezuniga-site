@@ -619,12 +619,14 @@ export async function mountPhotoTV(opts) {
   if (PANEL) {
     tv.root.traverse(o => { if ((o.isMesh || o.isSprite) && o !== tv.screen) o.visible = false; });
     tv.meshes.length = 0; tv.meshes.push(tv.screen);
-    panel = new THREE.Group(); panel.name = 'photo-panel';
+    const lock = new THREE.Group(); lock.name = 'photo-panel-lock';
+    panel = new THREE.Group(); panel.name = 'photo-panel'; lock.add(panel);
     tv.screen.parent.remove(tv.screen); panel.add(tv.screen); tv.screen.position.set(0, 0, 0); tv.screen.scale.set(1, 1, 1);
     tv.screen.material.depthTest = false; tv.screen.material.depthWrite = false; tv.screen.renderOrder = -1;
     panelGlowM = new THREE.MeshBasicMaterial({ map: panelGlowTexture(), color: new THREE.Color(1.0, 0.72, 0.42), blending: THREE.AdditiveBlending, transparent: false, depthTest: false, depthWrite: false, toneMapped: false, opacity: 0 });
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 1.3, SCR_H * 1.42), panelGlowM); glow.renderOrder = -1.5; glow.position.z = -0.01; panel.add(glow);
     const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
+    const offE = new THREE.Euler(), offQ = new THREE.Quaternion();
     const place = (r, s, c) => {   // camera-locked: upper-middle of the view on desktop, a wide band behind the scene on phones
       if (!c || !c.isPerspectiveCamera) return;
       const L = window.__homeLayout || {}, P = L.panel || {}, N = L.neon;
@@ -633,7 +635,8 @@ export async function mountPhotoTV(opts) {
       if (P.w == null || P.h == null) { const hm = Hv * (ph ? 0.4 : 0.56); if (h > hm) { h = hm; w = h * SCR_W / SCR_H; } }
       fw.set(0, 0, -1).applyQuaternion(c.quaternion); up.set(0, 1, 0).applyQuaternion(c.quaternion); rt.set(1, 0, 0).applyQuaternion(c.quaternion);
       const cy = P.cy != null ? P.cy : (ph ? -0.01 : 0.0), cx = P.cx != null ? P.cx : 0;
-      panel.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * cy).addScaledVector(rt, Wv * cx);
+      // Pivot follows the camera; tilt/turn live on the child so a later camera-quat copy cannot overwrite them.
+      lock.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * cy).addScaledVector(rt, Wv * cx);
       if (N && N.lx != null) {
         for (const [m, ro, z] of neonParts) {
           m.position.set(N.lx * SCR_W, N.ly * SCR_H, z); m.scale.setScalar(m.userData.s0 * (N.s != null ? N.s : 1));
@@ -646,12 +649,23 @@ export async function mountPhotoTV(opts) {
           m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true;
         }
       }
-      panel.quaternion.copy(c.quaternion);
-      if (P.w != null && P.h != null) panel.scale.set(w / SCR_W, h / SCR_H, 1); else panel.scale.setScalar(w / SCR_W);
-      if (P.rz) panel.rotateZ(P.rz);
-      panel.updateMatrixWorld(true);
+      lock.quaternion.copy(c.quaternion);
+      if (P.w != null && P.h != null) lock.scale.set(w / SCR_W, h / SCR_H, 1); else lock.scale.setScalar(w / SCR_W);
+      // Blake 11:20: Turn (ry) and Tilt (rx/rz) are the child's local rotation, applied after the camera lock.
+      const ry = +P.ry || 0, rx = +P.rx || 0, rz = +P.rz || 0;
+      offE.set(rx, ry, rz, 'YXZ');
+      offQ.setFromEuler(offE);
+      panel.position.set(0, 0, 0);
+      panel.scale.set(1, 1, 1);
+      panel.quaternion.copy(offQ);
+      lock.updateMatrixWorld(true);
     };
     glow.onBeforeRender = place; tv.screen.onBeforeRender = place;
+    if (!renderer.__panelPlaceHooked) {
+      renderer.__panelPlaceHooked = true;
+      const origRender = renderer.render.bind(renderer);
+      renderer.render = (s, c) => { try { place(renderer, s, c); } catch (_) {} return origRender(s, c); };
+    }
     // Blake 9:53: the Precious Memories neon straddles the panel's bottom border (half over the frame edge), same glowing look
     let neonPh = null; const neonParts = [];   // [mesh, desktop renderOrder, z]
     let haloMesh = null; tv.root.traverse(o => { if (o.isMesh && o.material === tv.haloM) haloMesh = o; });
@@ -662,9 +676,11 @@ export async function mountPhotoTV(opts) {
       m.material.depthTest = false; m.material.depthWrite = false; m.material.transparent = false; m.material.blending = THREE.AdditiveBlending; m.material.needsUpdate = true; m.userData.s0 = NS; neonParts.push([m, ro, 0.02]);
     }
     scene.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'CircleGeometry' && o.material && o.material.emissiveMap) o.renderOrder = -2; });   // the floor glow first, the panel over it
-    panel.traverse(o => { o.layers.set(1); });
-    scene.add(panel);
+    lock.traverse(o => { o.layers.set(1); });
+    scene.add(lock);
     S.panel = panel;
+    S.lock = lock;
+    S.place = place;
     const vis = () => { panel.visible = document.body.dataset.mode === 'show' || !document.body.dataset.mode; };
     vis(); document.addEventListener('zg:mode', vis);
   }
