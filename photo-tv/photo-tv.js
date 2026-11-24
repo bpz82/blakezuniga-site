@@ -850,9 +850,15 @@ export async function mountPhotoTV(opts) {
   const el = renderer.domElement;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   const hit = (cx, cy) => {
+    // Prefer the projected screen rect: a yawed panel under a non-uniform lock scale can miss a 3D raycast.
+    try {
+      const sr = screenRect();
+      if (sr && cx >= sr.x && cy >= sr.y && cx <= sr.x + sr.w && cy <= sr.y + sr.h) return true;
+    } catch (_) { }
     const r = el.getBoundingClientRect(); if (!r.width || !r.height) return false;
     ndc.set(((cx - r.left) / r.width) * 2 - 1, -(((cy - r.top) / r.height) * 2 - 1));
     ray.setFromCamera(ndc, camera);
+    try { ray.layers.enableAll(); } catch (_) { }
     return ray.intersectObjects(tv.meshes, false).length > 0;
   };
   const modeOk = () => { const m = document.body.dataset.mode; return m === 'show' || m === 'amp'; };

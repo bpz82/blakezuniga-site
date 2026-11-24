@@ -155,10 +155,11 @@ function applyTilesAndExplore(L) {
   if (ring) { ring.style.transform = ''; ring.style.transformOrigin = ''; }
   applyDom(document.getElementById('zg-explore'), L.explore, 'center bottom');
   try { document.dispatchEvent(new CustomEvent('zg:layout-tiles')); } catch (_) { }
-  if (clampDomLayout(L)) {
+  // Live page shows layout.json as written. Clamp / write-back stays editor-only so we do not nudge Blake's numbers.
+  if (isEdit() && clampDomLayout(L)) {
     try { document.dispatchEvent(new CustomEvent('zg:layout-tiles')); } catch (_) { }
     applyDom(document.getElementById('zg-explore'), L.explore, 'center bottom');
-    if (isEdit()) saveLocal();   // write back clamped tiles offsets so an existing saved layout stays on screen; no reset needed
+    saveLocal();
   }
 }
 
@@ -236,6 +237,9 @@ function applyFrame(cam) {
   window.__homeLayout = L;
   const d = window.__dbg;
   if (!d) return;
+  // Hold the camera at the saved layout values every frame so later auto home
+  // (__amp7SetHome from amp place / fade) and the auto orbit cannot drift it.
+  applyCamera(L);
   if (L.guitar) applyPose(d.G, L.guitar);
   if (L.amp) applyPose(window.__ampHandle && window.__ampHandle.object3d, L.amp);
   if (L.title && L.title.cx != null) placeBillboard(findTitle(), cam || d.camera, L.title);
