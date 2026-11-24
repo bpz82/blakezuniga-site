@@ -197,7 +197,7 @@ function open({ photos, startIndex = 0, base, originRect, onClose }) {
   el('div', 'ptv-glow', stage);
 
   const count = el('div', 'ptv-count', root);
-  const cap = el('div', 'ptv-cap', root);
+  // j: no caption/description element (Blake: no descriptions); img.alt still carries p.alt
   const bPrev = el('button', 'ptv-prev', root);
   const bNext = el('button', 'ptv-next', root);
   const bClose = el('button', 'ptv-close', root);
@@ -240,8 +240,6 @@ function open({ photos, startIndex = 0, base, originRect, onClose }) {
     root.dataset.index = String(idx);
     root.dataset.id = p.id != null ? String(p.id) : '';
     count.textContent = `${idx + 1} / ${N}`;
-    const capText = p.caption || p.alt || '';
-    cap.textContent = capText && capText !== p.id && !/^[\w.-]+$/.test(capText) ? capText : '';
     edge.textContent = `▷ ${String(idx + 1).padStart(3, '0')}   ▷ ${String(idx + 1).padStart(3, '0')}A`;
     err.classList.remove('ptv-on');
     // placeholder

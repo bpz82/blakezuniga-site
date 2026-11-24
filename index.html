@@ -3497,7 +3497,7 @@ function* amp7PlaceGen(THREE, box, qs, why, opt) {
     for (const p of gp) if (p[0] > x0 - 4 && p[0] < x1 + 4 && p[1] > y0 - 4 && p[1] < y1 + 4) { gi++; if (p[1] > yFeet - 4) giFeet++; }
     const behindGuitar = Math.hypot(x - cam.position.x, z - cam.position.z) > Math.hypot(bc.x - cam.position.x, bc.z - cam.position.z);
     let rh = 0; for (const p of ring) if (p[0] + p[2] > x0 && p[0] - p[2] < x1 && p[1] + p[2] > y0 && p[1] - p[2] < y1) rh++;
-    const acx = (x0 + x1) / 2, left = acx < W * LEFT_MAX && acx < gcx;   // amp8 item 2
+    const acx = (x0 + x1) / 2, left = acx > W * (1 - LEFT_MAX) && acx > gcx;   // photo-tv (Blake 4:32 layout): amp on the RIGHT of the guitar
     return { rect: [x0, y0, x1, y1], ok: floorHit === 0 && giFeet === 0 && (gi === 0 || behindGuitar) && left && behindGuitar, out, tov, floorHit, gi, giFeet, behindGuitar,
       rf: rh / ring.length, hf: (y1 - y0) / H, acx, left };
   }
@@ -3509,7 +3509,7 @@ function* amp7PlaceGen(THREE, box, qs, why, opt) {
     if (!e) return;
     const dh = Math.hypot(x - head.x, z - head.z) / L;
     let cost = (e.hf < T ? (T - e.hf) / T * 100 : (e.hf - T) / T * 150) + dh * 40 + e.rf * 60 + Math.abs(dy) * 10 + e.gi / Math.max(1, gp.length) * 300;
-    if (e.acx !== undefined) cost += Math.max(0, e.acx / W - 0.3) * 120;   // amp8 item 2: prefer well left (<= 30% width)
+    if (e.acx !== undefined) cost += Math.max(0, (1 - e.acx / W) - 0.3) * 120;   // photo-tv (Blake 4:32 layout): prefer well right (>= 70% width)
     if (e.ok) nOk++;
     else cost += 1e5 + e.out * 50 + Math.sqrt(e.tov) * 200 + e.floorHit * 500 + e.giFeet * 40;
     if (!best || cost < best.cost) best = { cost, x, z, yaw, dy, dh, e };
@@ -3803,9 +3803,10 @@ function* amp9PlaceGen(THREE, box, qs, why) {
     if (gap < CLEAR || gap > AMP9_RULE.gapMaxL * L) return null;
     if (Math.hypot(x - p1.x, z - p1.z) <= Math.hypot(bc.x - p1.x, bc.z - p1.z)) return null;   // amp8 rule kept: deeper than the guitar
     const st = startStats(x, z, yaw, p1);
-    if (!st || !(st.acx < st.gcx && st.acx < W * 0.45) || st.giFeet || st.tov > 0) return null;   // amp8 rules kept: left of the guitar; feet + ZUNIGA word clear
+    if (!st || !(st.acx > st.gcx && st.acx > W * 0.55) || st.giFeet || st.tov > 0) return null;   // photo-tv (Blake 4:32 layout): RIGHT of the guitar (was left); feet + ZUNIGA word clear
     // near the guitar's middle (the orbit centre: keeps the orbiting camera away) and its body, small gap
-    const cost = gap / L * 40 + Math.hypot(x - bc.x, z - bc.z) / L * 40 + Math.hypot(x - body.x, z - body.z) / L * 10 + st.gi / Math.max(1, gws.length / 3) * 60;
+    const cost = gap / L * 40 + Math.hypot(x - bc.x, z - bc.z) / L * 40 + Math.hypot(x - body.x, z - body.z) / L * 10 + st.gi / Math.max(1, gws.length / 3) * 60
+      - Math.min(0.6, Math.max(0, st.depth) / L) * 25;   // photo-tv (Blake 4:32 layout): move the amp back a bit (prefer deeper than the guitar)
     return { x, z, gap, cost };
   };
   for (let x = gb.x0 - ext; x <= gb.x1 + ext + 1e-6; x += step) for (let z = gb.z0 - ext; z <= gb.z1 + ext + 1e-6; z += step) {
@@ -3827,7 +3828,7 @@ function* amp9PlaceGen(THREE, box, qs, why) {
     const o = amp9Orbit(ps, lb, cd.x, floorY, cd.z, yaw, W, H, cs, rc, gcs);
     o.hero = hero;
     if (hero < AMP9_RULE.hero) { o.ok = false; o.bad += (AMP9_RULE.hero - hero) * 4; }
-    if (o.ok) { const s2 = startStats(cd.x, cd.z, yaw, ps[0]); if (!s2 || s2.tov > 0 || s2.giFeet || !(s2.acx < s2.gcx && s2.acx < W * 0.45)) o.ok = false; }   // start rules at this k too
+    if (o.ok) { const s2 = startStats(cd.x, cd.z, yaw, ps[0]); if (!s2 || s2.tov > 0 || s2.giFeet || !(s2.acx > s2.gcx && s2.acx > W * 0.55)) o.ok = false; }   // photo-tv (Blake 4:32 layout): right side   // start rules at this k too
     const tr9 = window.__amp9PlaceDbg && window.__amp9PlaceDbg.trace;   // amp9 (Blake t188u) 9g2: probe-only trace (off unless a probe sets it)
     if (tr9 && tr9.length < 40000) tr9.push([+cd.x.toFixed(1), +cd.z.toFixed(1), F, k, +hero.toFixed(3), +o.areaFrac.toFixed(3), +o.cutFrac.toFixed(3), +o.camDistOverAmpSize.toFixed(2), +o.startCut.toFixed(3), +o.guitarCut.toFixed(3), o.ok ? 1 : 0]);
     if (o.ok) { if (!best || total < best.total) best = { ...cd, k, F, o, yaw, dy: dy || 0, total }; return 'ok'; }
@@ -3922,7 +3923,7 @@ function* amp9PlaceGen(THREE, box, qs, why) {
   const r = { position: { x: pick.x, y: floorY, z: pick.z }, rotation: { x: 0, y: pick.yaw, z: 0 }, scale: S };
   const r3 = v => +(+v).toFixed(3);
   window.__ampPlace = { ...r, version: 'amp9 place v9', used: 'v9', view, feasible: !!best, cost: r3(pick.cost), homeK: pick.k, ox: r3(ox), oz: r3(oz),
-    screenCx: r3(st.acx / W), guitarCx: r3(st.gcx / W), left: st.acx < st.gcx, behindGuitar: st.depth > 0, floorHits: 0, guitarHits: st.gi, guitarHitsFeet: st.giFeet,
+    screenCx: r3(st.acx / W), guitarCx: r3(st.gcx / W), left: st.acx < st.gcx, right: st.acx > st.gcx, behindGuitar: st.depth > 0, floorHits: 0, guitarHits: st.gi, guitarHitsFeet: st.giFeet,
     depthVsGuitar: r3(st.depth), facingErrDeg: +(Math.abs(pick.dy || 0) * 180 / Math.PI).toFixed(2), sizeFrac: r3((st.rect[3] - st.rect[1]) / H),
     box: st.rect.map(Math.round), floorY, L: r3(L), gap: r3(pick.gap), endZ, candidates: n, nearCandidates: cands.length,
     searchMs: Math.round(performance.now() - t0), autoMs: Math.round(performance.now() - t0), moves };
