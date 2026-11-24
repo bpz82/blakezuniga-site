@@ -11,7 +11,8 @@
 // Ids that may be registered.
 // 'selftest-broken' is TEST-ONLY: it is registered only when the page URL has ?selftest=1.
 // amp12 (Blake t208u): 'photos' added (the Photos module, photos.js)
-export const ACTIVE = ['contact', 'collaborative-projects', 'photos', 'selftest-broken'];
+// Vinyl Vault (Blake, 23 Nov 2026): 'vinyl-vault' added (apps/vinyl-vault/vinyl-vault.js)
+export const ACTIVE = ['contact', 'collaborative-projects', 'photos', 'vinyl-vault', 'selftest-broken'];
 
 // Ids that were once used and are now retired. Never remove an id from this list.
 export const RETIRED = ['about', 'music', 'videos', 'shop'];

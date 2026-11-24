@@ -3387,10 +3387,13 @@ window.__ampFail = 0;
    returns { x0, y0, x1, y1 } plus circles [cx, cy, r] along the row (centre line, spacing size/2, r = size/2) that stand in for the
    old 48 ring samples in the amp placement overlap tests (ringFrac = the share of those circles the amp's screen box touches). */
 function amp11WidgetRow(W, H) {
-  const n = Math.max(1, document.querySelectorAll('.zg-tile').length || 2), size = Math.round(Math.min(129, Math.max(106, W * 0.168))), GAP = 16;
+  const n = Math.max(1, document.querySelectorAll('.zg-tile').length || 2), GAP = 16;
+  let size = Math.round(Math.min(129, Math.max(106, W * 0.168)));
   let sl = 0, sb = 0;
   try { const r = document.querySelector('.zg-ring'); if (r) { const cs = getComputedStyle(r); sl = parseFloat(cs.paddingLeft) || 0; sb = parseFloat(cs.paddingBottom) || 0; } } catch (_) { }
-  const margin = W < 600 ? 16 : 24, pad = H > W ? 110 : 88, y1 = H - (sb + pad), y0 = y1 - size;   // home-v2: mirrors harness.js layout() (row centered, above Explore)
+  const margin = W < 600 ? 16 : 24;
+  { const fit = Math.floor((W - 2 * Math.max(margin, sl + margin) - (n - 1) * GAP) / n); if (size > fit) size = Math.max(72, fit); }   // Vinyl Vault: mirrors harness.js layout() shrink-to-fit
+  const pad = H > W ? 110 : 88, y1 = H - (sb + pad), y0 = y1 - size;   // home-v2: mirrors harness.js layout() (row centered, above Explore)
   const total = n * size + (n - 1) * GAP, x0 = Math.max(Math.max(margin, sl + margin), (W - total) / 2), x1 = x0 + Math.min(total, W - 2 * x0), circles = [];
   for (let x = x0 + size / 2; x <= x1 - size / 2 + 0.5; x += size / 2) circles.push([x, (y0 + y1) / 2, size / 2]);
   return { x0, y0, x1, y1, size, circles };
