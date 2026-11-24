@@ -631,16 +631,24 @@ export async function mountPhotoTV(opts) {
       let w = Wv * (ph ? 0.96 : 0.5), h = w * SCR_H / SCR_W; const hm = Hv * (ph ? 0.4 : 0.56); if (h > hm) { h = hm; w = h * SCR_W / SCR_H; }
       fw.set(0, 0, -1).applyQuaternion(c.quaternion); up.set(0, 1, 0).applyQuaternion(c.quaternion);
       panel.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * (ph ? -0.01 : 0.0));
+      if (ph !== neonPh) {   // Blake 10:18: on phones the sign sits in the right corner of the top border, a bit smaller, drawn over the amp (never covered); desktop unchanged
+        neonPh = ph;
+        for (const [m, ro, z] of neonParts) {
+          m.position.set(ph ? SCR_W * 0.285 : SCR_W * 0.24, SCR_H / 2, z); m.scale.setScalar(m.userData.s0 * (ph ? 0.82 : 1));
+          m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true;
+        }
+      }
       panel.quaternion.copy(c.quaternion); panel.scale.setScalar(w / SCR_W); panel.updateMatrixWorld(true);
     };
     glow.onBeforeRender = place; tv.screen.onBeforeRender = place;
     // Blake 9:53: the Precious Memories neon straddles the panel's bottom border (half over the frame edge), same glowing look
+    let neonPh = null; const neonParts = [];   // [mesh, desktop renderOrder, z]
     let haloMesh = null; tv.root.traverse(o => { if (o.isMesh && o.material === tv.haloM) haloMesh = o; });
     const NS = (SCR_W * 0.46) / SIGN.w;
-    { const bk = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 0.42, SCR_H * 0.11), new THREE.MeshBasicMaterial({ color: 0x050403, depthTest: false, depthWrite: false, toneMapped: false })); bk.position.set(SCR_W * 0.24, SCR_H / 2, 0.01); bk.renderOrder = -0.5; panel.add(bk); }   // dark strip behind the neon so it reads over a bright photo
+    { const bk = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 0.42, SCR_H * 0.11), new THREE.MeshBasicMaterial({ color: 0x050403, depthTest: false, depthWrite: false, toneMapped: false })); bk.position.set(SCR_W * 0.24, SCR_H / 2, 0.01); bk.renderOrder = -0.5; panel.add(bk); bk.userData.s0 = 1; neonParts.push([bk, -0.5, 0.01]); }   // dark strip behind the neon so it reads over a bright photo
     for (const [m, ro] of [[haloMesh, -0.4], [tv.neonMesh, -0.3]]) {
       if (!m) continue; m.parent.remove(m); panel.add(m); m.visible = true; m.position.set(SCR_W * 0.24, SCR_H / 2, 0.02); m.scale.setScalar(NS); m.renderOrder = ro;
-      m.material.depthTest = false; m.material.depthWrite = false; m.material.transparent = false; m.material.blending = THREE.AdditiveBlending; m.material.needsUpdate = true;
+      m.material.depthTest = false; m.material.depthWrite = false; m.material.transparent = false; m.material.blending = THREE.AdditiveBlending; m.material.needsUpdate = true; m.userData.s0 = NS; neonParts.push([m, ro, 0.02]);
     }
     scene.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'CircleGeometry' && o.material && o.material.emissiveMap) o.renderOrder = -2; });   // the floor glow first, the panel over it
     panel.traverse(o => { o.layers.set(1); });
