@@ -311,6 +311,7 @@ const zgW = {
     const _fitProbe = { x: 0, y: 0, right: 0, bottom: 0, n: 0 };
     const _gBox = new THREE.Box3();
     const _fitDest = new THREE.Vector3();
+    const _fitDest2 = new THREE.Vector3();
     function projectNameBox(camera, px, py, pz, scale, yaw, out) {
       const lb = ensureNameBox();
       const padY = (L * 0.012) / Math.max(scale, 1e-4);
@@ -392,12 +393,29 @@ const zgW = {
     function fitGroupToFrustum(camera, anchor, baseScale, yaw, dest, noScale) {
       const W = Math.max(1, window.innerWidth || 1), H = Math.max(1, window.innerHeight || 1);
       const margin = Math.max(24, Math.round(Math.min(W, H) * 0.05));
-      const gap = Math.max(16, Math.round(Math.min(W, H) * 0.03));
+      // call 7 (CE2): on a tall portrait phone (393x852) the guitar clearance is 6px so the name can sit at ~28% down; shorter/landscape views keep 16px
+      const gap = (W < H * 0.8 && H >= 800) ? 6 : Math.max(16, Math.round(Math.min(W, H) * 0.03));
       let scale = baseScale;
       const minScale = Math.max(0.28, baseScale * 0.4);
       let y = anchor.y;
-      const x = anchor.x, z = anchor.z;
+      let x = anchor.x, z = anchor.z;
       const box = _fitBox;
+      // call 6 (CE1/CE2): slide the group along the camera's horizontal right axis so the projected ZUNIGA + Folk Blues box sits on vw/2,
+      // and on portrait phones place it lower in the free space above the guitar (box centre ~31% down, never past the guitar clearance).
+      const cme = camera.matrixWorld.elements;
+      let rx = cme[0], rz = cme[2]; const rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl;
+      const portrait = W < H * 0.8;
+      const centerX = () => {
+        const b = _fitBox; projectNameBox(camera, x, y, z, scale, yaw, b);
+        if (!b.n) return false;
+        const c0 = (b.x + b.right) / 2;
+        projectNameBox(camera, x + rx, y, z + rz, scale, yaw, _fitProbe);
+        const sens = (_fitProbe.x + _fitProbe.right) / 2 - c0;
+        if (!Number.isFinite(sens) || Math.abs(sens) < 1e-6) return false;
+        const k = (W / 2 - c0) / sens;
+        x += rx * k; z += rz * k;
+        return Math.abs(W / 2 - c0) > 0.4;
+      };
       // Only nudge when the natural pose would leave the frame or cover the
       // guitar. Do not pre-lift off the guitar's world AABB — that was the
       // L*0.05 overflow, and it shrank the name during boot before the guitar
@@ -406,6 +424,8 @@ const zgW = {
         projectNameBox(camera, x, y, z, scale, yaw, box);
         if (!box.n) break;
         const textH = box.bottom - box.y, textW = box.right - box.x;
+        const needX = centerX();
+        if (needX) { projectNameBox(camera, x, y, z, scale, yaw, box); }
         const gTop = guitarScreenTop(camera, box.x, box.right);
         const floor = Math.min(H - margin, Number.isFinite(gTop) ? gTop - gap : H - margin);
         const ceil = margin;
@@ -422,15 +442,20 @@ const zgW = {
         if (scaled) continue;
         const overflowTop = ceil - box.y;
         const overflowBot = box.bottom - floor;
-        if (overflowTop <= 0.75 && overflowBot <= 0.75) break;
+        const lowT = portrait ? Math.min(Math.max(ceil, H * 0.31 - textH / 2), Math.max(ceil, floor - textH)) : null;
+        const wantLower = lowT !== null && box.y < lowT - 0.75;
+        if (overflowTop <= 0.75 && overflowBot <= 0.75 && !wantLower && !needX) break;
+        if (overflowTop <= 0.75 && overflowBot <= 0.75 && !wantLower) continue;
         projectNameBox(camera, x, y - 1, z, scale, yaw, _fitProbe);
         const dBoxYdWorldY = (_fitProbe.y - box.y) / -1;
         if (!Number.isFinite(dBoxYdWorldY) || Math.abs(dBoxYdWorldY) < 1e-6) break;
         let desired = box.y;
         if (overflowTop > 0.75) desired = ceil;
-        else if (overflowBot > 0.75) desired = noScale ? Math.max(ceil, box.y - overflowBot) : box.y - overflowBot;   // call 3: locked-scale fit keeps the top margin ahead of guitar clearance (no up/down oscillation)
+        else if (overflowBot > 0.75) desired = noScale ? Math.max(ceil, box.y - overflowBot) : box.y - overflowBot;
+        else if (wantLower) desired = lowT;   // call 3: locked-scale fit keeps the top margin ahead of guitar clearance (no up/down oscillation)
         y += (desired - box.y) / dBoxYdWorldY;
       }
+      for (let i = 0; i < 3; i++) if (!centerX()) break;
       projectNameBox(camera, x, y, z, scale, yaw, box);
       dest.set(x, y, z);
       zgW._fit = window.__zgNameFit = { scale, margin, box: { x: box.x, y: box.y, right: box.right, bottom: box.bottom }, pos: { x, y, z } };
@@ -675,6 +700,13 @@ const zgW = {
         if (lockOn && (!lockRatio || lockW !== window.innerWidth || lockH !== window.innerHeight)) computeFitLock(camera);
         if (lockOn && lockRatio) {
           placeSc = fitGroupToFrustum(camera, pos, sc * lockRatio * introScale, yaw, _fitDest, true);
+        } else if (phase === 'done' && lockRatio && doneK < 1 && lockW === window.innerWidth && lockH === window.innerHeight) {
+          // call 7 (SM6): ease from the locked-scale pose used during 'down' to the free rest pose (no world-position / scale jump on the first done frame)
+          const sL = fitGroupToFrustum(camera, pos, sc * lockRatio, yaw, _fitDest2, true);
+          const sF = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
+          const w = smooth01(doneK);
+          _fitDest.lerpVectors(_fitDest2, _fitDest, w);
+          placeSc = sL + (sF - sL) * w;
         } else {
           placeSc = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
         }
@@ -702,8 +734,8 @@ const zgW = {
       // blob shadow: higher word -> a bit bigger and lighter
       const h = f * 0.5 + 0.5; // 0..1
       const k = 1 + 0.06 * h;
-      shadow.position.x = pos.x;
-      shadow.position.z = pos.z;
+      shadow.position.x = _fitDest.x;   // call 6: follows the centred word
+      shadow.position.z = _fitDest.z;
       shadow.rotation.y = yaw;
       shadow.scale.set(width * 1.5 * k * sc, size * 1.6 * k * sc, 1);
       smat.opacity = showShadow ? (0.95 - 0.2 * h) * fo * (phase === 'down' ? phaseU(DOWN_S) : 1) : 0;

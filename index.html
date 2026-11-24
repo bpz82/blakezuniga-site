@@ -334,14 +334,14 @@ function setupStage(renderer, scene, camera, focus) {
     composer.render();
   }
 
-  function resize(w, h, pixelRatio) {
+  function resize(w, h, pixelRatio, deferRT) {   // call 8 (SM1): deferRT = keep the composer / bloom targets as they are (a size change re-creates ~13 target textures)
     const pr = Math.min(pixelRatio || window.devicePixelRatio || 1, mobile ? 2 : 2.5);
     renderer.setPixelRatio(pr);
     renderer.setSize(w, h);
-    composer.setPixelRatio(pr);
-    composer.setSize(w, h);
+    if (!deferRT) { composer.setPixelRatio(pr);
+    composer.setSize(w, h); }
     const bw = w * pr, bh = h * pr;
-    bloom.setSize(mobile ? bw * 0.5 : bw, mobile ? bh * 0.5 : bh); // internal is /2 again
+    if (!deferRT) bloom.setSize(mobile ? bw * 0.5 : bw, mobile ? bh * 0.5 : bh); // internal is /2 again
     if (fxaa) fxaa.material.uniforms.resolution.value.set(1 / Math.max(1, bw), 1 / Math.max(1, bh));
     if (camera.isPerspectiveCamera) {
       camera.aspect = w / h;
@@ -1798,7 +1798,11 @@ STAGE.floor.visible = false; STAGE.catcher.visible = false;   // behind the veil
 // software test renderer with per-frame VSM; that slowdown failed the logged 120 Hz-step walk tests).
 // amp10 (Blake t196u) 10e: needsUpdate stays false until the guitar is in (bootFinish sets it): the shadow pass has nothing to draw before
 renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = false;
-function resize() { STAGE.resize(window.innerWidth, window.innerHeight, pr); }
+// call 8 (SM1): while the intro is visible (zg-intro: in / hold / down) a window resize only updates the canvas + camera; the composer / bloom render targets
+// are re-created (~13 createTexture) once the intro is done (+14 frames), so no texture object is created between the first visible frame and 'done'
+let rszPend = false;
+function resize() { const hold = document.body.classList.contains('zg-intro'); if (hold) rszPend = true; STAGE.resize(window.innerWidth, window.innerHeight, pr, hold); }
+document.addEventListener('zg:reveal', (e) => { if (e.detail && e.detail.phase === 'done' && rszPend) { let n = 0; const go = () => { if (++n < 14) requestAnimationFrame(go); else { rszPend = false; resize(); } }; requestAnimationFrame(go); } });
 window.addEventListener('resize', resize); resize();
 
 /* ---------- site1: floating ZUNIGA word (zuniga3d.js), its own failure domain ---------- */
@@ -2119,6 +2123,7 @@ const zgW = {
     const _fitProbe = { x: 0, y: 0, right: 0, bottom: 0, n: 0 };
     const _gBox = new THREE.Box3();
     const _fitDest = new THREE.Vector3();
+    const _fitDest2 = new THREE.Vector3();
     function projectNameBox(camera, px, py, pz, scale, yaw, out) {
       const lb = ensureNameBox();
       const padY = (L * 0.012) / Math.max(scale, 1e-4);
@@ -2200,12 +2205,29 @@ const zgW = {
     function fitGroupToFrustum(camera, anchor, baseScale, yaw, dest, noScale) {
       const W = Math.max(1, window.innerWidth || 1), H = Math.max(1, window.innerHeight || 1);
       const margin = Math.max(24, Math.round(Math.min(W, H) * 0.05));
-      const gap = Math.max(16, Math.round(Math.min(W, H) * 0.03));
+      // call 7 (CE2): on a tall portrait phone (393x852) the guitar clearance is 6px so the name can sit at ~28% down; shorter/landscape views keep 16px
+      const gap = (W < H * 0.8 && H >= 800) ? 6 : Math.max(16, Math.round(Math.min(W, H) * 0.03));
       let scale = baseScale;
       const minScale = Math.max(0.28, baseScale * 0.4);
       let y = anchor.y;
-      const x = anchor.x, z = anchor.z;
+      let x = anchor.x, z = anchor.z;
       const box = _fitBox;
+      // call 6 (CE1/CE2): slide the group along the camera's horizontal right axis so the projected ZUNIGA + Folk Blues box sits on vw/2,
+      // and on portrait phones place it lower in the free space above the guitar (box centre ~31% down, never past the guitar clearance).
+      const cme = camera.matrixWorld.elements;
+      let rx = cme[0], rz = cme[2]; const rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl;
+      const portrait = W < H * 0.8;
+      const centerX = () => {
+        const b = _fitBox; projectNameBox(camera, x, y, z, scale, yaw, b);
+        if (!b.n) return false;
+        const c0 = (b.x + b.right) / 2;
+        projectNameBox(camera, x + rx, y, z + rz, scale, yaw, _fitProbe);
+        const sens = (_fitProbe.x + _fitProbe.right) / 2 - c0;
+        if (!Number.isFinite(sens) || Math.abs(sens) < 1e-6) return false;
+        const k = (W / 2 - c0) / sens;
+        x += rx * k; z += rz * k;
+        return Math.abs(W / 2 - c0) > 0.4;
+      };
       // Only nudge when the natural pose would leave the frame or cover the
       // guitar. Do not pre-lift off the guitar's world AABB — that was the
       // L*0.05 overflow, and it shrank the name during boot before the guitar
@@ -2214,6 +2236,8 @@ const zgW = {
         projectNameBox(camera, x, y, z, scale, yaw, box);
         if (!box.n) break;
         const textH = box.bottom - box.y, textW = box.right - box.x;
+        const needX = centerX();
+        if (needX) { projectNameBox(camera, x, y, z, scale, yaw, box); }
         const gTop = guitarScreenTop(camera, box.x, box.right);
         const floor = Math.min(H - margin, Number.isFinite(gTop) ? gTop - gap : H - margin);
         const ceil = margin;
@@ -2230,15 +2254,20 @@ const zgW = {
         if (scaled) continue;
         const overflowTop = ceil - box.y;
         const overflowBot = box.bottom - floor;
-        if (overflowTop <= 0.75 && overflowBot <= 0.75) break;
+        const lowT = portrait ? Math.min(Math.max(ceil, H * 0.31 - textH / 2), Math.max(ceil, floor - textH)) : null;
+        const wantLower = lowT !== null && box.y < lowT - 0.75;
+        if (overflowTop <= 0.75 && overflowBot <= 0.75 && !wantLower && !needX) break;
+        if (overflowTop <= 0.75 && overflowBot <= 0.75 && !wantLower) continue;
         projectNameBox(camera, x, y - 1, z, scale, yaw, _fitProbe);
         const dBoxYdWorldY = (_fitProbe.y - box.y) / -1;
         if (!Number.isFinite(dBoxYdWorldY) || Math.abs(dBoxYdWorldY) < 1e-6) break;
         let desired = box.y;
         if (overflowTop > 0.75) desired = ceil;
-        else if (overflowBot > 0.75) desired = noScale ? Math.max(ceil, box.y - overflowBot) : box.y - overflowBot;   // call 3: locked-scale fit keeps the top margin ahead of guitar clearance (no up/down oscillation)
+        else if (overflowBot > 0.75) desired = noScale ? Math.max(ceil, box.y - overflowBot) : box.y - overflowBot;
+        else if (wantLower) desired = lowT;   // call 3: locked-scale fit keeps the top margin ahead of guitar clearance (no up/down oscillation)
         y += (desired - box.y) / dBoxYdWorldY;
       }
+      for (let i = 0; i < 3; i++) if (!centerX()) break;
       projectNameBox(camera, x, y, z, scale, yaw, box);
       dest.set(x, y, z);
       zgW._fit = window.__zgNameFit = { scale, margin, box: { x: box.x, y: box.y, right: box.right, bottom: box.bottom }, pos: { x, y, z } };
@@ -2483,6 +2512,13 @@ const zgW = {
         if (lockOn && (!lockRatio || lockW !== window.innerWidth || lockH !== window.innerHeight)) computeFitLock(camera);
         if (lockOn && lockRatio) {
           placeSc = fitGroupToFrustum(camera, pos, sc * lockRatio * introScale, yaw, _fitDest, true);
+        } else if (phase === 'done' && lockRatio && doneK < 1 && lockW === window.innerWidth && lockH === window.innerHeight) {
+          // call 7 (SM6): ease from the locked-scale pose used during 'down' to the free rest pose (no world-position / scale jump on the first done frame)
+          const sL = fitGroupToFrustum(camera, pos, sc * lockRatio, yaw, _fitDest2, true);
+          const sF = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
+          const w = smooth01(doneK);
+          _fitDest.lerpVectors(_fitDest2, _fitDest, w);
+          placeSc = sL + (sF - sL) * w;
         } else {
           placeSc = fitGroupToFrustum(camera, pos, placeSc, yaw, _fitDest);
         }
@@ -2510,8 +2546,8 @@ const zgW = {
       // blob shadow: higher word -> a bit bigger and lighter
       const h = f * 0.5 + 0.5; // 0..1
       const k = 1 + 0.06 * h;
-      shadow.position.x = pos.x;
-      shadow.position.z = pos.z;
+      shadow.position.x = _fitDest.x;   // call 6: follows the centred word
+      shadow.position.z = _fitDest.z;
       shadow.rotation.y = yaw;
       shadow.scale.set(width * 1.5 * k * sc, size * 1.6 * k * sc, 1);
       smat.opacity = showShadow ? (0.95 - 0.2 * h) * fo * (phase === 'down' ? phaseU(DOWN_S) : 1) : 0;
@@ -3309,7 +3345,14 @@ async function bootFinish() {
       const d = performance.now() - t0; if (d > BOOT.maxTaskMs) BOOT.maxTaskMs = Math.round(d);
     }
     logm('warmed');
-    warmRT.dispose(); warmRT = null;
+    // call 7 (SM1): keep the 4x4 warm target and the 1x1 sync target alive and fully created NOW (before the first visible 'in' frame); the amp reuses them,
+    // so its warm step after 'done' creates no render-target textures (they were ~13 createTexture on the first / slowest view)
+    try {
+      const syncK = new rt.constructor(1, 1);
+      if (renderer.initRenderTarget) { renderer.initRenderTarget(warmRT); renderer.initRenderTarget(syncK); }
+      window.__zgKeepRT = { warm: warmRT, sync: syncK, rt };
+    } catch (_) { try { warmRT.dispose(); } catch (_2) { } window.__zgKeepRT = null; }
+    warmRT = null;
     // amp10 (Blake t196u) 10j safety net: nothing the boot did may leave a guitar mesh hidden or a map un-uploaded (a missing texture must never leave the guitar invisible)
     for (let i = 0; i < meshes.length; i++) if (meshes[i].visible !== vis0[i]) { meshes[i].visible = vis0[i]; BOOT.revisFixed = (BOOT.revisFixed || 0) + 1; }
     for (const t of texs) { try { const pr = renderer.properties.get(t); if (!pr.__webglTexture || pr.__version !== t.version) { t.needsUpdate = true; BOOT.texRepaired = (BOOT.texRepaired || 0) + 1; } } catch (_) { } }
@@ -4414,7 +4457,8 @@ async function amp8Prepare(h, lights) {
   // amp9 (Blake t188u) 9g: the warm target = a 4x4 twin of the composer's target (same type, format, MSAA samples,
   // depth/stencil), so the pipelines built are the ones the real frame uses, while three's MSAA resolve after each
   // render covers 4x4 px (warming straight into the full-size target cost ~150 ms more per draw on the test GPU)
-  const warmRT = rt ? new rt.constructor(4, 4, { type: rt.texture.type, format: rt.texture.format, samples: rt.samples,
+  const keepRT = (rt && window.__zgKeepRT && window.__zgKeepRT.rt.samples === rt.samples && window.__zgKeepRT.rt.texture.type === rt.texture.type && window.__zgKeepRT.rt.texture.format === rt.texture.format) ? window.__zgKeepRT : null;   // call 7 (SM1): created at boot, reused here
+  const warmRT = keepRT ? keepRT.warm : rt ? new rt.constructor(4, 4, { type: rt.texture.type, format: rt.texture.format, samples: rt.samples,
     depthBuffer: rt.depthBuffer, stencilBuffer: rt.stencilBuffer, colorSpace: rt.texture.colorSpace }) : null;
   const fc = new Map();
   const warmGroup = (group, opaque) => {
@@ -4443,7 +4487,7 @@ async function amp8Prepare(h, lights) {
   AMP8.warm = { steps: 0, maxN: 0, maxGapRatio: 0, log: [], mats: [] };
   // GPU sync point: a 1-pixel read from a 1x1 RGBA8 target waits for every GPU command queued before it (gl.finish()
   // does not: measured, the deferred pipeline build still landed in the next frame)
-  const one = [null], gl = renderer.getContext(), px = new Uint8Array(4), syncRT = rt ? new rt.constructor(1, 1) : null;
+  const one = [null], gl = renderer.getContext(), px = new Uint8Array(4), syncRT = keepRT ? keepRT.sync : rt ? new rt.constructor(1, 1) : null;
   const gpuSync = () => {
     if (!syncRT || !window.__zgTestOn) return;   // amp10 (Blake t196u) 10d: no GPU sync in normal loads (paced by rAF deltas instead)
     const prev = renderer.getRenderTarget();
@@ -4462,6 +4506,7 @@ async function amp8Prepare(h, lights) {
     amp9RecStart();   // (normally already running since ZUNIGA started, see bootAmp)
     while (AMP9_GI < 5) await amp8AfterFrame();   // a few frames of baseline if not
     while (amp8Phase() !== 'done') await amp8AfterFrame();   // intro-polish: no texture uploads / shader compiles / new buffers during the visible intro (in / hold / down); warm right after the real 'done'
+    for (let n = 0; n < 14; n++) await amp8AfterFrame();   // call 6 (SM1): the amp's first warm step (its 128x128 blob-shadow canvas upload + the 4x4 render targets, ~14 createTexture) must not land on the 'done' frame itself; 14 frames (~230 ms at 60 fps) after the real 'done'
     for (let i = 0; i < list.length;) {
       await amp8AfterFrame();
       const g = AMP9_LAST, base = Math.max(8, amp9MedianFrame()), budget = 0.9 * base;
@@ -4521,7 +4566,7 @@ async function amp8Prepare(h, lights) {
   amp7Mark('compile0');
   // runs on in the background: bootAmp shows the amp when it is done, or at its deadline with the rest joining as warmed
   st.warmP = warmAll(entries).then(() => {
-    try { if (warmRT) warmRT.dispose(); if (syncRT) syncRT.dispose(); } catch (_) { }
+    try { if (!keepRT) { if (warmRT) warmRT.dispose(); if (syncRT) syncRT.dispose(); } } catch (_) { }   // call 7: kept targets live on (no dispose = no later re-create)
     amp7Mark('compiled'); amp7Mark('uploaded');        // (amp8 mark names kept for the perf probe)
     st.net();   // amp10 (Blake t196u) 10m
     AMP8.preparedT = amp8Now();
