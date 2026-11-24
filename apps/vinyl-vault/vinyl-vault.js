@@ -21,6 +21,8 @@ const CSS = `
 :host{display:block}
 .vv{box-sizing:border-box;color:#f1e9e6;font:15px/1.35 "Zuniga Mission",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .vv *{box-sizing:border-box}
+.vv-desc{margin:0;padding:4px 14px 2px;font:400 14px/1.3 "Zuniga Mission",system-ui,-apple-system,sans-serif;letter-spacing:.03em;
+  color:rgba(241,233,230,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vv-msg{margin:0;padding:22px;color:rgba(241,233,230,.85)}
 .vv-bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px;background:rgba(18,12,14,.88);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -96,6 +98,8 @@ function str(v, max) {
 }
 
 // A working link is a non-empty https URL that is not a search page. null, "" and search URLs all count as missing ('').
+// Search URLs are never accepted as album links. Discover uses a verified track link when present, else the album link; if both are missing it keeps "Not on X".
+
 function workingUrl(v) {
   if (typeof v !== 'string' || v.length > 1000) return '';
   try {
@@ -141,11 +145,24 @@ function parseRecords(data, baseUrl) {
       if (coverUrl.origin !== baseUrl.origin || !coverUrl.pathname.startsWith(baseUrl.pathname)) throw new Error('row');
       const spotify = workingUrl(r.spotify), apple = workingUrl(r.apple), youtube = workingUrl(r.youtube);
       const tracks = Array.isArray(r.tracks) ? r.tracks.map((t) => str(t, 200)).filter(Boolean) : [];
+      // optional verified per-track links: { "<track name>": { apple, spotify, youtube } }; invalid entries are dropped, never fatal
+      const trackLinks = {};
+      if (r.trackLinks && typeof r.trackLinks === 'object' && !Array.isArray(r.trackLinks)) {
+        for (const name of Object.keys(r.trackLinks)) {
+          try {
+            const e = r.trackLinks[name];
+            if (!tracks.includes(name) || !e || typeof e !== 'object') continue;
+            const o2 = {};
+            for (const k of ['apple', 'spotify', 'youtube']) { const u = workingUrl(e[k]); if (u) o2[k] = u; }
+            if (Object.keys(o2).length) trackLinks[name] = o2;
+          } catch (_) { /* omit */ }
+        }
+      }
       const year = Number.isInteger(r.year) && r.year >= 1900 && r.year <= 2100 ? r.year : 0;
       const copyText = str(r.copyText, 400) || artist + ' — ' + album;
       list.push({
         id: String(r.id == null ? list.length : r.id).slice(0, 40),
-        artist, album, year, cover: coverUrl.href, spotify, apple, youtube, tracks, copyText,
+        artist, album, year, cover: coverUrl.href, spotify, apple, youtube, tracks, trackLinks, copyText,
         hay: (artist + ' ' + album + ' ' + (year || '')).toLowerCase(),
       });
     } catch (_) {
@@ -256,7 +273,8 @@ export function mountVinylVault(host, opts) {
     empty.setAttribute('role', 'status');
     empty.hidden = true;
 
-    root.replaceChildren(bar, listEl, empty);
+    const desc = el('p', 'vv-desc', 'My personal vinyl collection — every record here is one I own and spin.');
+    root.replaceChildren(desc, bar, listEl, empty);
     root.dataset.count = String(list.length);
 
     // letter headers stick just under the search bar, whatever height the bar wraps to
@@ -310,7 +328,7 @@ export function mountVinylVault(host, opts) {
       copyBtn = el('button', 'vv-btn vv-copy', 'Copy');
       copyBtn.type = 'button';
       copyBtn.addEventListener('click', doCopy);
-      spinBtn = el('button', 'vv-btn vv-spin', 'Spin again');
+      spinBtn = el('button', 'vv-btn vv-spin', 'Pull Another Record');
       spinBtn.type = 'button';
       spinBtn.addEventListener('click', () => spin(spinBtn));
       fb = el('input', 'vv-fb');
@@ -341,10 +359,12 @@ export function mountVinylVault(host, opts) {
       // Copy always shows when anything is missing.
       const items = [];
       const notes = [];
+      const tl = (discover && track && r.trackLinks[track]) || {};
       for (const [label, key] of SERVICES) {
-        if (!r[key]) { notes.push(el('p', 'vv-only', 'Not on ' + label + ' \u2014 try searching it by name.')); continue; }
+        let href = tl[key] || r[key];
+        if (!href) { notes.push(el('p', 'vv-only', 'Not on ' + label + ' \u2014 try searching it by name.')); continue; }
         const a = el('a', 'vv-btn', label);
-        a.href = r[key];
+        a.href = href;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         items.push(a);
