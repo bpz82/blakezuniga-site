@@ -211,6 +211,7 @@ function collaborativeProjectsWidget() {
 // amp12 (Blake t208u): Photos widget. The photo UI lives in photos.js, imported lazily on first open (no photo request and no
 // photos.js fetch before the tile is tapped). Contract: mountPhotos(el, { manifestUrl }) -> { unmount() }. Handled failures
 // (module or manifest cannot load) are shown inside the panel and logged with console.warn, never thrown.
+// retired t307u, unhooked, files kept (not in the exported `widgets` array any more)
 function photosWidget() {
   let handle = null;
   let gone = false;
@@ -286,8 +287,9 @@ function vinylVaultWidget() {
 export const widgets = [
   contactWidget(),
   collaborativeProjectsWidget(),
-  photosWidget(),   // amp12 (Blake t208u)
-  vinylVaultWidget(),   // Vinyl Vault (Blake, 23 Nov 2026): 4th tile
+  // photosWidget() retired t307u, unhooked, files kept (the 3D photo TV in photo-tv/ replaces it)
+  vinylVaultWidget(),   // Vinyl Vault (Blake, 23 Nov 2026)
+
 ];
 
 // TEST-ONLY: deliberately broken widget, registered only with ?selftest=1.
