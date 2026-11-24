@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Home layout editor — Blake Zuniga</title>
   <link rel="preload" href="assets/fonts/ZunigaMission-Regular-v3.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="layout-editor.css">
+  <link rel="stylesheet" href="editor/editor.css">
   <link rel="stylesheet" href="layout/photo-manager.css">
 </head>
 <body>
@@ -21,21 +21,26 @@
         <button type="button" id="btn-desk" class="on" aria-pressed="true">Desktop</button>
         <button type="button" id="btn-phone" aria-pressed="false">Phone</button>
       </div>
-      <p class="hint layout-only">Drag to move. Pinch, drag a corner, or use Size to resize. Place Desktop and Phone separately, then Copy JSON and send it back so it can go on the site.</p>
       <p class="hint photos-only">Precious Memories photos. Add from your library, mark ones to remove, then Export changes and send the file back. Nothing is deleted until that file is applied with your OK.</p>
     </div>
-    <div class="row chips layout-only" id="chips" role="tablist" aria-label="Item"></div>
-    <div class="row sliders layout-only" id="sliders" hidden></div>
-    <div class="row layout-only">
+    <div class="row tools layout-only">
+      <button type="button" class="btn icon" id="btn-undo" disabled aria-label="Undo">Undo</button>
+      <button type="button" class="btn icon" id="btn-redo" disabled aria-label="Redo">Redo</button>
+      <button type="button" class="btn toggle" id="btn-snap" aria-pressed="false">Snap: off</button>
       <button type="button" class="btn primary" id="btn-copy">Copy JSON</button>
       <button type="button" class="btn" id="btn-dl">Download</button>
       <button type="button" class="btn warn" id="btn-reset">Reset this view</button>
-      <span id="status">Loading the scene…</span>
     </div>
+    <div class="row chips layout-only" id="chips" role="tablist" aria-label="Item"></div>
+    <p id="status" class="layout-only">Loading the scene…</p>
   </header>
   <div id="stage-wrap"><div id="stage-clip"><iframe id="stage" title="Home scene"></iframe></div></div>
+  <section id="inspector" class="layout-only" hidden aria-label="Selected object">
+    <div class="ins-head"><strong id="ins-title"></strong><button type="button" class="btn small" id="btn-reset-item">Reset this item</button></div>
+    <div id="fields"></div>
+  </section>
   <div id="photo-manager" hidden></div>
   <script src="layout/photo-manager.js" defer></script>
-  <script src="layout-editor.js" defer></script>
+  <script type="module" src="editor/ui.js"></script>
 </body>
 </html>
