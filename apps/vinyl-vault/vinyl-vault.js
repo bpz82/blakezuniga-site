@@ -273,7 +273,7 @@ export function mountVinylVault(host, opts) {
     empty.setAttribute('role', 'status');
     empty.hidden = true;
 
-    const desc = el('p', 'vv-desc', 'My personal vinyl collection — every record here is one I own and spin.');
+    const desc = el('p', 'vv-desc', 'Into vinyl? This is Blake’s ever-growing collection. Tap a record to listen.');
     root.replaceChildren(desc, bar, listEl, empty);
     root.dataset.count = String(list.length);
 
