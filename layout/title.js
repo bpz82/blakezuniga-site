@@ -127,10 +127,12 @@ export function place(mesh, cam, T) {
   setTop(mesh, mode === 'show');
   const D = T.depth || 420;
   if (I.s0 == null) I.s0 = mesh.scale.x;   // only used when the layout has no saved scale
-  const cx = T.cx || 0, cy = T.cy || 0, s = T.s != null ? T.s : I.s0, rz = T.rz || 0;
+  // Blake t452u: the saved scale is tuned for home fov 38; at amp / walk fov (72+) scale it so the on-screen size matches the home pose
+  const fk = Math.tan(cam.fov * Math.PI / 360) / Math.tan(38 * Math.PI / 360);
+  const cx = T.cx || 0, cy = T.cy || 0, s = (T.s != null ? T.s : I.s0) * fk, rz = T.rz || 0;
   const now = performance.now();
   const k = mode === 'show' ? introK(now) : null;
-  if (k === null) { billboard(mesh, cam, D, cx, cy, T.s, rz); return; }
+  if (k === null) { billboard(mesh, cam, D, cx, cy, T.s != null ? T.s * fk : null, rz); return; }
   // POP pose: screen centre (the ZUNIGA + Folk Blues group centred), POP_NEAR closer = 1 / 0.78 larger, capped to 90 % of the width
   const th = Math.tan(cam.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * cam.aspect, pb = measurePop(mesh);
   let ks = 1 / POP_NEAR;

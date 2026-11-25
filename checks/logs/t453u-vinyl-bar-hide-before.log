@@ -1,0 +1,8 @@
+FAIL .vv-bar background is opaque #120c0e
+FAIL .vv-bar--hidden class: translateY(-100%) + transition
+FAIL toggles vv-bar--hidden
+FAIL passive scroll listener
+FAIL scroll listener calls nextBarHidden
+FAIL focus guard (activeElement)
+FAIL nextBarHidden exported
+FAIL t453u-vinyl-bar-hide

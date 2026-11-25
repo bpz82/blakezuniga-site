@@ -1,0 +1,6 @@
+ok   fov 38 mode show: on-screen size ratio vs home = 1.0000
+FAIL fov 72 mode amp: on-screen size ratio vs home = 0.4739
+FAIL fov 95 mode amp: on-screen size ratio vs home = 0.3155
+FAIL fov 72 mode show: on-screen size ratio vs home = 0.4739
+FAIL fov 95 mode show: on-screen size ratio vs home = 0.3155
+FAIL t452u-title-amp-size
