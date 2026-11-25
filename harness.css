@@ -73,7 +73,7 @@ body[data-mode="walk"] .zg-ring {
   left: 0;
   top: 0;
   width: var(--zg-size);
-  height: var(--zg-size);
+  height: var(--zg-h, var(--zg-size));   /* harness.js sets --zg-h: = size on desktop, slimmer on a phone */
   padding: 0;
   box-sizing: border-box;
   display: flex;
@@ -259,6 +259,27 @@ a.zg-tile:visited {
 }
 .zg-tile--error {
   border-color: rgba(255, 90, 70, 0.7);
+}
+/* phone: slim tiles (harness.js sets --zg-size = width ~92 px, --zg-h = 74% of it): lighter frame and shadow, smaller icon/label */
+@media (max-width: 599px) {
+  .zg-tile {
+    gap: 2px;
+    border-radius: 16px;
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, calc(0.7 * var(--zg-fade, 1)));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .zg-icon {
+    font-size: calc(var(--zg-size) * 0.3);
+  }
+  .zg-icon:has(.zg-icon-img) {
+    width: calc(var(--zg-size) * 0.32);
+    height: calc(var(--zg-size) * 0.32);
+    font-size: 0;
+  }
+  .zg-label {
+    font-size: calc(var(--zg-size) * 0.105);
+  }
 }
 .zg-badge {
   position: absolute;

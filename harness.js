@@ -75,6 +75,8 @@ let modeQueued = false;
 let vw = 1280;
 let vh = 800;
 let size = 129;
+let lastSc = 1;
+let sizeH = 129; // tile height (phone: slimmer than the width)
 let rowX = 24; // left edge of the first tile
 let rowY = 647; // top of the row
 let scroll = 0; // px the row is scrolled left (only when the tiles overflow)
@@ -388,10 +390,11 @@ function bindRowPointer(el, fn) {
     if (ring) { ring.scrollLeft = 0; ring.scrollTop = 0; }
     const i = order.findIndex((q) => q.el === el);
     if (i < 0 || maxScroll <= 0) return;
-    const x = i * (size + GAP) - scroll;
+    const tw = vw < 600 ? size * tileScale() : size;
+    const x = i * (tw + GAP) - scroll;
     const room = vw - rowX * 2;
-    if (x < 0) scroll = Math.max(0, i * (size + GAP));
-    else if (x + size > room) scroll = Math.min(maxScroll, i * (size + GAP) + size - room);
+    if (x < 0) scroll = Math.max(0, i * (tw + GAP));
+    else if (x + tw > room) scroll = Math.min(maxScroll, i * (tw + GAP) + tw - room);
     render();
   });
 }
@@ -558,6 +561,14 @@ function closePanel(session) {
 /* ------------------------------------------------------------------ */
 
 // amp11 (Blake t206u) 11a: one straight row, tile i at x = rowX + i * (size + GAP) - scroll, every tile at the same top y.
+function tileScale() {
+  const off = (window.__homeLayout && window.__homeLayout.tiles) || {};
+  let sc = off.s != null ? +off.s : 1;
+  if (!(sc >= 0.4)) sc = off.s != null ? 0.4 : 1;
+  if (sc > 3) sc = 3;
+  return sc;
+}
+
 function render() {
   const n = order.length;
   if (!n) return;
@@ -565,12 +576,21 @@ function render() {
   // that made this position:fixed row collapse). Missing or empty values keep the automatic row.
   const off = (window.__homeLayout && window.__homeLayout.tiles) || {};
   const ox = +off.x || 0, oy = +off.y || 0;
-  let sc = off.s != null ? +off.s : 1;
-  if (!(sc >= 0.4)) sc = off.s != null ? 0.4 : 1;
-  if (sc > 3) sc = 3;
+  const sc = tileScale();
+  // phone (vw < 600): the gap is measured AFTER the scale (visual pitch = size * s + GAP) so the tiles never touch; the
+  // scale is about the tile's centre-bottom, so the left edge is shifted by half the growth. Desktop keeps the old math.
+  const ph = vw < 600;
+  if (ph && sc !== lastSc) { lastSc = sc; layout(); return; }   // tiles.s arrived/changed after layout(): re-centre + re-fit once
+  const vwid = ph ? size * sc : size, dx = ph ? -(size - vwid) / 2 : 0;
+  // phone: tiles.x may push the row past an edge; keep the whole row inside the viewport (4 px) when it fits, else leave it (it scrolls)
+  let cx = 0;
+  if (ph) {
+    const l0 = rowX - scroll + ox + dx, span = n * vwid + (n - 1) * GAP;
+    if (span <= vw - 8) cx = l0 < 4 ? 4 - l0 : (l0 + span > vw - 4 ? vw - 4 - (l0 + span) : 0);
+  }
   for (let i = 0; i < n; i++) {
     const e = order[i];
-    const tf = 'translate3d(' + (rowX + i * (size + GAP) - scroll + ox).toFixed(1) + 'px,' + (rowY + oy).toFixed(1) + 'px,0)' + (sc !== 1 ? ' scale(' + sc.toFixed(3) + ')' : '');
+    const tf = 'translate3d(' + (rowX + i * (vwid + GAP) - scroll + ox + dx + cx).toFixed(1) + 'px,' + (rowY + oy).toFixed(1) + 'px,0)' + (sc !== 1 ? ' scale(' + sc.toFixed(3) + ')' : '');
     if (tf !== e.tf) { e.tf = tf; e.el.style.transform = tf; e.el.style.transformOrigin = 'center bottom'; }
   }
 }
@@ -692,22 +712,30 @@ function layout() {
     /* no insets */
   }
   const margin = vw < 600 ? 16 : 24;
-  size = Math.round(Math.min(129, Math.max(106, vw * 0.168))); // mirrors CSS clamp
+  const phone = vw < 600;
+  const sc = tileScale();
+  // phone: slim tiles. width = 23.5% of vw (92 px at 390), height = 74% of the width (68 px), so after tiles.s (1.16 on Blake's
+  // phone layout) they are ~107 x 79 px, not 123 x 123. Never below 56 px wide, and the scaled row must fit the margins.
+  size = phone ? Math.max(56, Math.min(100, Math.round(vw * 0.235))) : Math.round(Math.min(129, Math.max(106, vw * 0.168))); // desktop mirrors CSS clamp
   // Vinyl Vault (Blake, 23 Nov 2026): with 4+ tiles the row can overflow a narrow screen (4 x 106 + 3 x 16 > 393). Shrink the tiles
   // only as much as needed so the row fits between the margins (and stays centered), never below 72. 3 tiles: unchanged (106 at 393).
   const nTiles = Math.max(1, order.length);
-  const fit = Math.floor((vw - 2 * Math.max(margin, sl + margin) - (nTiles - 1) * GAP) / nTiles);
-  if (size > fit) size = Math.max(72, fit);
+  const fit = Math.floor((vw - 2 * Math.max(margin, sl + margin) - (nTiles - 1) * GAP) / (nTiles * (phone ? sc : 1)));
+  if (size > fit) size = Math.max(phone ? 56 : 72, fit);
+  sizeH = phone ? Math.round(size * 0.74) : size;
   root.style.setProperty('--zg-size', size + 'px');
+  root.style.setProperty('--zg-h', sizeH + 'px');
   // home-v2 (Blake, 23 Nov 2026): the apps row is CENTERED horizontally and always sits ABOVE the centered "Explore the Guitar"
   // button (button top is ~64 px + safe-area above the bottom edge): bottom pad 110 on a portrait phone, 88 elsewhere (a 20+ px gap).
   // When the row is wider than the viewport it starts at the left margin and scrolls (maxScroll below).
-  const pad = vh > vw ? 110 : 88;
+  // phone portrait: pad 136 (was 110) lifts the slim row clear of Explore even with Blake's tiles.y = +42 / explore.y = -15.
+  const pad = vh > vw ? (phone ? 136 : 110) : 88;
   const rowMin = Math.max(margin, sl + margin);
-  const total0 = order.length * size + Math.max(0, order.length - 1) * GAP;
+  const vwid = phone ? size * sc : size;   // visual tile width (phone: after tiles.s)
+  const total0 = order.length * vwid + Math.max(0, order.length - 1) * GAP;
   rowX = Math.max(rowMin, (vw - total0) / 2);
-  rowY = Math.max(0, vh - (sb + pad) - size);
-  const total = order.length * size + Math.max(0, order.length - 1) * GAP;
+  rowY = Math.max(0, vh - (sb + pad) - sizeH);
+  const total = total0;
   maxScroll = Math.max(0, total - (vw - rowX * 2));
   if (scroll > maxScroll) scroll = maxScroll;
   render();

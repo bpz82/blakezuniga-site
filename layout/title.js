@@ -29,8 +29,27 @@ function qApply(q, x, y, z, out) {   // rotate a unit axis by a quaternion witho
   return out;
 }
 
+// Always on top: once the intro reveal is done the letters (ZUNIGA + the "Folk Blues" child, they share one material) are drawn
+// after, and without a depth test against, the amp / guitar / panel, so nothing can hide them at any orbit angle. The billboard
+// placement is NOT moved. Stays transparent (opacity 1) so it lands in the transparent pass, which draws after all opaque
+// meshes and is sorted by renderOrder (title 1000 > everything else); depthWrite off so it punches no hole in later draws.
+// The tagline shadow stays depth-tested (it is a soft drop shadow, drawn under the letters at renderOrder 10).
+// Before the reveal is done the intro veil/fade (renderOrder 10, depthTest false) is left exactly as index.html built it.
+const TOP = 1000;
+function onTop(mesh) {
+  if (!document.body.classList.contains('zg-reveal-done')) return;
+  const m = mesh.material;
+  if (m && (m.depthTest !== false || m.depthWrite !== false || m.transparent !== true)) {
+    m.depthTest = false; m.depthWrite = false; m.transparent = true; m.needsUpdate = true;
+  }
+  if (mesh.renderOrder < TOP) mesh.renderOrder = TOP;   // above every other mesh (the amp has transparent parts at ~50)
+  const tag = mesh.getObjectByName('zg-tagline');
+  if (tag && tag.renderOrder < TOP) tag.renderOrder = TOP;
+}
+
 export function place(mesh, cam, T) {
   if (!mesh || !cam || !T || T.cx == null) return;
+  onTop(mesh);
   const D = T.depth || 420;
   const th = Math.tan(cam.fov * Math.PI / 360);
   const Hv = 2 * D * th, Wv = Hv * cam.aspect;
