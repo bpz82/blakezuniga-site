@@ -176,7 +176,7 @@ function setupStage(renderer, scene, camera, focus) {
   envScene.traverse(o => { if (o.isMesh) o.material.dispose(); });
   panelGeo.dispose();
   scene.environment = env;
-  scene.environmentIntensity = 1.0;
+  scene.environmentIntensity = 1.35;   // polish (Blake t405u): 1.0 -> 1.35, brighter guitar
 
   // 3. Real lights: low-key cinematic ----------------------------------------
   // E = desired irradiance at the guitar; intensity is derived for decay 2.
@@ -193,7 +193,9 @@ function setupStage(renderer, scene, camera, focus) {
   }
   // Key: above, a little toward the treble side and the front, warm white.
   // Grok v2: lower key + wider/softer cone so the whole guitar AND its floor shadow (neck + headstock) are inside the shadow frustum
-  const key = spot(0xfff1e0, 2.9, new THREE.Vector3(R * 1.1, R * 2.2, R * 1.3), 0.52, 0.9,
+  // Polish (Blake t405u "brighten the guitar, it looks too dark"): key 2.9 -> 4.2, plus a soft front fill below (2.2), env 1.0 -> 1.35,
+  // hemisphere 0.08 -> 0.18. Exposure unchanged (1.08) so the amp and the photo panel do not lift with it.
+  const key = spot(0xfff1e0, 4.2, new THREE.Vector3(R * 1.1, R * 2.2, R * 1.3), 0.52, 0.9,
     new THREE.Vector3(-R * 0.15, -R * 0.35, -R * 0.35));
   key.castShadow = true;
   key.shadow.mapSize.set(shadowSize, shadowSize);
@@ -217,7 +219,9 @@ function setupStage(renderer, scene, camera, focus) {
   const under = spot(0xffe2c4, 2.2, new THREE.Vector3(R * 0.4, -R * 1.6, R * 0.5), 0.75, 1.0);
   const underI = under.intensity; under.intensity = 0;
   // Extremely weak hemisphere so the underside is not a void.
-  scene.add(new THREE.HemisphereLight(0x27303f, 0x0a0705, 0.08));
+  scene.add(new THREE.HemisphereLight(0x27303f, 0x0a0705, 0.18));   // polish: 0.08 -> 0.18
+  // Polish (Blake t405u): soft warm front fill from the home-camera side and above, a narrow cone on the guitar (not the amp).
+  spot(0xfff4e8, 2.2, new THREE.Vector3(R * 0.7, R * 1.5, R * 1.9), 0.42, 1.0);
 
   // 4. Floor (Grok v2): ONE surface. The warm glow is baked into the floor's emissiveMap instead of a
   // second additive plane 0.12 above it (that coplanar pair z-fought on iPhone depth buffers -> black flicker).
@@ -1807,6 +1811,7 @@ window.addEventListener('resize', resize); resize();
 
 /* ---------- site1: floating ZUNIGA word (zuniga3d.js), its own failure domain ---------- */
 let zgWordTick = null;
+const HOME_ORB = { cx: 0, cy: 0, cz: 0, R: 0, ok: false };   // polish: the live home orbit centre + radius (written by the show-mode camera, read by photo-tv.js)
 try {
 // ---- ZUNIGA floating 3D word (snippet; paste inside the scene module) ----
 // Needs in scope: THREE, FontLoader, TextGeometry, scene, G, bc (Vector3), L, STAGE.
@@ -3192,6 +3197,7 @@ function tick(now) {   // amp10 (Blake t196u) 10e: driven by loop() below (rAF i
       camera.fov = 38; camera.near = 2; camera.far = 2000;   // Grok v2: deep near plane in photo view -> no floor/catcher depth fighting
       camera.position.set(cx + Math.sin(sYaw) * Math.cos(sPitch) * R, bc.y + Math.sin(sPitch) * R, cz + Math.cos(sYaw) * Math.cos(sPitch) * R);
       camera.lookAt(cx, bc.y, cz);
+      HOME_ORB.cx = cx; HOME_ORB.cy = bc.y; HOME_ORB.cz = cz; HOME_ORB.R = R; HOME_ORB.ok = true;   // polish: photo panel world pose (photo-tv.js)
     }
     camera.updateProjectionMatrix();
   }
@@ -3237,6 +3243,7 @@ const views = (() => {
   };
 })();
 const dbg = window.__dbg = {
+  homeOrbit: HOME_ORB,
   ready: false, P, G, STAGE, get sideFill() { return sideFillK; }, views, toWorld, renderer, scene, camera, GT,
   cam(x, y, z, lx, ly, lz, fov) { free = true; camera.near = 0.05; camera.far = 2000; camera.fov = fov || 45; camera.position.set(x, y, z); camera.lookAt(lx, ly, lz); camera.updateProjectionMatrix(); },
   walk() { free = false; if (mode !== 'walk') setMode('walk'); mode = 'walk'; },

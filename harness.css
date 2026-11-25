@@ -260,10 +260,10 @@ a.zg-tile:visited {
 .zg-tile--error {
   border-color: rgba(255, 90, 70, 0.7);
 }
-/* phone: slim tiles (harness.js sets --zg-size = width ~92 px, --zg-h = 74% of it): lighter frame and shadow, smaller icon/label */
+/* phone: square tiles again (harness.js sets --zg-size = --zg-h = 88 px at 390, ~102 px after tiles.s): lighter frame and shadow, smaller icon/label */
 @media (max-width: 599px) {
   .zg-tile {
-    gap: 2px;
+    gap: 4px;
     border-radius: 16px;
     border-color: rgba(255, 255, 255, 0.55);
     background: rgba(255, 255, 255, calc(0.7 * var(--zg-fade, 1)));
@@ -351,7 +351,30 @@ a.zg-tile:visited {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+/* optional subtitle an app puts inside the header, under the title (Vinyl Vault, Blake t405u): wraps in full, never truncated.
+   The header wraps onto a second line for it; the close X stays in the top-right corner. */
+.zg-head:has(.zg-sub) {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.zg-sub {
+  order: 3;
+  flex: 1 1 100%;
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 0 8px 0 0;
+  font-family: var(--zg-font-title);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.42;
+  letter-spacing: 0.03em;
+  color: rgba(244, 236, 234, 0.7);
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
 .zg-close {
+  flex: 0 0 auto;
   width: 44px;
   height: 44px;
   padding: 0;

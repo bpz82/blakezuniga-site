@@ -714,15 +714,17 @@ function layout() {
   const margin = vw < 600 ? 16 : 24;
   const phone = vw < 600;
   const sc = tileScale();
-  // phone: slim tiles. width = 23.5% of vw (92 px at 390), height = 74% of the width (68 px), so after tiles.s (1.16 on Blake's
-  // phone layout) they are ~107 x 79 px, not 123 x 123. Never below 56 px wide, and the scaled row must fit the margins.
-  size = phone ? Math.max(56, Math.min(100, Math.round(vw * 0.235))) : Math.round(Math.min(129, Math.max(106, vw * 0.168))); // desktop mirrors CSS clamp
+  // phone (Blake t405u "more square again"): square tiles, 22.5% of vw (88 px at 390), so after tiles.s (1.16 on Blake's phone
+  // layout) they are ~102 x 102 px (the old clunky ones were 123 x 123). Lighter chrome stays (harness.css). Never below 56 px,
+  // and the scaled row must fit the margins. The row's bottom edge does not depend on the height (scale is about centre-bottom),
+  // so the pad below still clears Explore.
+  size = phone ? Math.max(56, Math.min(100, Math.round(vw * 0.225))) : Math.round(Math.min(129, Math.max(106, vw * 0.168))); // desktop mirrors CSS clamp
   // Vinyl Vault (Blake, 23 Nov 2026): with 4+ tiles the row can overflow a narrow screen (4 x 106 + 3 x 16 > 393). Shrink the tiles
   // only as much as needed so the row fits between the margins (and stays centered), never below 72. 3 tiles: unchanged (106 at 393).
   const nTiles = Math.max(1, order.length);
   const fit = Math.floor((vw - 2 * Math.max(margin, sl + margin) - (nTiles - 1) * GAP) / (nTiles * (phone ? sc : 1)));
   if (size > fit) size = Math.max(phone ? 56 : 72, fit);
-  sizeH = phone ? Math.round(size * 0.74) : size;
+  sizeH = size;   // square everywhere (phone was 0.74 x the width in 6cf3945)
   root.style.setProperty('--zg-size', size + 'px');
   root.style.setProperty('--zg-h', sizeH + 'px');
   // home-v2 (Blake, 23 Nov 2026): the apps row is CENTERED horizontally and always sits ABOVE the centered "Explore the Guitar"

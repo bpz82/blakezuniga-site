@@ -91,11 +91,14 @@ precision highp float;
 varying vec2 vUv;
 uniform sampler2D tA; uniform sampler2D tB;
 uniform float uMix, uT, uSwitch, uRoll, uAspA, uAspB, uFade, uHasA;
+uniform float uScr;  // polish: the screen's real width / height in the world (the panel's w/h can be any shape)
 uniform vec4 uPow;   // x: open width, y: open height, z: picture brightness, w: line glow
 float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+// polish (Blake t405u "photos must not be distorted"): CONTAIN against the real screen aspect (uScr). The whole photo is shown at
+// its true aspect; a wider photo gets bars top and bottom, a taller one bars left and right. Never stretched to the panel.
 vec2 fitUv(vec2 uv, float asp){
-  float r = asp / ${(SCR_W / SCR_H).toFixed(4)};
-  if (asp >= 1.0) { if (r >= 1.0) uv.x = (uv.x - 0.5) / r + 0.5; else uv.y = (uv.y - 0.5) * r + 0.5; }
+  float r = asp / uScr;
+  if (r >= 1.0) uv.y = (uv.y - 0.5) * r + 0.5;
   else uv.x = (uv.x - 0.5) / r + 0.5;
   return uv;
 }
@@ -271,7 +274,7 @@ function buildTV(tex) {
   { const p = sg.attributes.position; for (let i = 0; i < p.count; i++) { const nx = p.getX(i) / (SCR_W / 2), ny = p.getY(i) / (SCR_H / 2); p.setZ(i, 0.022 * (1 - 0.5 * nx * nx - 0.5 * ny * ny) * (1 - 0.08 * nx * nx * ny * ny)); } sg.computeVertexNormals(); }
   const screenU = {
     tA: { value: null }, tB: { value: null }, uMix: { value: 0 }, uT: { value: 0 }, uSwitch: { value: 0 }, uRoll: { value: 0 },
-    uAspA: { value: 1.5 }, uAspB: { value: 1.5 }, uFade: { value: 0 }, uHasA: { value: 0 }, uPow: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uAspA: { value: 1.5 }, uAspB: { value: 1.5 }, uScr: { value: SCR_W / SCR_H }, uFade: { value: 0 }, uHasA: { value: 0 }, uPow: { value: new THREE.Vector4(0, 0, 0, 0) },
   };
   const screenM = new THREE.ShaderMaterial({ uniforms: screenU, vertexShader: SCREEN_VS, fragmentShader: SCREEN_FS, toneMapped: false });
   const screen = add(sg, screenM, 0, 0, HF + 0.004, head);
@@ -627,8 +630,28 @@ export async function mountPhotoTV(opts) {
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 1.3, SCR_H * 1.42), panelGlowM); glow.renderOrder = -1.5; glow.position.z = -0.01; panel.add(glow);
     const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
     const offE = new THREE.Euler(), offQ = new THREE.Quaternion();
-    const place = (r, s, c) => {   // camera-locked: upper-middle of the view on desktop, a wide band behind the scene on phones
-      if (!c || !c.isPerspectiveCamera) return;
+    // Polish (Blake t405u "the panel should join the spinning background"): the panel is posed ONCE per frame against a fixed
+    // REFERENCE home camera (layout.json camera yaw / pitch on the live orbit centre and radius), not the live camera. So at the
+    // saved pose (the 17 s hold, and the editor) it sits exactly where layout.json says (same cx, cy, w, h, depth, rz, ry mapping),
+    // and once the orbit runs it stays put in the world and turns with the guitar, amp and floor like the background.
+    const refC = new THREE.PerspectiveCamera(38, 1, 2, 2000);
+    let placedOnce = false;
+    const refCam = (c) => {
+      const O = dbg.homeOrbit;
+      if (!O || !O.ok || !(O.R > 0)) return c;   // no home frame yet: fall back to the live camera (first frames only)
+      const Lc = (window.__homeLayout || {}).camera || {};
+      const y = Lc.yaw != null ? +Lc.yaw : 0.6, p = Lc.pitch != null ? +Lc.pitch : 0.55;   // 0.6 / 0.55 = index.html BOOT_HOME
+      refC.fov = 38; refC.aspect = c.aspect; refC.near = 2; refC.far = 2000;   // 38 = the home (show) camera fov in index.html
+      refC.position.set(O.cx + Math.sin(y) * Math.cos(p) * O.R, O.cy + Math.sin(p) * O.R, O.cz + Math.cos(y) * Math.cos(p) * O.R);
+      refC.lookAt(O.cx, O.cy, O.cz);
+      refC.updateMatrixWorld(true);
+      return refC;
+    };
+    const place = (r, s, c0) => {   // upper-middle of the reference view on desktop, a wide band behind the scene on phones
+      if (!c0 || !c0.isPerspectiveCamera) return;
+      if (c0 !== camera && placedOnce) return;   // other cameras (none today) never move the world-fixed panel
+      placedOnce = true;
+      const c = refCam(c0);
       const L = window.__homeLayout || {}, P = L.panel || {}, N = L.neon;
       const D = P.depth || 600, th = Math.tan(c.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * c.aspect, ph = innerWidth < 600 || innerWidth < innerHeight;
       let w = P.w != null ? Wv * P.w : Wv * (ph ? 0.96 : 0.5), h = P.h != null ? Hv * P.h : w * SCR_H / SCR_W;
@@ -659,6 +682,10 @@ export async function mountPhotoTV(opts) {
       panel.scale.set(1, 1, 1);
       panel.quaternion.copy(offQ);
       lock.updateMatrixWorld(true);
+      // the real in-plane aspect of the glass for the contain fit: the screen's world x / y axis lengths. Not just w / h: the
+      // Turn (ry) sits under the non-uniform w/h scale, which shortens the turned width (desktop: 1.363 instead of 1.432).
+      { const e = tv.screen.matrixWorld.elements, ax = Math.hypot(e[0], e[1], e[2]), ay = Math.hypot(e[4], e[5], e[6]);
+        if (ax > 0 && ay > 0) tv.screenU.uScr.value = (SCR_W * ax) / (SCR_H * ay); }
     };
     glow.onBeforeRender = place; tv.screen.onBeforeRender = place;
     if (!renderer.__panelPlaceHooked) {

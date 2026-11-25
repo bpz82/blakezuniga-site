@@ -35,21 +35,43 @@ function qApply(q, x, y, z, out) {   // rotate a unit axis by a quaternion witho
 // meshes and is sorted by renderOrder (title 1000 > everything else); depthWrite off so it punches no hole in later draws.
 // The tagline shadow stays depth-tested (it is a soft drop shadow, drawn under the letters at renderOrder 10).
 // Before the reveal is done the intro veil/fade (renderOrder 10, depthTest false) is left exactly as index.html built it.
-const TOP = 1000;
-function onTop(mesh) {
-  if (!document.body.classList.contains('zg-reveal-done')) return;
-  const m = mesh.material;
-  if (m && (m.depthTest !== false || m.depthWrite !== false || m.transparent !== true)) {
-    m.depthTest = false; m.depthWrite = false; m.transparent = true; m.needsUpdate = true;
+// Polish (Blake t405u):
+//  - "Folk Blues needs to pop up with ZUNIGA": the on-top treatment now also covers the intro (in / hold / down) in the home view.
+//    Before, during the intro the letters were depth-tested against the amp / guitar that sit (invisible) behind the black veil,
+//    so the lower line (Folk Blues) was cut out until zg-reveal-done. The veil is renderOrder 10 without a depth test; the
+//    letters at 1000 draw over it exactly as before, the fade (material opacity) is untouched.
+//  - "In Explore the title gets small": Explore (mode 'walk') no longer uses the home billboard at all. The billboard keeps a
+//    fixed world scale at 420 units in front of the camera, so with the wide Explore lens (fov up to 95) it became a small speck
+//    in the black far away. In Explore the site's own floating word (index.html zgWordTick: frozen in the world over the guitar,
+//    as before the layout module) places it again, big over the guitar, and it stays on top so the strings / body never cut into
+//    Folk Blues. Amp mode keeps the 6cf3945 billboard, depth-tested. Home placement and layout.json are unchanged.
+const TOP = 1000, BASE_RO = 11;   // 11 = index.html's own renderOrder for the word and its tagline
+const modeOf = () => document.body.dataset.mode || 'show';
+function setTop(mesh, on) {
+  const m = mesh.material, tag = mesh.getObjectByName('zg-tagline');
+  if (on) {
+    if (m && (m.depthTest !== false || m.depthWrite !== false || m.transparent !== true)) {
+      m.depthTest = false; m.depthWrite = false; m.transparent = true; m.needsUpdate = true;
+    }
+    if (mesh.renderOrder < TOP) mesh.renderOrder = TOP;   // above every other mesh (the amp has transparent parts at ~50)
+    if (tag && tag.renderOrder < TOP) tag.renderOrder = TOP;
+  } else {
+    // back to index.html's own state: depth-tested, opaque once the fade is done
+    const tr = !!(m && m.opacity < 1);
+    if (m && (m.depthTest !== true || m.depthWrite !== true || m.transparent !== tr)) {
+      m.depthTest = true; m.depthWrite = true; m.transparent = tr; m.needsUpdate = true;
+    }
+    if (mesh.renderOrder === TOP) mesh.renderOrder = BASE_RO;
+    if (tag && tag.renderOrder === TOP) tag.renderOrder = BASE_RO;
   }
-  if (mesh.renderOrder < TOP) mesh.renderOrder = TOP;   // above every other mesh (the amp has transparent parts at ~50)
-  const tag = mesh.getObjectByName('zg-tagline');
-  if (tag && tag.renderOrder < TOP) tag.renderOrder = TOP;
 }
 
 export function place(mesh, cam, T) {
   if (!mesh || !cam || !T || T.cx == null) return;
-  onTop(mesh);
+  const mode = modeOf();
+  // Explore: the floating word from index.html places it (pre-layout behaviour), drawn on top so the guitar never cuts into it
+  if (mode === 'walk') { setTop(mesh, true); return; }
+  setTop(mesh, mode === 'show');
   const D = T.depth || 420;
   const th = Math.tan(cam.fov * Math.PI / 360);
   const Hv = 2 * D * th, Wv = Hv * cam.aspect;

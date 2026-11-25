@@ -17,12 +17,17 @@
  * (onBack is accepted for contract parity with photos.js; the app adds no history entries, so it is not needed.)
  */
 
+// Cover grain (Blake t405u: the SVG feTurbulence + overlay grain was invisible on iPhone Safari): a small baked RGBA noise PNG
+// (white/black specks, alpha ~ |noise|, so it is mean-neutral), static, normal blend at .18, clipped by the cover's rounded overflow.
+// Resolved against this module so the shadow-root <style> finds it wherever the page lives.
+const GRAIN_URL = new URL('./grain.png', import.meta.url).href;
+
 const CSS = `
 :host{display:block}
 .vv{box-sizing:border-box;color:#f1e9e6;font:15px/1.35 "Zuniga Mission",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .vv *{box-sizing:border-box}
 .vv-desc{margin:0;padding:4px 14px 2px;font:400 14px/1.3 "Zuniga Mission",system-ui,-apple-system,sans-serif;letter-spacing:.03em;
-  color:rgba(241,233,230,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  color:rgba(241,233,230,.72);white-space:normal;overflow-wrap:break-word}
 .vv-msg{margin:0;padding:22px;color:rgba(241,233,230,.85)}
 .vv-bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px;background:rgba(18,12,14,.88);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -47,8 +52,7 @@ const CSS = `
 .vv-cell[hidden]{display:none}
 .vv-cover{position:relative;display:block;overflow:hidden;isolation:isolate;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:transform .2s ease}
 .vv-cover::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:inherit;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  background-size:180px 180px;opacity:.12;mix-blend-mode:overlay}
+  background-image:url("${GRAIN_URL}");background-repeat:repeat;background-size:64px 64px;opacity:.18;mix-blend-mode:normal}
 .vv-cell img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;background:#0c0809;border-radius:6px}
 .vv-cell:hover .vv-cover{transform:translateY(-2px)}
 .vv-cell:focus-visible{outline:2px solid #ff6b5a;outline-offset:3px;border-radius:6px}
@@ -280,7 +284,25 @@ export function mountVinylVault(host, opts) {
     empty.hidden = true;
 
     const desc = el('p', 'vv-desc', 'Into vinyl? This is Blake’s ever-growing collection. Tap a record to listen.');
-    root.replaceChildren(desc, bar, listEl, empty);
+    // Blake t405u: the line lives in the panel header, right under the VINYL VAULT title, wrapped in full (harness.css .zg-sub).
+    // The harness puts this app in a shadow root (.zg-body); its header (.zg-head) is the light-DOM sibling. No header found
+    // (another host): keep it at the top of the app, still wrapping.
+    let head = null;
+    try {
+      const sh = host.getRootNode && host.getRootNode();
+      const body = sh && sh.host;
+      const panel = body && body.parentElement;
+      head = panel ? panel.querySelector(':scope > .zg-head') : null;
+    } catch (_) { head = null; }
+    if (head) {
+      desc.className = 'zg-sub';
+      const close = head.querySelector('.zg-close');
+      head.insertBefore(desc, close || null);
+      cleanups.push(() => desc.remove());
+      root.replaceChildren(bar, listEl, empty);
+    } else {
+      root.replaceChildren(desc, bar, listEl, empty);
+    }
     root.dataset.count = String(list.length);
 
     // letter headers stick just under the search bar, whatever height the bar wraps to
