@@ -1,0 +1,19 @@
+ok   widget-ids.js: 'zuniga-philosophy' not in ACTIVE
+ok   widget-ids.js: 'zuniga-philosophy' not in RETIRED
+ok   widgets.js: exported widgets have no Zuniga Philosophy id or title
+ok   widgets.js: no zuniga-philosophy reference at all
+ok   widgets.js: no "Zuniga Philosophy" label
+ok   widgets.js: no href / src / iconSrc to apps/zuniga-philosophy/
+ok   widget-ids.js: no "Zuniga Philosophy" label
+ok   widget-ids.js: no href / src / iconSrc to apps/zuniga-philosophy/
+ok   harness.js: no "Zuniga Philosophy" label
+ok   harness.js: no href / src / iconSrc to apps/zuniga-philosophy/
+ok   index.html: no "Zuniga Philosophy" label
+ok   index.html: no href / src / iconSrc to apps/zuniga-philosophy/
+ok   index.html: only the ?zp=1 query hook mentions the app (1 line)
+ok   zp-hook.js: opens only under ?zp=1
+ok   zp-hook.js: does not touch the home apps row / harness
+ok   direct URL apps/zuniga-philosophy/index.html exists and mounts the module
+ok   sitemap.xml does not list the app (preview, direct URL only)
+PASS
+exit 0

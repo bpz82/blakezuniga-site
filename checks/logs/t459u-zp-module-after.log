@@ -1,0 +1,39 @@
+ok   standalone page apps/zuniga-philosophy/index.html exists
+ok   module apps/zuniga-philosophy/zuniga-philosophy.js exists
+ok   sample data apps/zuniga-philosophy/data/sample.json exists
+ok   page imports ./zuniga-philosophy.js and calls mountZunigaPhilosophy
+ok   page is noindex (preview only)
+ok   module imports and exports mountZunigaPhilosophy
+ok   38 books
+ok   sample flag carried
+ok   books in TOC order by default (Meditations first, Extras last)
+ok   counts use full_note_count (Meditations: 87 notes, 3 in sample)
+ok   cleaned spellings present: Eric Ries, Brothers Karamazov
+ok   mount returns { unmount }
+ok   after load: title "Zuniga Philosophy", Search field and nav render
+ok   quiet "Sample preview" note shown (not an error)
+ok   unmount empties el
+ok   Books grid renders 38 cards incl. Meditations and Extras
+ok   Books grid shows "87 notes" for Meditations
+ok   Books search "hill" leaves only the two Napoleon Hill books visible
+ok   A-Z sort: "38 Letters..." first, "The Wealthy Gardener" sorted under W
+ok   author sort: Aristotle first, books with no author last
+ok   book page: title, author, blurb with Blake label, notes, sample note
+ok   book page: session metadata shown
+ok   search is case-insensitive, multi-word, finds the Meditations passage
+ok   search over title/author finds the book
+ok   search result links to the book + note
+ok   search highlights the match
+ok   empty result state
+ok   feed: one pass shows every item exactly once
+ok   feed: second pass is a new order and does not repeat the boundary item
+ok   deep link #zp/meditations/meditations-n0001
+ok   deep link #zp/feed
+ok   bad fetch (404): no throw, short message shown
+ok   network error: no throw
+ok   null element: no throw
+ok   fullUrl failure falls back to the sample
+ok   fullUrl success is used (sample:false)
+ok   unmount aborts the pending fetch and empties el
+PASS
+exit 0

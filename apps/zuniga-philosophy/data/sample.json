@@ -1,0 +1,1593 @@
+{
+  "sample": true,
+  "policy": "All 38 books; first 3 notes per book (includes TOC blurb when present). Full quote text is not in this file.",
+  "generated": "2026-11-25T17:29:00-05:00",
+  "source": "zuniga-philosophy-notes/data/books.clean.json (not in the public repo)",
+  "book_count": 38,
+  "note_count": 113,
+  "full_note_count": 2637,
+  "books": [
+    {
+      "id": "meditations",
+      "title": "Meditations",
+      "author": "Marcus Aurelius",
+      "toc_page": 17,
+      "heading_as_written": "Meditations by Marcus Aurelius",
+      "blurb": "One of the most important books in my life. I look to this book for continued education on deeply connecting with myself and the universe. I keep a copy of this book in my car and in the house so I am tempted to pick it up as often as possible.",
+      "images": [],
+      "notes": [
+        {
+          "id": "meditations-blurb",
+          "text": "One of the most important books in my life. I look to this book for continued education on deeply connecting with myself and the universe. I keep a copy of this book in my car and in the house so I am tempted to pick it up as often as possible.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 41
+        },
+        {
+          "id": "meditations-n0001",
+          "text": "If you do everything as if it were the last thing in your life, and stop being aimless, stop letting your emotions override what your mind tells you, stop being hypocritical, self centered, irritable, you see how few things you have to do to live a satisfying and reverent life.",
+          "kind": "quote",
+          "source_line": 171,
+          "session": {
+            "label": "Meditations 2022"
+          }
+        },
+        {
+          "id": "meditations-n0002",
+          "text": "People who labor all their lives but have no purpose to direct every thought and impulse toward, are wasting their time, even when hard at work.",
+          "kind": "quote",
+          "source_line": 172,
+          "session": {
+            "label": "Meditations 2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 87
+    },
+    {
+      "id": "tough",
+      "title": "Tough",
+      "author": "Terry Crews",
+      "toc_page": 33,
+      "heading_as_written": "Tough by Terry Crews",
+      "blurb": "The book at the beginning of my learning how to be humble, what love and being a man can look like.",
+      "images": [],
+      "notes": [
+        {
+          "id": "tough-blurb",
+          "text": "The book at the beginning of my learning how to be humble, what love and being a man can look like.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 44
+        },
+        {
+          "id": "tough-n0001",
+          "text": "There will be opportunities that arise. Take Them!",
+          "kind": "quote",
+          "source_line": 312,
+          "session": {
+            "date": "5/8/2022"
+          }
+        },
+        {
+          "id": "tough-n0002",
+          "text": "Give my kids the luxury of conversation and a sense of entitlement that is just enough to help them realize that everything they could dream up is, in fact, possible/ tangible. -bz",
+          "kind": "note",
+          "source_line": 313,
+          "session": {
+            "date": "5/8/2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 21
+    },
+    {
+      "id": "atomic-habits",
+      "title": "Atomic Habits",
+      "author": "James Clear",
+      "toc_page": 38,
+      "heading_as_written": "Atomic Habits by James Clear",
+      "blurb": "My understanding of building systems in life began with this text. Great for fundamental level thinking on the nurturing of a passion.",
+      "images": [],
+      "notes": [
+        {
+          "id": "atomic-habits-blurb",
+          "text": "My understanding of building systems in life began with this text. Great for fundamental level thinking on the nurturing of a passion.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 47
+        },
+        {
+          "id": "atomic-habits-n0001",
+          "text": "Outliers are those who have been given opportunities and have had the same strength and presence of mind to seize them.",
+          "kind": "quote",
+          "source_line": 363,
+          "session": {
+            "date": "6/14/2022"
+          }
+        },
+        {
+          "id": "atomic-habits-n0002",
+          "text": "If you can get 1% better each day for a year, you’ll end up 37 times better by the time you’re done.",
+          "kind": "quote",
+          "source_line": 364,
+          "session": {
+            "date": "6/14/2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 31
+    },
+    {
+      "id": "millionaire-next-door",
+      "title": "Millionaire Next Door",
+      "author": "Thomas J. Stanley",
+      "toc_page": 44,
+      "heading_as_written": "Millionaire Next Door by Thomas J. Stanley",
+      "blurb": "Stresses the concepts of purchasing real estate early and living below your means. Advice on how to handle giving money to your children. Establishes meaningful philosophy on how money should be thought of.",
+      "images": [],
+      "notes": [
+        {
+          "id": "millionaire-next-door-blurb",
+          "text": "Stresses the concepts of purchasing real estate early and living below your means. Advice on how to handle giving money to your children. Establishes meaningful philosophy on how money should be thought of.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 52
+        },
+        {
+          "id": "millionaire-next-door-n0001",
+          "text": "Wealth is more often the result of a lifestyle of hard work, perseverance, planning, and most of all, self discipline.",
+          "kind": "quote",
+          "source_line": 428,
+          "session": {
+            "date": "7/11/2022"
+          }
+        },
+        {
+          "id": "millionaire-next-door-n0002",
+          "text": "The Millionaire Nextdoor Checklist:",
+          "kind": "quote",
+          "source_line": 429,
+          "session": {
+            "date": "7/11/2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 22
+    },
+    {
+      "id": "men-are-from-mars-women-are-from-venus",
+      "title": "Men are from Mars Women are from Venus",
+      "author": "John Gray",
+      "toc_page": 49,
+      "heading_as_written": "Men are from Mars Women are from Venus by John Gray",
+      "blurb": "Speaks on the natural differences between men and women. Taught me the value in listening first. Great protocols on how to structure arguing.",
+      "images": [],
+      "notes": [
+        {
+          "id": "men-are-from-mars-women-are-from-venus-blurb",
+          "text": "Speaks on the natural differences between men and women. Taught me the value in listening first. Great protocols on how to structure arguing.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 54
+        },
+        {
+          "id": "men-are-from-mars-women-are-from-venus-n0001",
+          "text": "You cannot change your partner. That is his or her job. Your job is to change the ways you communicate, react, and respond to your partner.",
+          "kind": "quote",
+          "source_line": 486,
+          "session": {
+            "date": "9/19/2022"
+          }
+        },
+        {
+          "id": "men-are-from-mars-women-are-from-venus-n0002",
+          "text": "Don’t always give solutions. Especially with your significant other. More often than not, women just want to feel heard and listened to.",
+          "kind": "quote",
+          "source_line": 487,
+          "session": {
+            "date": "9/19/2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 28
+    },
+    {
+      "id": "tax-free-wealth",
+      "title": "Tax Free Wealth",
+      "author": "Tom Wheelwright",
+      "toc_page": 54,
+      "heading_as_written": "Tax Free Wealth by Tom Wheelwright",
+      "blurb": "Recognition of how tax laws fuel economy. Fundamentals of writing off expenses and what’s allowed. I utilized this heavily in my organization of The Curl Tapes’ bank accounts and deductions per year.",
+      "images": [],
+      "notes": [
+        {
+          "id": "tax-free-wealth-blurb",
+          "text": "Recognition of how tax laws fuel economy. Fundamentals of writing off expenses and what’s allowed. I utilized this heavily in my organization of The Curl Tapes’ bank accounts and deductions per year.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 56
+        },
+        {
+          "id": "tax-free-wealth-n0001",
+          "text": "The tax laws of every country are written to encourage certain activities that benefit the economy and promote social policy.",
+          "kind": "quote",
+          "source_line": 539,
+          "session": {
+            "date": "11/1/2022"
+          }
+        },
+        {
+          "id": "tax-free-wealth-n0002",
+          "text": "Employee and Self Employed: Pay the highest in tax percentage",
+          "kind": "quote",
+          "source_line": 540,
+          "session": {
+            "date": "11/1/2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 14
+    },
+    {
+      "id": "how-to-win-friends-and-influence-people",
+      "title": "How to Win Friends and Influence People",
+      "author": "Dale Carnegie",
+      "toc_page": 57,
+      "heading_as_written": "How to Win Friends and Influence People by Dale Carnegie",
+      "blurb": "Absolutely critical read. I utilize methods from this book every single day. Could be renamed, “How to Get Along with Everyone Better.” Foundational in building skills for a leader. Foundational in how to approach business, because most every business is a people business. Foundational in creating natural magnetism.",
+      "images": [],
+      "notes": [
+        {
+          "id": "how-to-win-friends-and-influence-people-blurb",
+          "text": "Absolutely critical read. I utilize methods from this book every single day. Could be renamed, “How to Get Along with Everyone Better.” Foundational in building skills for a leader. Foundational in how to approach business, because most every business is a people business. Foundational in creating natural magnetism.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 59
+        },
+        {
+          "id": "how-to-win-friends-and-influence-people-n0001",
+          "text": "About 15% of one’s financial success is due to technical knowledge. 85% is due to skill in human engineering- to personality and leading people.",
+          "kind": "quote",
+          "source_line": 576,
+          "session": {
+            "date": "11/28/2022"
+          }
+        },
+        {
+          "id": "how-to-win-friends-and-influence-people-n0002",
+          "text": "Criticism is futile because it puts people on the defensive and usually makes them strive to justify themselves. Criticism is dangerous because it wounds a person’s pride, hurts their sense of importance, and arouses resentment.",
+          "kind": "quote",
+          "source_line": 578,
+          "session": {
+            "date": "12/8/2022"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 78
+    },
+    {
+      "id": "the-second-mountain",
+      "title": "The Second Mountain",
+      "author": "David Brooks",
+      "toc_page": 73,
+      "heading_as_written": "The Second Mountain by David Brooks",
+      "blurb": "Concreted my vision for what I wanted my life to be like. Great advice on picking a spouse. Great advice on how to choose what you want to do in life. I’d suggest anyone who feels “stuck” in any way read this. Incredible writing.",
+      "images": [],
+      "notes": [
+        {
+          "id": "the-second-mountain-blurb",
+          "text": "Concreted my vision for what I wanted my life to be like. Great advice on picking a spouse. Great advice on how to choose what you want to do in life. I’d suggest anyone who feels “stuck” in any way read this. Incredible writing.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 61
+        },
+        {
+          "id": "the-second-mountain-n0001",
+          "text": "The crucial way to tell whether you are on your first or second mountain is a question of ultimate goal, or appeal. Is it to serve yourself or something outside of self?",
+          "kind": "quote",
+          "source_line": 710,
+          "session": {
+            "date": "4/3/2023"
+          }
+        },
+        {
+          "id": "the-second-mountain-n0002",
+          "text": "If the first mountain is building up the ego and defining the self, the second mountain is about shedding the ego and losing the self.",
+          "kind": "quote",
+          "source_line": 711,
+          "session": {
+            "date": "4/3/2023"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 143
+    },
+    {
+      "id": "my-effin-life",
+      "title": "My Effin Life",
+      "author": "Geddy Lee",
+      "toc_page": 99,
+      "heading_as_written": "My Effin Life by Geddy Lee",
+      "blurb": "I was in a weird phase where I didn’t want to take notes on certain books, this being one of them. But this book helped me begin to realize the definition of “selling your soul.”",
+      "images": [],
+      "notes": [
+        {
+          "id": "my-effin-life-blurb",
+          "text": "I was in a weird phase where I didn’t want to take notes on certain books, this being one of them. But this book helped me begin to realize the definition of “selling your soul.”",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 63
+        },
+        {
+          "id": "my-effin-life-n0001",
+          "text": "Be true to yourself and just say no. A young artist’s greatest asset is the word “no”. There will always be pressure on you to compromise, pressure to sell your dreams short, and always people wanting you to be something you’re not, none of these things can happen without your permission.",
+          "kind": "quote",
+          "source_line": 886,
+          "session": {
+            "date": "11/27/2023",
+            "time": "04:56"
+          }
+        }
+      ],
+      "sample_note_count": 2,
+      "full_note_count": 2
+    },
+    {
+      "id": "cant-hurt-me",
+      "title": "Can’t Hurt Me",
+      "author": "David Goggins",
+      "toc_page": 100,
+      "heading_as_written": "Can’t Hurt Me by David Goggins",
+      "blurb": "Same thing, not many notes. This book made me realize how spoiled and easy my life is. It helped me understand the benefit of putting your body and mind through purposeful pain in order to make them stronger.",
+      "images": [],
+      "notes": [
+        {
+          "id": "cant-hurt-me-blurb",
+          "text": "Same thing, not many notes. This book made me realize how spoiled and easy my life is. It helped me understand the benefit of putting your body and mind through purposeful pain in order to make them stronger.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 65
+        },
+        {
+          "id": "cant-hurt-me-n0001",
+          "text": "Don’t focus on what you think you deserve, take aim at what you’re willing to earn.",
+          "kind": "quote",
+          "source_line": 895,
+          "session": {
+            "date": "6/7/2023",
+            "time": "21:17",
+            "label": "Goggins Book"
+          }
+        },
+        {
+          "id": "cant-hurt-me-n0002",
+          "text": "It takes great strength to be vulnerable enough to put your ass on the line in public, and work towards a dream that feels like it’s slipping away.",
+          "kind": "quote",
+          "source_line": 896,
+          "session": {
+            "date": "6/7/2023",
+            "time": "21:17",
+            "label": "Goggins Book"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 4
+    },
+    {
+      "id": "the-lean-startup",
+      "title": "The Lean Startup",
+      "author": "Eric Ries",
+      "toc_page": 101,
+      "heading_as_written": "The Lean Startup by Eric Ries",
+      "blurb": "I had just dropped out of school when I found this book. Gives formative lessons and questions on how to begin to think as an entrepreneur.",
+      "images": [],
+      "notes": [
+        {
+          "id": "the-lean-startup-blurb",
+          "text": "I had just dropped out of school when I found this book. Gives formative lessons and questions on how to begin to think as an entrepreneur.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 67
+        },
+        {
+          "id": "the-lean-startup-n0001",
+          "text": "Build measure learn: the fundamental activity of a startup is to turn ideas into products, measure how customers respond, and then learn whether to pivot or persevere. All successful startup processes should be geared to accelerate that feedback loop.",
+          "kind": "quote",
+          "source_line": 924,
+          "session": {
+            "date": "1/24/2024",
+            "time": "17:49",
+            "label": "Foco,CO"
+          }
+        },
+        {
+          "id": "the-lean-startup-n0002",
+          "text": "Entrepreneur Prerequisites:",
+          "kind": "quote",
+          "source_line": 929,
+          "session": {
+            "date": "1/25/2024",
+            "time": "11:07",
+            "label": "Foco, CO"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 26
+    },
+    {
+      "id": "think-and-grow-rich",
+      "title": "Think and Grow Rich",
+      "author": "Napoleon Hill",
+      "toc_page": 106,
+      "heading_as_written": "Think and Grow Rich by Napoleon Hill",
+      "blurb": "Napoleon Hill is one of the biggest influences my mind has ever met. The tools this book offers are absolutely indispensable for anyone who wants to live in the driver seat of their life. Easily shows you a route to rewire your brain to then better serve you on every front imaginable. Read every page of notes on Napoleon Hill, then read it again.",
+      "images": [],
+      "notes": [
+        {
+          "id": "think-and-grow-rich-blurb",
+          "text": "Napoleon Hill is one of the biggest influences my mind has ever met. The tools this book offers are absolutely indispensable for anyone who wants to live in the driver seat of their life. Easily shows you a route to rewire your brain to then better serve you on every front imaginable. Read every page of notes on Napoleon Hill, then read it again.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 69
+        },
+        {
+          "id": "think-and-grow-rich-n0001",
+          "text": "I had learned, from years of experience with men, that when a man really desires a thing so deeply that he is willing to stake his entire future on a single turn of the wheel in order to get in, he is sure to win.",
+          "kind": "quote",
+          "source_line": 981,
+          "session": {
+            "date": "6/6/2023"
+          }
+        },
+        {
+          "id": "think-and-grow-rich-n0002",
+          "text": "“It could not have been the young man’s appearance which got him his start at the Edison office. It was what he thought that counted.",
+          "kind": "quote",
+          "source_line": 982,
+          "session": {
+            "date": "6/6/2023"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 394
+    },
+    {
+      "id": "chronicles-volume-1",
+      "title": "Chronicles Volume 1",
+      "author": "Bob Dylan",
+      "toc_page": 173,
+      "heading_as_written": "Chronicles Volume 1 by Bob Dylan",
+      "blurb": "Exploded my young songwriting mind and gave way to so many possibilities. Some of the most flowing and beautiful writing I have ever come across. Great suggestions to some influential poets. Gives insight into how the brain of a high functioning artist operates.",
+      "images": [],
+      "notes": [
+        {
+          "id": "chronicles-volume-1-blurb",
+          "text": "Exploded my young songwriting mind and gave way to so many possibilities. Some of the most flowing and beautiful writing I have ever come across. Great suggestions to some influential poets. Gives insight into how the brain of a high functioning artist operates.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 73
+        },
+        {
+          "id": "chronicles-volume-1-n0001",
+          "text": "You can say I practiced in public and my whole life was becoming what I practiced.",
+          "kind": "quote",
+          "source_line": 1600,
+          "session": {
+            "date": "3/7/2024",
+            "time": "08:02",
+            "label": "Bob Dylan book",
+            "place": "Foco, CO"
+          }
+        },
+        {
+          "id": "chronicles-volume-1-n0002",
+          "text": "Most of the performers tried putting themselves across rather than the song, but I didn’t care about doing that. With me, it was about putting the song across.",
+          "kind": "quote",
+          "source_line": 1601,
+          "session": {
+            "date": "3/7/2024",
+            "time": "08:02",
+            "label": "Bob Dylan book",
+            "place": "Foco, CO"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 35
+    },
+    {
+      "id": "the-fountainhead",
+      "title": "The Fountainhead",
+      "author": "Ayn Rand",
+      "toc_page": 183,
+      "heading_as_written": "The Fountainhead by Ayn Rand",
+      "blurb": "My favorite author. Every author I read is weighed against her writing. How a creator should view their work. Integrity in the creation of your life’s work. How to be original, a true individual. Unmatched insight into human nature and the different types of personalities the world is filled with. Will equip you with confidence in the face of everyone who doubts you.",
+      "images": [],
+      "notes": [
+        {
+          "id": "the-fountainhead-blurb",
+          "text": "My favorite author. Every author I read is weighed against her writing. How a creator should view their work. Integrity in the creation of your life’s work. How to be original, a true individual. Unmatched insight into human nature and the different types of personalities the world is filled with. Will equip you with confidence in the face of everyone who doubts you.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 76
+        },
+        {
+          "id": "the-fountainhead-n0001",
+          "text": "Before you can do anything for people, you must be the kind of man who can get things done. But to get things done, you must love the doing, not the secondary consequences. The work, not the people, your own action. Not any possible object of your charity.",
+          "kind": "quote",
+          "source_line": 1703,
+          "session": {
+            "date": "3/11/2024",
+            "time": "19:59",
+            "label": "Florida"
+          }
+        },
+        {
+          "id": "the-fountainhead-n0002",
+          "text": "I like to receive money for my work. But I can pass it up this time. I like to have people know my work is done by me, but I can pass it up. The only thing that matters, my goal, my reward, my beginning, my end is the work itself.",
+          "kind": "quote",
+          "source_line": 1704,
+          "session": {
+            "date": "3/11/2024",
+            "time": "19:59",
+            "label": "Florida"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 25
+    },
+    {
+      "id": "far-and-away",
+      "title": "Far and Away",
+      "author": "Neil Peart",
+      "toc_page": 191,
+      "heading_as_written": "Far and Away by Neil Peart",
+      "blurb": "Fundamentals of a mindset that has conquered the mentality needed to stand on stage and dominate every time. Philosophical insight into what life as a performer should look like. The meaning of life, love and respect.",
+      "images": [],
+      "notes": [
+        {
+          "id": "far-and-away-blurb",
+          "text": "Fundamentals of a mindset that has conquered the mentality needed to stand on stage and dominate every time. Philosophical insight into what life as a performer should look like. The meaning of life, love and respect.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 81
+        },
+        {
+          "id": "far-and-away-n0001",
+          "text": "This tour, the first half of my solo is improvised over a simple foundation of single bass-drum beats and alternating high hat clicks, as I experiment widely with it every night. It’s been taking me to some interesting places, while still giving me the consistency of the orchestrated second half, so I know the customers will always be satisfied.",
+          "kind": "quote",
+          "source_line": 1760,
+          "session": {
+            "date": "3/19/2024",
+            "time": "15:11",
+            "label": "Foco, CO"
+          }
+        },
+        {
+          "id": "far-and-away-n0002",
+          "text": "Think about what happens between the beats, and make it part of the music, the kind of rotary motion that makes your playing feel like a dance. Internalize that dance - make it part of your thinking, part of your feeling, part of your time sense, but not part of your actual motion.",
+          "kind": "quote",
+          "source_line": 1766,
+          "session": {
+            "date": "4/9/2024",
+            "time": "09:26",
+            "label": "Neil Peart Book",
+            "place": "Ride to CO from TX"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 35
+    },
+    {
+      "id": "brothers-karamasov",
+      "title": "Brothers Karamazov",
+      "author": "Fyodor Dostoevsky",
+      "toc_page": 200,
+      "heading_as_written": "Brothers Karamazov by Fyodor Dostoevsky",
+      "blurb": "I only got through about a quarter of this book and just couldn’t take the slow nature of the writing. Some good takeaways on the importance of integrity and love.",
+      "images": [],
+      "notes": [
+        {
+          "id": "brothers-karamasov-blurb",
+          "text": "I only got through about a quarter of this book and just couldn’t take the slow nature of the writing. Some good takeaways on the importance of integrity and love.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 84
+        },
+        {
+          "id": "brothers-karamasov-n0001",
+          "text": "Although unfortunately, these young men do not understand that the sacrifice of life is, perhaps, the easiest of all sacrifices in many cases. While to sacrifice, for example, five or six years of their ebulliently youthful life to hard, difficult studies, to learning, in order to increase tenfold their strength to serve the very truth and the very deed that they loved to set out and accomplish – such sacrifice is quite often almost beyond the strength of many of them.",
+          "kind": "quote",
+          "source_line": 1874,
+          "session": {
+            "date": "3/20/2024",
+            "time": "11:46",
+            "label": "Brothers Karamazov",
+            "place": "Foco, CO"
+          }
+        },
+        {
+          "id": "brothers-karamasov-n0002",
+          "text": "*People go their whole life without finding themselves in themselves.*",
+          "kind": "quote",
+          "source_line": 1875,
+          "session": {
+            "date": "3/20/2024",
+            "time": "11:46",
+            "label": "Brothers Karamazov",
+            "place": "Foco, CO"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 6
+    },
+    {
+      "id": "purple-cow",
+      "title": "Purple Cow",
+      "author": "Seth Godin",
+      "toc_page": 204,
+      "heading_as_written": "Purple Cow by Seth Godin",
+      "blurb": "The reason I took business cards so serious. Reminder that not everyone has to like you.",
+      "images": [],
+      "notes": [
+        {
+          "id": "purple-cow-blurb",
+          "text": "The reason I took business cards so serious. Reminder that not everyone has to like you.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 87
+        },
+        {
+          "id": "purple-cow-n0001",
+          "text": "If you’re remarkable some people won’t like you. That’s part of the definition of remarkable. Nobody gets unanimous praise – ever. The best the timid can hope for is to be unnoticed. Criticism comes to those who stand out.",
+          "kind": "quote",
+          "source_line": 1927,
+          "session": {
+            "date": "3/21/2024",
+            "time": "15:00",
+            "label": "Foco, CO"
+          }
+        },
+        {
+          "id": "purple-cow-n0002",
+          "text": "We mistakenly believe that criticism leads to failure.",
+          "kind": "quote",
+          "source_line": 1928,
+          "session": {
+            "date": "3/21/2024",
+            "time": "15:00",
+            "label": "Foco, CO"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 9
+    },
+    {
+      "id": "38-letters-from-rockefeller-to-his-son",
+      "title": "38 Letters from Rockefeller to his Son",
+      "author": "John D. Rockefeller",
+      "toc_page": 207,
+      "heading_as_written": "38 Letters from Rockefeller to his Son",
+      "blurb": "Another highly influential book in my life. Again, I keep a hard copy of this in the car and the house. Intense overlap between this and Napoleon Hill’s writing. How someone in the driver seat builds their mental fortress. Everything and anything is possible. Speed and action are the key. Must read. Then read again.",
+      "images": [],
+      "notes": [
+        {
+          "id": "38-letters-from-rockefeller-to-his-son-blurb",
+          "text": "Another highly influential book in my life. Again, I keep a hard copy of this in the car and the house. Intense overlap between this and Napoleon Hill’s writing. How someone in the driver seat builds their mental fortress. Everything and anything is possible. Speed and action are the key. Must read. Then read again.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 92
+        },
+        {
+          "id": "38-letters-from-rockefeller-to-his-son-n0001",
+          "text": "It’s all about the actions you take and the choices you make along the way",
+          "kind": "quote",
+          "source_line": 1972,
+          "session": {
+            "date": "3/28/2024",
+            "time": "11:43",
+            "label": "Foco, CO"
+          }
+        },
+        {
+          "id": "38-letters-from-rockefeller-to-his-son-n0002",
+          "text": "We need to harness our knowledge and use it to make a difference in the world! So, let’s go out there and make things happen, because we have the power to create our own destiny.",
+          "kind": "quote",
+          "source_line": 1973,
+          "session": {
+            "date": "3/28/2024",
+            "time": "11:43",
+            "label": "Foco, CO"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 366
+    },
+    {
+      "id": "its-a-long-story",
+      "title": "It’s a Long Story",
+      "author": "Willie Nelson",
+      "toc_page": 290,
+      "heading_as_written": "It’s a Long Story by Willie Nelson",
+      "blurb": "Really helped me as I learned how I wanted to present myself on stage. You don’t have to talk that much. Your job is to play music. Music as a positive coping mechanism. Follow your heart's desire in the creative workflow.",
+      "images": [],
+      "notes": [
+        {
+          "id": "its-a-long-story-blurb",
+          "text": "Really helped me as I learned how I wanted to present myself on stage. You don’t have to talk that much. Your job is to play music. Music as a positive coping mechanism. Follow your heart's desire in the creative workflow.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 95
+        },
+        {
+          "id": "its-a-long-story-n0001",
+          "text": "Ride to Texas (Right outside of Amarillo)",
+          "kind": "quote",
+          "source_line": 2447,
+          "session": {
+            "date": "4/7/2024",
+            "time": "10:24"
+          }
+        },
+        {
+          "id": "its-a-long-story-n0002",
+          "text": "The more intense my personal life became, the more I concentrated on making sounds that soothed my soul.",
+          "kind": "quote",
+          "source_line": 2449,
+          "session": {
+            "date": "4/7/2024",
+            "time": "10:24",
+            "label": "Willie Nelson Book"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 25
+    },
+    {
+      "id": "take-me-home",
+      "title": "Take Me Home",
+      "author": "John Denver",
+      "toc_page": 294,
+      "heading_as_written": "Take Me Home by John Denver",
+      "blurb": "Another book that came to me at the time I needed it most. His dad’s reaction to him dropping out of school felt huge to me. Formative in how I view songwriting and things I look out for, like getting out of my own way. Good amount of overlap with the Bob Dylan book, love to see that. Read to learn about his process for writing a song.",
+      "images": [],
+      "notes": [
+        {
+          "id": "take-me-home-blurb",
+          "text": "Another book that came to me at the time I needed it most. His dad’s reaction to him dropping out of school felt huge to me. Formative in how I view songwriting and things I look out for, like getting out of my own way. Good amount of overlap with the Bob Dylan book, love to see that. Read to learn about his process for writing a song.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 100
+        },
+        {
+          "id": "take-me-home-n0001",
+          "text": "Ride to Texas (Right outside of Amarillo)",
+          "kind": "quote",
+          "source_line": 2501,
+          "session": {
+            "date": "4/7/2024",
+            "time": "11:40"
+          }
+        },
+        {
+          "id": "take-me-home-n0002",
+          "text": "“They were so insecure about their place in the world that they couldn’t see giving anyone else a hand up.” (His parents)",
+          "kind": "quote",
+          "source_line": 2503,
+          "session": {
+            "date": "4/7/2024",
+            "time": "11:40",
+            "label": "John Denver Book"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 64
+    },
+    {
+      "id": "freddie-mercury-a-life-in-his-own-words",
+      "title": "Freddie Mercury: A Life in his Own Words",
+      "author": "",
+      "toc_page": 312,
+      "heading_as_written": "Freddie Mercury: A Life in his Own Words",
+      "blurb": "Important lessons on keeping the integrity of your personality as fame takes over. The expressed importance of acting like a professional no matter what stage of the come up you’re in. Keying in on the fact that nobody will hear your music or see your products unless you force it into discovery. Understanding the weight of not widely sharing the meaning of your songs so people can make their own assumptions.",
+      "images": [],
+      "notes": [
+        {
+          "id": "freddie-mercury-a-life-in-his-own-words-blurb",
+          "text": "Important lessons on keeping the integrity of your personality as fame takes over. The expressed importance of acting like a professional no matter what stage of the come up you’re in. Keying in on the fact that nobody will hear your music or see your products unless you force it into discovery. Understanding the weight of not widely sharing the meaning of your songs so people can make their own assumptions.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 103
+        },
+        {
+          "id": "freddie-mercury-a-life-in-his-own-words-n0001",
+          "text": "In the beginning I was quite prepared to starve, which I did, and just make go of it. You have to believe in yourself no matter how long it takes.",
+          "kind": "quote",
+          "source_line": 2662,
+          "session": {
+            "date": "6/16/2024",
+            "time": "08:10",
+            "label": "Freddy Mercury book",
+            "place": "Foco, couch"
+          }
+        },
+        {
+          "id": "freddie-mercury-a-life-in-his-own-words-n0002",
+          "text": "You have to have a lot of arrogance and absolute determination, as well as other obvious skills, like music.",
+          "kind": "quote",
+          "source_line": 2663,
+          "session": {
+            "date": "6/16/2024",
+            "time": "08:10",
+            "label": "Freddy Mercury book",
+            "place": "Foco, couch"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 47
+    },
+    {
+      "id": "atlas-shrugged",
+      "title": "Atlas Shrugged",
+      "author": "Ayn Rand",
+      "toc_page": 324,
+      "heading_as_written": "Atlas Shrugged by Ayn Rand",
+      "blurb": "Again, incredible writing. Lessons in love, and even more into human nature, very transformational. The continued power of the individual thinker and creator. Ethics on how to view sex. Reality as the final arbiter.",
+      "images": [],
+      "notes": [
+        {
+          "id": "atlas-shrugged-blurb",
+          "text": "Again, incredible writing. Lessons in love, and even more into human nature, very transformational. The continued power of the individual thinker and creator. Ethics on how to view sex. Reality as the final arbiter.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 108
+        },
+        {
+          "id": "atlas-shrugged-n0001",
+          "text": "“To love a woman for her virtues is meaningless. She’s earned it, it is a payment, not a gift. But to love her for her vices is a real gift, unearned and undeserved. To love her for her vices is to defile all virtue for her sake - and that is a real tribute of love, because you sacrifice your conscience, your reason, your integrity, and your invaluable self esteem.”",
+          "kind": "quote",
+          "source_line": 2773,
+          "session": {
+            "date": "8/14/2024",
+            "time": "12:10",
+            "label": "Augusta, ME"
+          }
+        },
+        {
+          "id": "atlas-shrugged-n0002",
+          "text": "“There are people who’ll hurt you through the good they see in you - knowing that it’s good, needing it and punishing you for it. Don’t let it break you when you discover that.",
+          "kind": "quote",
+          "source_line": 2779,
+          "session": {
+            "date": "11/6/2024",
+            "time": "08:15",
+            "label": "Winter House",
+            "place": "Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 95
+    },
+    {
+      "id": "gary-moore-the-official-biography",
+      "title": "Gary Moore The Official Biography",
+      "author": "Harry Shapiro",
+      "toc_page": 360,
+      "heading_as_written": "Gary Moore The Official Biography by Harry Shapiro",
+      "blurb": "Very big influence on how I think of guitar. Great advice on tone that I stole so many ideas from. Reminder that your ears and personal taste are the most part of the music you create. Tons of quotes on Peter Green and other blues legends.",
+      "images": [],
+      "notes": [
+        {
+          "id": "gary-moore-the-official-biography-blurb",
+          "text": "Very big influence on how I think of guitar. Great advice on tone that I stole so many ideas from. Reminder that your ears and personal taste are the most part of the music you create. Tons of quotes on Peter Green and other blues legends.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 110
+        },
+        {
+          "id": "gary-moore-the-official-biography-n0001",
+          "text": "Speaking about noise issues and an awful hum due to grounding issues: “David Gilmore had a word with Gary, something along the lines of, “So what? Make the best of it and enjoy yourself,” and some other encouraging words.",
+          "kind": "quote",
+          "source_line": 3155,
+          "session": {
+            "date": "9/10/2024",
+            "time": "14:18",
+            "label": "Gary Moore Book",
+            "place": "Brunswick, ME"
+          }
+        },
+        {
+          "id": "gary-moore-the-official-biography-n0002",
+          "text": "Gary on getting back into the blues -",
+          "kind": "quote",
+          "source_line": 3160,
+          "session": {
+            "date": "9/13/2024",
+            "time": "09:49",
+            "label": "Gary Moore Book",
+            "place": "Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 57
+    },
+    {
+      "id": "greenlights",
+      "title": "Greenlights",
+      "author": "Matthew McConaughey",
+      "toc_page": 381,
+      "heading_as_written": "Greenlights by Matthew McConaughey",
+      "blurb": "More on how to handle fame. Again, tons of advice for someone who wants to be in the driver seat. Formulaic thoughts on how to develop your mind into that of an unconquerable achiever. Realize, you have to deal with all your problems because they will not go away without your hard earned effort.",
+      "images": [],
+      "notes": [
+        {
+          "id": "greenlights-blurb",
+          "text": "More on how to handle fame. Again, tons of advice for someone who wants to be in the driver seat. Formulaic thoughts on how to develop your mind into that of an unconquerable achiever. Realize, you have to deal with all your problems because they will not go away without your hard earned effort.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 112
+        },
+        {
+          "id": "greenlights-n0001",
+          "text": "Catching greenlights is about skill: intent, context, consideration, endurance, anticipation, resilience, speed and discipline. We can catch more greenlights by simply identifying where the red lights are in our life and then change course to hit fewer of them. We can also earn green lights, engineer and design for them. We can create more and schedule them in our future - a path of least resistance - through force of will, hard work, and the choices we make. We can be responsible for green lights.",
+          "kind": "quote",
+          "source_line": 3306,
+          "session": {
+            "date": "11/13/2024",
+            "time": "06:50",
+            "label": "Green Lights",
+            "place": "Lisbon, ME"
+          }
+        },
+        {
+          "id": "greenlights-n0002",
+          "text": "Catching greenlights is about timing. The world’s timing and ours. When we are in the zone, on the frequency, and with the flow. We can catch greenlights by sheer luck, because we are in the right place at the right time. Catching more of them in our future can be about intuition, karma, and fortune. Sometimes catching greenlights is about fate.",
+          "kind": "quote",
+          "source_line": 3307,
+          "session": {
+            "date": "11/13/2024",
+            "time": "06:50",
+            "label": "Green Lights",
+            "place": "Lisbon, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 169
+    },
+    {
+      "id": "poetics",
+      "title": "Poetics",
+      "author": "Aristotle",
+      "toc_page": 407,
+      "heading_as_written": "Poetics by Aristotle",
+      "blurb": "How to actually tell a story. Great for building a foundational structure in writing songs. Actions speak louder than words.",
+      "images": [],
+      "notes": [
+        {
+          "id": "poetics-blurb",
+          "text": "How to actually tell a story. Great for building a foundational structure in writing songs. Actions speak louder than words.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 114
+        },
+        {
+          "id": "poetics-n0001",
+          "text": "Since the objects of man's imitations are men in action, and these men must be either of a higher or lower type, it follows that we must represent men either as better than real life, or as worse, as they are.",
+          "kind": "quote",
+          "source_line": 3590,
+          "session": {
+            "date": "12/16/2024",
+            "time": "05:41",
+            "label": "Winter House",
+            "place": "Brunswick, ME"
+          }
+        },
+        {
+          "id": "poetics-n0002",
+          "text": "The 3 differences that distinguish artistic imitation: the medium, the objects, and the manner.",
+          "kind": "quote",
+          "source_line": 3591,
+          "session": {
+            "date": "12/16/2024",
+            "time": "05:41",
+            "label": "Winter House",
+            "place": "Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 19
+    },
+    {
+      "id": "born-of-this-land-chung-ju-yung",
+      "title": "Born of this Land: Chung Ju Yung",
+      "author": "",
+      "toc_page": 412,
+      "heading_as_written": "Born of this Land: Chung Ju Yung",
+      "blurb": "Wonderful overlap with Rockefeller. A healthy mindset towards success will bring success. Diligence.",
+      "images": [],
+      "notes": [
+        {
+          "id": "born-of-this-land-chung-ju-yung-blurb",
+          "text": "Wonderful overlap with Rockefeller. A healthy mindset towards success will bring success. Diligence.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 116
+        },
+        {
+          "id": "born-of-this-land-chung-ju-yung-n0001",
+          "text": "“I think there's nothing more foolish than living life according to the mantra of doing just enough to get by, not knowing how precious one’s time is. In one lifetime we can become a revered politician, a scholar, a revolutionary, a writer, a musician, a painter, or a businessman like those we admire. These remarkable people did not take two or three lifetimes to accomplish what they did, they did it in one. If you make full use of your time by living diligently, you can excel in any field.",
+          "kind": "quote",
+          "source_line": 3638,
+          "session": {
+            "date": "12/29/2024",
+            "time": "16:55",
+            "label": "Airplane to Maryland"
+          }
+        },
+        {
+          "id": "born-of-this-land-chung-ju-yung-n0002",
+          "text": "If a loss yields an experience, then it’s truly not a loss. If you can learn from a loss, then you can turn it into a gain. Sometimes you get more from losing money than you do making it.",
+          "kind": "quote",
+          "source_line": 3639,
+          "session": {
+            "date": "12/29/2024",
+            "time": "16:55",
+            "label": "Airplane to Maryland"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 25
+    },
+    {
+      "id": "millionaire-real-estate-investor",
+      "title": "Millionaire Real Estate Investor",
+      "author": "Gary Keller",
+      "toc_page": 421,
+      "heading_as_written": "Millionaire Real Estate Investor by Gary Keller",
+      "blurb": "How deliberate focus starts slow but begins to compound.",
+      "images": [],
+      "notes": [
+        {
+          "id": "millionaire-real-estate-investor-blurb",
+          "text": "How deliberate focus starts slow but begins to compound.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 118
+        },
+        {
+          "id": "millionaire-real-estate-investor-n0001",
+          "text": "Focus is the key to great success, more than effort, experience, or even natural ability. Look at the highest achievers in any field and you’ll discover that they have powerful focus; just as important: you’ll learn they focus on the right things, the handful of truly important issues that make the biggest difference. They know what matters most and when it matters most.",
+          "kind": "quote",
+          "source_line": 3708,
+          "session": {
+            "date": "12/29/2024",
+            "time": "12:59",
+            "label": "Parents House, CO"
+          }
+        },
+        {
+          "id": "millionaire-real-estate-investor-n0002",
+          "text": "Results from this knowledge and action may start slowly but over time they grow substantially.",
+          "kind": "quote",
+          "source_line": 3709,
+          "session": {
+            "date": "12/29/2024",
+            "time": "12:59",
+            "label": "Parents House, CO"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 20
+    },
+    {
+      "id": "the-dream-of-solomelo",
+      "title": "The Dream of Solomeo",
+      "author": "Brunello Cucinelli",
+      "toc_page": 427,
+      "heading_as_written": "The Dream of Solomeo by Brunello Cucinelli",
+      "blurb": "The importance of books as a timeless mechanism for connection with the great minds that preceded us. Simplicity is everything. More on focus. Importance of enthusiasm.",
+      "images": [],
+      "notes": [
+        {
+          "id": "the-dream-of-solomelo-blurb",
+          "text": "The importance of books as a timeless mechanism for connection with the great minds that preceded us. Simplicity is everything. More on focus. Importance of enthusiasm.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 120
+        },
+        {
+          "id": "the-dream-of-solomelo-n0001",
+          "text": "I would always read when I was alone, especially philosophy. It reminds me of Machiavelli during his exile, he too spent his afternoons playing board games and drinking wine. While at night, in the austere silence of his studio, he engaged in solitary literary conversations with the great ancient scholars.",
+          "kind": "quote",
+          "source_line": 3803,
+          "session": {
+            "date": "02/07/2025",
+            "time": "14:57",
+            "label": "Brunello Cucinelli: The Dream of Solomeo",
+            "place": "Winter House, Brunswick, ME"
+          }
+        },
+        {
+          "id": "the-dream-of-solomelo-n0002",
+          "text": "Because of the help and the pleasure they give me, books come first and foremost. I cannot do without books because they teach us how to listen to the voice of man, both others and our own. This is why they are irreplaceable for the soul.",
+          "kind": "quote",
+          "source_line": 3804,
+          "session": {
+            "date": "02/07/2025",
+            "time": "14:57",
+            "label": "Brunello Cucinelli: The Dream of Solomeo",
+            "place": "Winter House, Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 44
+    },
+    {
+      "id": "the-art-of-loving",
+      "title": "The Art of Loving",
+      "author": "Erich Fromm",
+      "toc_page": 442,
+      "heading_as_written": "The Art of Loving by Erich Fromm",
+      "blurb": "Made me realize why there’s so much trouble in marriages. This book teaches a necessary reframing of what love is, a passionate art that deserves consistent tender care.",
+      "images": [],
+      "notes": [
+        {
+          "id": "the-art-of-loving-blurb",
+          "text": "Made me realize why there’s so much trouble in marriages. This book teaches a necessary reframing of what love is, a passionate art that deserves consistent tender care.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 124
+        },
+        {
+          "id": "the-art-of-loving-n0001",
+          "text": "He who knows nothing, loves nothing.",
+          "kind": "quote",
+          "source_line": 3911,
+          "session": {
+            "date": "02/19/2025",
+            "time": "08:02",
+            "label": "Brunswick, ME",
+            "place": "Winter House"
+          }
+        },
+        {
+          "id": "the-art-of-loving-n0002",
+          "text": "He who can do nothing understands nothing.",
+          "kind": "quote",
+          "source_line": 3912,
+          "session": {
+            "date": "02/19/2025",
+            "time": "08:02",
+            "label": "Brunswick, ME",
+            "place": "Winter House"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 69
+    },
+    {
+      "id": "moonwalking-with-einstein",
+      "title": "Moonwalking With Einstein",
+      "author": "Joshua Foer",
+      "toc_page": 461,
+      "heading_as_written": "Moonwalking With Einstein by Joshua Foer",
+      "blurb": "Good ideas on how our brains remember things, and great explanations of how time plays a role in our perception of life.",
+      "images": [],
+      "notes": [
+        {
+          "id": "moonwalking-with-einstein-blurb",
+          "text": "Good ideas on how our brains remember things, and great explanations of how time plays a role in our perception of life.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 126
+        },
+        {
+          "id": "moonwalking-with-einstein-n0001",
+          "text": "A trained memory was not just a handy tool, but a fundamental facet of any worldly mind.",
+          "kind": "quote",
+          "source_line": 4074,
+          "session": {
+            "date": "02/15/2025",
+            "time": "07:00",
+            "label": "Brunswick, ME",
+            "place": "Winter House"
+          }
+        },
+        {
+          "id": "moonwalking-with-einstein-n0002",
+          "text": "Only by memorizing, the thinking went, could ideas be truly incorporated into one’s psyche and their values absorbed.",
+          "kind": "quote",
+          "source_line": 4075,
+          "session": {
+            "date": "02/15/2025",
+            "time": "07:00",
+            "label": "Brunswick, ME",
+            "place": "Winter House"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 20
+    },
+    {
+      "id": "jj-cale-guitar-player-magazine-interview",
+      "title": "JJ Cale Guitar Player Magazine Interview",
+      "author": "",
+      "toc_page": 467,
+      "heading_as_written": "JJ Cale Guitar Player Magazine Interview",
+      "blurb": "I like how he thinks of “not getting too famous”",
+      "images": [],
+      "notes": [
+        {
+          "id": "jj-cale-guitar-player-magazine-interview-blurb",
+          "text": "I like how he thinks of “not getting too famous”",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 128
+        },
+        {
+          "id": "jj-cale-guitar-player-magazine-interview-n0001",
+          "text": "“I wrote a lot of songs that are just kinda grooves with some mumbling on top. I kinda consider my voice just an instrument. You know, a lot of songs I’ve written are not really songs, they are just grooves with mumbling, and some of them worked out as songs, but most of them didn’t. I always liked something you can tap your toe to.”",
+          "kind": "quote",
+          "source_line": 4130,
+          "session": {
+            "date": "03/11/2025",
+            "time": "12:59",
+            "label": "JJ Cale Guitar Player Interview",
+            "place": "Winter House, Brunswick, ME"
+          }
+        },
+        {
+          "id": "jj-cale-guitar-player-magazine-interview-n0002",
+          "text": "“How did you write magnolia?”",
+          "kind": "quote",
+          "source_line": 4131,
+          "session": {
+            "date": "03/11/2025",
+            "time": "12:59",
+            "label": "JJ Cale Guitar Player Interview",
+            "place": "Winter House, Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 9
+    },
+    {
+      "id": "peter-green",
+      "title": "Peter Green",
+      "author": "Martin Celmins",
+      "toc_page": 471,
+      "heading_as_written": "Peter Green by Martin Celmins",
+      "blurb": "The book that made me hip to the idea of the “human” touch on a guitar, and the benefits of leaning into it. Song writing ideas.",
+      "images": [],
+      "notes": [
+        {
+          "id": "peter-green-blurb",
+          "text": "The book that made me hip to the idea of the “human” touch on a guitar, and the benefits of leaning into it. Song writing ideas.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 130
+        },
+        {
+          "id": "peter-green-n0001",
+          "text": "“Pete played that very simplifies incisive clean style perfectly.”",
+          "kind": "quote",
+          "source_line": 4183,
+          "session": {
+            "date": "04/16/2025",
+            "time": "09:34",
+            "label": "Peter Green Book",
+            "place": "Winter House, Brunswick, ME"
+          }
+        },
+        {
+          "id": "peter-green-n0002",
+          "text": "*Talking about John Mayall*",
+          "kind": "quote",
+          "source_line": 4190,
+          "session": {
+            "date": "04/18/2025",
+            "time": "06:58",
+            "label": "Peter Green Book",
+            "place": "Winter House, Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 24
+    },
+    {
+      "id": "the-wealthy-gardener",
+      "title": "The Wealthy Gardener",
+      "author": "John Soforic",
+      "toc_page": 480,
+      "heading_as_written": "The Wealthy Gardener by John Soforic",
+      "blurb": "Reminder on the importance of time and how you spend it. The power in finding your purpose and how to find it. Great quotes from history. How you can learn about life by looking at nature. Optimism. The importance of values. Honestly a really important book in my life.",
+      "images": [],
+      "notes": [
+        {
+          "id": "the-wealthy-gardener-blurb",
+          "text": "Reminder on the importance of time and how you spend it. The power in finding your purpose and how to find it. Great quotes from history. How you can learn about life by looking at nature. Optimism. The importance of values. Honestly a really important book in my life.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 132
+        },
+        {
+          "id": "the-wealthy-gardener-n0001",
+          "text": "The seed of every harvest are the hours of the days.",
+          "kind": "quote",
+          "source_line": 4287,
+          "session": {
+            "date": "04/25/2025",
+            "time": "14:45",
+            "label": "Brunswick, ME",
+            "place": "Winter House"
+          }
+        },
+        {
+          "id": "the-wealthy-gardener-n0002",
+          "text": "The moral is clear as I look back at the lessons now that I am of age. That the book of one's life is determined by the courage in each page contained.",
+          "kind": "quote",
+          "source_line": 4288,
+          "session": {
+            "date": "04/25/2025",
+            "time": "14:45",
+            "label": "Brunswick, ME",
+            "place": "Winter House"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 194
+    },
+    {
+      "id": "how-to-outwit-the-devil",
+      "title": "How to Outwit The Devil",
+      "author": "Napoleon Hill",
+      "toc_page": 523,
+      "heading_as_written": "How to Outwit The Devil by Napoleon Hill",
+      "blurb": "Critical Read. This book reshaped my view of the world more than any other. Liberates by actually teaching you how to think. Very useful mental tools and images that are extremely easy to digest and immediately employ. Thoughts are the building blocks of everything in your life. How successful men foster a highly developed sex nature, and why that is so important. How to teach your children to have a powerful mind. Read this over and over and over again.",
+      "images": [],
+      "notes": [
+        {
+          "id": "how-to-outwit-the-devil-blurb",
+          "text": "Critical Read. This book reshaped my view of the world more than any other. Liberates by actually teaching you how to think. Very useful mental tools and images that are extremely easy to digest and immediately employ. Thoughts are the building blocks of everything in your life. How successful men foster a highly developed sex nature, and why that is so important. How to teach your children to have a powerful mind. Read this over and over and over again.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 134
+        },
+        {
+          "id": "how-to-outwit-the-devil-n0001",
+          "text": "“It seems to me that here is an opportunity which should challenge an ambitious young man of your type: but ambition alone is not enough for this task which I have suggested. The one who undertakes it must have courage and tenacity.”",
+          "kind": "quote",
+          "source_line": 4680,
+          "session": {
+            "date": "09/02/2025",
+            "time": "20:30",
+            "label": "Outwit the Devil",
+            "place": "Piano House, Orrs Island, ME"
+          }
+        },
+        {
+          "id": "how-to-outwit-the-devil-n0002",
+          "text": "The job will require at least 20 years of continuous effort, during which the one who undertakes it will have to earn his living from some other source, because this sort of research is never profitable at the beginning and generally, those who have contributed to civilization have to wait a hundred years or so after their own funerals to receive recognition for their labor.",
+          "kind": "quote",
+          "source_line": 4681,
+          "session": {
+            "date": "09/02/2025",
+            "time": "20:30",
+            "label": "Outwit the Devil",
+            "place": "Piano House, Orrs Island, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 196
+    },
+    {
+      "id": "how-to-make-a-few-billion-dollars",
+      "title": "How to Make a Few Billion Dollars",
+      "author": "Brad Jacobs",
+      "toc_page": 574,
+      "heading_as_written": "How to Make a Few Billion Dollars by Brad Jacobs",
+      "blurb": "Attributes of effective leadership. Company building tactics. More thoughts on the mind and how important taking great care of it is. Powerful meditation techniques.",
+      "images": [],
+      "notes": [
+        {
+          "id": "how-to-make-a-few-billion-dollars-blurb",
+          "text": "Attributes of effective leadership. Company building tactics. More thoughts on the mind and how important taking great care of it is. Powerful meditation techniques.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 136
+        },
+        {
+          "id": "how-to-make-a-few-billion-dollars-n0001",
+          "text": "Listening is very important.",
+          "kind": "quote",
+          "source_line": 4984,
+          "session": {
+            "date": "11/24/2025",
+            "time": "07:25",
+            "label": "Few Billion",
+            "place": "Parents House"
+          }
+        },
+        {
+          "id": "how-to-make-a-few-billion-dollars-n0002",
+          "text": "Smarts and efforts are a powerful combination.",
+          "kind": "quote",
+          "source_line": 4985,
+          "session": {
+            "date": "11/24/2025",
+            "time": "07:25",
+            "label": "Few Billion",
+            "place": "Parents House"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 75
+    },
+    {
+      "id": "ogilvy-unpublished",
+      "title": "Ogilvy Unpublished",
+      "author": "David Ogilvy",
+      "toc_page": 587,
+      "heading_as_written": "Ogilvy Unpublished by David Ogilvy",
+      "blurb": "Concepts of timeless advertising, which means, tons of lessons on human nature. Brand building 101. Creating a contrived personality in your brand.",
+      "images": [],
+      "notes": [
+        {
+          "id": "ogilvy-unpublished-blurb",
+          "text": "Concepts of timeless advertising, which means, tons of lessons on human nature. Brand building 101. Creating a contrived personality in your brand.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 140
+        },
+        {
+          "id": "ogilvy-unpublished-n0001",
+          "text": "Every advertisement must tell the whole sales story.",
+          "kind": "quote",
+          "source_line": 5118,
+          "session": {
+            "date": "1/24/2026",
+            "time": "09:29",
+            "label": "Piano House",
+            "place": "Orrs Island, ME"
+          }
+        },
+        {
+          "id": "ogilvy-unpublished-n0002",
+          "text": "The copy must be human and very simple.",
+          "kind": "quote",
+          "source_line": 5119,
+          "session": {
+            "date": "1/24/2026",
+            "time": "09:29",
+            "label": "Piano House",
+            "place": "Orrs Island, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 65
+    },
+    {
+      "id": "scientific-advertising",
+      "title": "Scientific Advertising",
+      "author": "Claude C. Hopkins",
+      "toc_page": 596,
+      "heading_as_written": "Scientific Advertising by Claude C. Hopkins",
+      "blurb": "Viewing advertisements as salesmen. Think of individuals, not the masses. The power of curiosity.",
+      "images": [],
+      "notes": [
+        {
+          "id": "scientific-advertising-blurb",
+          "text": "Viewing advertisements as salesmen. Think of individuals, not the masses. The power of curiosity.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 142
+        },
+        {
+          "id": "scientific-advertising-n0001",
+          "text": "Individuals come and go, but they leave their records and ideas behind them. They become a guide to all who follow.",
+          "kind": "quote",
+          "source_line": 5240,
+          "session": {
+            "date": "1/24/2026",
+            "time": "13:18",
+            "label": "Piano House",
+            "place": "Orrs Island, ME"
+          }
+        },
+        {
+          "id": "scientific-advertising-n0002",
+          "text": "Nearly every selling question which arises in business is accurately answered by many experiences.",
+          "kind": "quote",
+          "source_line": 5241,
+          "session": {
+            "date": "1/24/2026",
+            "time": "13:18",
+            "label": "Piano House",
+            "place": "Orrs Island, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 52
+    },
+    {
+      "id": "extras",
+      "title": "Extras",
+      "author": "",
+      "toc_page": 607,
+      "heading_as_written": "Extras",
+      "blurb": "Handful of great ideas from various sources.",
+      "images": [],
+      "notes": [
+        {
+          "id": "extras-blurb",
+          "text": "Handful of great ideas from various sources.",
+          "kind": "note",
+          "role": "blurb",
+          "source_line": 144
+        },
+        {
+          "id": "extras-n0001",
+          "text": "“See. Breathe. Choose. Hold. Honor.”",
+          "kind": "note",
+          "source_line": 5338,
+          "session": {
+            "date": "05/06/2025",
+            "time": "13:00",
+            "label": "Deeply Reflecting: BZ",
+            "place": "Winter House, Brunswick, ME"
+          }
+        },
+        {
+          "id": "extras-n0002",
+          "text": "See: See things as they are.",
+          "kind": "note",
+          "source_line": 5339,
+          "session": {
+            "date": "05/06/2025",
+            "time": "13:00",
+            "label": "Deeply Reflecting: BZ",
+            "place": "Winter House, Brunswick, ME"
+          }
+        }
+      ],
+      "sample_note_count": 3,
+      "full_note_count": 42
+    }
+  ]
+}

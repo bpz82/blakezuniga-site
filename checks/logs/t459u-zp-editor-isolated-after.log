@@ -1,0 +1,11 @@
+ok   ZP module files exist (zuniga-philosophy.js, index.html, zp-hook.js)
+ok   no ZP file references the layout editor / layout runtime
+ok   index.html: ?edit=1 hook unchanged (byte-for-byte as at 16b02c3) and present once
+ok   index.html: the only editor reference is the ?edit=1 hook (found 1)
+ok   ?zp=1 hook does not read 'edit' or import the editor
+ok   main has no apps/zuniga-philosophy (not pushed to main)
+ok   main has no layout editor files (editor stays off main)
+ok   origin/main has no apps/zuniga-philosophy (not pushed to main)
+ok   origin/main has no layout editor files (editor stays off main)
+PASS
+exit 0

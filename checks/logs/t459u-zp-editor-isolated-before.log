@@ -1,0 +1,10 @@
+# run on a git-archive export of 16b02c3 (pre-change tree) at /tmp/zp-before
+FAIL ZP module files exist (zuniga-philosophy.js, index.html, zp-hook.js)
+ok   no ZP file references the layout editor / layout runtime
+ok   index.html: ?edit=1 hook unchanged (byte-for-byte as at 16b02c3) and present once
+ok   index.html: the only editor reference is the ?edit=1 hook (found 1)
+FAIL ?zp=1 hook does not read 'edit' or import the editor
+skip  main not available here
+skip  origin/main not available here
+FAIL (2)
+exit 1

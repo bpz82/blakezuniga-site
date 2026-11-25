@@ -1,0 +1,22 @@
+ok   index.html: <!doctype html> first
+ok   index.html: exactly one <html>, <head>, </head>, <body>, </body>, </html>
+ok   index.html: <script> tags balanced
+ok   index.html: <style> tags balanced
+ok   index.html: head before body
+ok   index.html: all 5 inline module scripts pass node --check
+ok   widgets.js imports and exports the existing tiles (contact, collaborative-projects, vinyl-vault)
+ok   widgets.js: no static import of apps/zuniga-philosophy
+ok   harness.js: no static import of apps/zuniga-philosophy
+ok   widget-ids.js: no static import of apps/zuniga-philosophy
+ok   index.html: no <script src> / static import of apps/zuniga-philosophy
+ok   index.html: exactly one inline script mentions zuniga-philosophy (the ?zp=1 hook)
+ok   hook is guarded by get('zp') === '1' and is a dynamic import with .catch
+ok   hook: no ?zp=1 -> nothing imported
+ok   hook: ?zp=1 + import fails -> no throw, console.warn
+ok   apps/zuniga-philosophy/zp-hook.js exists
+ok   zp-hook.js imports in Node without side effects and exports openZpOverlay
+ok   openZpOverlay: no document -> null, no throw
+ok   openZpOverlay: module import fails -> null, overlay removed, warned
+ok   openZpOverlay: mount throws -> null, overlay removed
+PASS
+exit 0

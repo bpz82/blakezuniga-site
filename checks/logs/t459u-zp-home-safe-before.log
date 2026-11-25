@@ -1,0 +1,17 @@
+# run on a git-archive export of 16b02c3 (pre-change tree) at /tmp/zp-before
+ok   index.html: <!doctype html> first
+ok   index.html: exactly one <html>, <head>, </head>, <body>, </body>, </html>
+ok   index.html: <script> tags balanced
+ok   index.html: <style> tags balanced
+ok   index.html: head before body
+ok   index.html: all 4 inline module scripts pass node --check
+ok   widgets.js imports and exports the existing tiles (contact, collaborative-projects, vinyl-vault)
+ok   widgets.js: no static import of apps/zuniga-philosophy
+ok   harness.js: no static import of apps/zuniga-philosophy
+ok   widget-ids.js: no static import of apps/zuniga-philosophy
+ok   index.html: no <script src> / static import of apps/zuniga-philosophy
+FAIL index.html: exactly one inline script mentions zuniga-philosophy (the ?zp=1 hook)
+FAIL hook is guarded by get('zp') === '1' and is a dynamic import with .catch
+FAIL apps/zuniga-philosophy/zp-hook.js exists
+FAIL (3)
+exit 1

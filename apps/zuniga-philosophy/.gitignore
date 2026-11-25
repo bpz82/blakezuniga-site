@@ -1,0 +1,9 @@
+# Zuniga Philosophy (t459u): the full notebook must never be in this repo. Only data/sample.json (sample:true) is public.
+# A later paid server gate serves the full set; it is not a static file here.
+books.clean.json
+books.json
+full.json
+full*.json
+*.full.json
+*full-dump*
+*.dump.json

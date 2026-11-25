@@ -1,0 +1,62 @@
+ok   module imports
+ok   BODY_FONT is exactly 'Times New Roman', Times, serif
+ok   UI_FONT starts with 'Zuniga Mission' and has no serif fallback
+ok   no Mulish / Charter / Iowan / Georgia / Founders fonts in module or page
+ok   no Founders Notes / Readwise / Sage names in module or page
+ok   module @font-face points at assets/fonts/ZunigaMission-Regular-v3.woff2 (exists)
+ok   standalone page @font-face uses ../../assets/fonts/ZunigaMission-Regular-v3.woff2
+ok   .zp-text rule sets font-family Times New Roman stack
+ok   .zp-blurb-text rule sets font-family Times New Roman stack
+ok   .zp-aside-text rule sets font-family Times New Roman stack
+ok   .zp-attr rule sets font-family Times New Roman stack
+ok   .zp-title rule sets font-family Zuniga Mission
+ok   .zp-q rule sets font-family Zuniga Mission
+ok   .zp-cap-title rule sets font-family Zuniga Mission
+ok   .zp-cap-author rule sets font-family Zuniga Mission
+ok   .zp-book-title rule sets font-family Zuniga Mission
+ok   .zp-book-author rule sets font-family Zuniga Mission
+ok   .zp-credit-title rule sets font-family Zuniga Mission
+ok   .zp-session rule sets font-family Zuniga Mission
+ok   .zp-empty rule sets font-family Zuniga Mission
+ok   .zp-tag rule sets font-family Zuniga Mission
+ok   placeholder uses Zuniga Mission
+ok   cascade: CSS parsed into font rules
+ok   search (empty): 0 quote/note body text nodes all Times New Roman
+ok   search (empty): 17 UI text nodes all Zuniga Mission
+ok   search (empty): buttons / inputs use Zuniga Mission
+ok   search results "river": 17 quote/note body text nodes all Times New Roman
+ok   search results "river": 33 UI text nodes all Zuniga Mission
+ok   search results "river": buttons / inputs use Zuniga Mission
+ok   search results "river": has quote/note bodies
+ok   search results "life": 77 quote/note body text nodes all Times New Roman
+ok   search results "life": 96 UI text nodes all Zuniga Mission
+ok   search results "life": buttons / inputs use Zuniga Mission
+ok   search results "life": has quote/note bodies
+ok   feed: 40 quote/note body text nodes all Times New Roman
+ok   feed: 145 UI text nodes all Zuniga Mission
+ok   feed: buttons / inputs use Zuniga Mission
+ok   feed: has quote/note bodies
+ok   books grid A-Z: 0 quote/note body text nodes all Times New Roman
+ok   books grid A-Z: 264 UI text nodes all Zuniga Mission
+ok   books grid A-Z: buttons / inputs use Zuniga Mission
+ok   books list by author: 0 quote/note body text nodes all Times New Roman
+ok   books list by author: 247 UI text nodes all Zuniga Mission
+ok   books list by author: buttons / inputs use Zuniga Mission
+ok   book page (synthetic: aside, attribution, starred, Blake note, session): 6 quote/note body text nodes all Times New Roman
+ok   book page (synthetic: aside, attribution, starred, Blake note, session): 25 UI text nodes all Zuniga Mission
+ok   book page (synthetic: aside, attribution, starred, Blake note, session): buttons / inputs use Zuniga Mission
+ok   book page (synthetic: aside, attribution, starred, Blake note, session): aside, attribution, starred, Blake note and blurb bodies all found as Times
+ok   book page (synthetic: aside, attribution, starred, Blake note, session): has quote/note bodies
+ok   book page Meditations: 3 quote/note body text nodes all Times New Roman
+ok   book page Meditations: 20 UI text nodes all Zuniga Mission
+ok   book page Meditations: buttons / inputs use Zuniga Mission
+ok   book page Meditations: has quote/note bodies
+ok   saved: 3 quote/note body text nodes all Times New Roman
+ok   saved: 12 UI text nodes all Zuniga Mission
+ok   saved: buttons / inputs use Zuniga Mission
+ok   saved: has quote/note bodies
+ok   saved (empty): 0 quote/note body text nodes all Times New Roman
+ok   saved (empty): 8 UI text nodes all Zuniga Mission
+ok   saved (empty): buttons / inputs use Zuniga Mission
+PASS
+exit 0

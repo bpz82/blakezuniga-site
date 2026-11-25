@@ -1,0 +1,5 @@
+# run on a git-archive export of 16b02c3 (pre-change tree) at /tmp/zp-before
+import error: Cannot find module '/tmp/zp-before/apps/zuniga-philosophy/zuniga-philosophy.js' imported from /tmp/zp-before/checks/t459u-zp-typography.mjs
+FAIL module imports
+FAIL (1)
+exit 1

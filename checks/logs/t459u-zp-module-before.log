@@ -1,0 +1,8 @@
+# run on a git-archive export of 16b02c3 (pre-change tree) at /tmp/zp-before
+FAIL standalone page apps/zuniga-philosophy/index.html exists
+FAIL module apps/zuniga-philosophy/zuniga-philosophy.js exists
+FAIL sample data apps/zuniga-philosophy/data/sample.json exists
+import error: Cannot find module '/tmp/zp-before/apps/zuniga-philosophy/zuniga-philosophy.js' imported from /tmp/zp-before/checks/t459u-zp-module.mjs
+FAIL module imports and exports mountZunigaPhilosophy
+FAIL (4)
+exit 1

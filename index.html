@@ -3478,6 +3478,7 @@ if (document.body.classList.contains('zg-reveal-done')) whGo(); whMode();
 <script type="module" src="photo-tv/boot.js"></script>
 <script type="module" src="layout/index.js"></script>
 <script type="module">if (new URLSearchParams(location.search).get('edit') === '1') import('./layout-editor-inner.js');</script>
+<script type="module">/* t459u/t460u: preview app by direct URL only (no tile); isolated, a failure only warns */ if (new URLSearchParams(location.search).get('zp') === '1') import('./apps/zuniga-philosophy/zp-hook.js').catch((e) => console.warn('[zp] hook failed', e));</script>
 <script type="module">
 /* Lazy-load the amp after the guitar's first frame. A failure leaves the guitar running. */
 window.__ampFail = 0;

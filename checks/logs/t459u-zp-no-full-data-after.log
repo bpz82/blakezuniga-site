@@ -1,0 +1,19 @@
+ok   apps/zuniga-philosophy/.gitignore exists
+ok   git ignores apps/zuniga-philosophy/books.clean.json
+ok   git ignores apps/zuniga-philosophy/full.json
+ok   git ignores apps/zuniga-philosophy/books.json
+ok   git ignores apps/zuniga-philosophy/data/books.clean.json
+ok   git ignores apps/zuniga-philosophy/data/full.json
+ok   git does NOT ignore data/sample.json
+ok   no tracked or addable path is books.clean.json / full.json
+ok   app files are present (module, page, sample)
+ok   sample.json has sample:true
+ok   sample.json: 38 books
+ok   sample.json: at most 3 notes per book
+ok   sample.json: note_count (113) == notes present (113) and well under the full set (2637)
+ok   sample.json: does not contain the late Think and Grow Rich needle
+ok   late full-set quote is in no tracked/addable file (109 scanned)
+ok   needle is a real full-set quote (private file, read only to validate the needle)
+ok   no obvious secrets in 6 app/hook files
+PASS
+exit 0
