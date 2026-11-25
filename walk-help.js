@@ -2,16 +2,20 @@
 // replacing the per-object how-to hints (#hint in index.html, #zg-amp-hint in amp-chrome.js; both stay hidden / unused).
 // Own failure domain: init and every handler are wrapped, so a bug here can never break walking, the scene or the apps.
 // It only reads body[data-mode]; it never touches scene state. Styles: chrome.css (#zg-walk-help, #zg-walk-help-btn).
-// Dismiss: x button, or Escape while the mouse is free (Esc while the mouse is captured only frees it). A small "?" (next to Home) reopens it. Dismissal is remembered (localStorage, best effort).
+// Shows on EVERY entry to Explore (nothing is remembered: Blake lost the directions to a permanent localStorage dismissal, Nov 2026),
+// then fades after AUTO_MS or on the first walk / look / jump input, so it never sits on the Explore title.
+// Dismiss: x button, or Escape while the mouse is free (Esc while the mouse is captured only frees it). A small "?" (next to Home) reopens it.
 
-const KEY = 'zg-walk-help-dismissed';
+const OLD_KEY = 'zg-walk-help-dismissed'; // retired: only removed, never read or written
+const AUTO_MS = 6000; // auto-fade delay
+const GRACE_MS = 400; // ignore input this soon after opening (the tap that entered Explore / fly-in tail)
+const MOVE_KEYS = new Set(['w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ']);
 
 function init() {
   // Phone card ONLY when the primary pointer is coarse. 'ontouchstart' alone (touch-capable desktops, forced in tests) is NOT phone.
   const mq = window.matchMedia ? matchMedia('(pointer: coarse)') : null;
   const isTouch = () => (mq ? mq.matches : 'ontouchstart' in window);
-  let dismissed = false;
-  try { dismissed = localStorage.getItem(KEY) === '1'; } catch (_) { /* storage blocked: shown each time */ }
+  try { localStorage.removeItem(OLD_KEY); } catch (_) { /* storage blocked: fine */ }
 
   const card = document.createElement('div');
   card.id = 'zg-walk-help';
@@ -60,46 +64,63 @@ function init() {
   document.body.append(card, btn);
 
   let open = false;
+  let entered = ''; // mode we already auto-opened for; reset when Explore is left, so each entry shows the card once
   let flyTimer = 0;
+  let autoTimer = 0;
+  let openedAt = 0;
   function render() {
     const m = document.body.dataset.mode;
     const walkish = m === 'walk' || m === 'amp';
     card.classList.toggle('show', walkish && open);
     btn.classList.toggle('show', walkish && !open);
   }
-  function setOpen(v) {
+  function setOpen(v, auto) {
     open = v;
+    clearTimeout(autoTimer);
+    autoTimer = 0;
+    card.classList.toggle('zg-wh-slow', !!(auto && !v)); // gentle fade for the automatic hide only
+    if (v) { openedAt = performance.now(); autoTimer = setTimeout(() => setOpen(false, true), AUTO_MS); }
     render();
   }
+  // first walk / look / jump input hides the card (capture phase: the walker's own handlers may stop propagation)
+  function firstMove(e) {
+    try {
+      if (!open || performance.now() - openedAt < GRACE_MS) return;
+      const t = e.target;
+      if (t && t.closest && t.closest('#zg-walk-help, #zg-walk-help-btn')) return;
+      if (e.type === 'keydown' && !MOVE_KEYS.has(e.key)) return;
+      setOpen(false, true);
+    } catch (_) { /* ignore */ }
+  }
+  for (const t of ['keydown', 'touchstart', 'pointerdown', 'mousedown']) document.addEventListener(t, firstMove, true);
   function onMode() {
     try {
       const m = document.body.dataset.mode;
       if (m === 'walk' || m === 'amp') {
         const h = window.__amp && window.__amp.handle;
         // amp: only when the amp is walkable (driver present); the orbit-only amp has nothing to explain
-        if (m === 'amp' && !(h && h.driver) && !(window.__ampHandle && window.__ampHandle.driver)) { open = false; render(); return; }
-        if (!open && !dismissed) {
+        if (m === 'amp' && !(h && h.driver) && !(window.__ampHandle && window.__ampHandle.driver)) { setOpen(false); return; }
+        if (entered !== m) {
           // wait for the intro fly-in to finish so the first WASD press isn't swallowed
           const fl = window.__dbg && typeof window.__dbg.fly === 'function' ? window.__dbg.fly() : null;
           if (fl && fl.active) {
             if (!flyTimer) flyTimer = setTimeout(() => { flyTimer = 0; onMode(); }, 250);
             return;
           }
-          open = true;
+          entered = m;
+          setOpen(true);
+          return;
         }
       } else {
-        open = false;
+        entered = '';
+        if (open) { setOpen(false); return; }
       }
       render();
     } catch (e) {
       console.warn('[walk-help] mode update failed', e);
     }
   }
-  close.addEventListener('click', () => {
-    dismissed = true;
-    try { localStorage.setItem(KEY, '1'); } catch (_) { /* ignore */ }
-    setOpen(false);
-  });
+  close.addEventListener('click', () => setOpen(false));
   btn.addEventListener('click', () => setOpen(true));
   // Pointer lock: the first Esc only frees the mouse (browser default). Chrome may drop the lock BEFORE our keydown runs,
   // so also treat Esc within 300 ms of a lock change as that same press (same idea as amp-walk.js). Mouse already free: Esc closes.
@@ -109,8 +130,6 @@ function init() {
     try {
       if (e.key !== 'Escape' || !open) return;
       if (document.pointerLockElement || performance.now() - lockChangedAt < 300) return;
-      dismissed = true;
-      try { localStorage.setItem(KEY, '1'); } catch (_) { /* ignore */ }
       setOpen(false);
     } catch (err) {
       console.warn('[walk-help] Escape handler failed', err);
