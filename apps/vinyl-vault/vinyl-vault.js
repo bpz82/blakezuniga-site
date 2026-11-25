@@ -45,9 +45,12 @@ const CSS = `
 .vv-cell{display:block;width:100%;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .vv-cell[hidden]{display:none}
-.vv-cell img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;background:#0c0809;border-radius:6px;
-  box-shadow:0 6px 16px rgba(0,0,0,.5);transition:transform .2s ease}
-.vv-cell:hover img{transform:translateY(-2px)}
+.vv-cover{position:relative;display:block;overflow:hidden;isolation:isolate;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.5);transition:transform .2s ease}
+.vv-cover::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:inherit;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 1'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size:180px 180px;opacity:.12;mix-blend-mode:overlay}
+.vv-cell img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;background:#0c0809;border-radius:6px}
+.vv-cell:hover .vv-cover{transform:translateY(-2px)}
 .vv-cell:focus-visible{outline:2px solid #ff6b5a;outline-offset:3px;border-radius:6px}
 .vv-a,.vv-b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vv-a{margin-top:8px;font-size:14px;letter-spacing:.05em;text-transform:uppercase}
@@ -58,6 +61,7 @@ const CSS = `
 .vv-pop[hidden]{display:none}
 .vv-card{position:relative;width:min(100%,340px);max-height:100%;overflow:auto;padding:14px 14px 16px;background:rgba(28,20,22,.96);
   border:1px solid rgba(255,255,255,.18);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.7);animation:vv-pop .18s ease both}
+.vv-card .vv-cover{border-radius:8px;box-shadow:none;transition:none}
 .vv-card img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:8px;background:#0c0809}
 .vv-x{position:absolute;top:8px;right:8px;width:40px;height:40px;margin:0;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.3);
   background:rgba(18,12,14,.8);color:#fff;font:300 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -80,7 +84,7 @@ const CSS = `
   border:1px solid rgba(255,255,255,.25);border-radius:10px;font:14px/1.3 system-ui,sans-serif}
 .vv-fb[hidden],.vv-y[hidden],.vv-track[hidden],.vv-spin[hidden],.vv-btn[hidden]{display:none}
 @keyframes vv-pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-@media (prefers-reduced-motion:reduce){.vv-cell img{transition:none}.vv-cell:hover img{transform:none}.vv-card{animation:none}}
+@media (prefers-reduced-motion:reduce){.vv-cover{transition:none}.vv-cell:hover .vv-cover{transform:none}.vv-card{animation:none}}
 `;
 
 // safe relative image path: segments start with a letter/digit, so no "..", no ".", no scheme, no leading slash
@@ -262,7 +266,9 @@ export function mountVinylVault(host, opts) {
       img.width = 300;
       img.height = 300;
       img.src = r.cover;
-      b.append(img, el('span', 'vv-a', r.artist), el('span', 'vv-b', r.album));
+      const cov = el('span', 'vv-cover');
+      cov.append(img);
+      b.append(cov, el('span', 'vv-a', r.artist), el('span', 'vv-b', r.album));
       b.addEventListener('click', () => show(r, '', false, b));
       curSec.grid.append(b);
       curSec.cells.push(b);
@@ -337,7 +343,9 @@ export function mountVinylVault(host, opts) {
       fb.hidden = true;
       fb.setAttribute('aria-label', 'Selected text, press copy on your keyboard');
       btns = el('div', 'vv-btns');
-      card.append(popImg, x, popTitle, popYear, popTrack, btns, spinBtn, fb);
+      const popCov = el('div', 'vv-cover');
+      popCov.append(popImg);
+      card.append(popCov, x, popTitle, popYear, popTrack, btns, spinBtn, fb);
       pop.append(card);
       // tap/click on the backdrop (outside the card) closes
       pop.addEventListener('click', (e) => { if (e.target === pop) closePop(); });
