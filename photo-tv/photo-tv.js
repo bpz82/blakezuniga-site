@@ -176,6 +176,42 @@ function panelGlowTexture() {   // Blake 9:50: soft glow around the photo panel 
     g.shadowBlur = 0; g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.roundRect(x - 2, y - 2, iw + 4, ih + 4, iw * SCR_R / SCR_W); g.fill();   // glow only outside the frame
   }, true, false);
 }
+// Border job (Blake t411u): a slim aged-wood + brass frame around the photo glass, built as concentric rounded-rect rings
+// (flat, no lights; bevel by vertex shading). Children of photo-panel, so it orbits with the panel. Never a raycast target.
+function buildPanelFrame() {
+  const grp = new THREE.Group(); grp.name = 'photo-panel-frame';
+  const hw = SCR_W / 2, hh = SCR_H / 2;
+  const rr = (s, x0, y0, x1, y1, r) => { r = Math.max(0.001, Math.min(r, (x1 - x0) / 2, (y1 - y0) / 2)); s.moveTo(x0 + r, y0); s.lineTo(x1 - r, y0); s.absarc(x1 - r, y0 + r, r, -Math.PI / 2, 0, false); s.lineTo(x1, y1 - r); s.absarc(x1 - r, y1 - r, r, 0, Math.PI / 2, false); s.lineTo(x0 + r, y1); s.absarc(x0 + r, y1 - r, r, Math.PI / 2, Math.PI, false); s.lineTo(x0, y0 + r); s.absarc(x0 + r, y0 + r, r, Math.PI, Math.PI * 1.5, false); };
+  // ring between offsets a (inner) and b (outer) from the glass edge; negative = inside the glass
+  const ring = (name, a, b, color, o) => {
+    o = o || {};
+    const sh = new THREE.Shape(), ho = new THREE.Path();
+    rr(sh, -hw - b, -hh - b, hw + b, hh + b, SCR_R + b); rr(ho, -hw - a, -hh - a, hw + a, hh + a, SCR_R + a);
+    sh.holes.push(ho);
+    const g = new THREE.ShapeGeometry(sh, 10);
+    const p = g.attributes.position, n = p.count;
+    if (o.shade) { const c = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const t = (-p.getX(i) / hw + p.getY(i) / hh) * 0.5, k = 1 + o.shade * t; c[i * 3] = c[i * 3 + 1] = c[i * 3 + 2] = k; } g.setAttribute('color', new THREE.BufferAttribute(c, 3)); }
+    if (o.grain) { const uv = new Float32Array(n * 2); for (let i = 0; i < n; i++) { uv[i * 2] = p.getX(i) / 0.35; uv[i * 2 + 1] = p.getY(i) / 0.05; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); }
+    const m = new THREE.MeshBasicMaterial({ color, map: o.grain || null, vertexColors: !!o.shade, toneMapped: false, depthTest: false, depthWrite: false, transparent: false, opacity: o.alpha != null ? o.alpha : 1 });
+    if (o.additive) m.blending = THREE.AdditiveBlending;
+    else if (o.alpha != null) { m.blending = THREE.CustomBlending; m.blendSrc = THREE.SrcAlphaFactor; m.blendDst = THREE.OneMinusSrcAlphaFactor; m.blendEquation = THREE.AddEquation; }
+    m.userData.op0 = m.opacity;
+    const mesh = new THREE.Mesh(g, m); mesh.name = name; mesh.renderOrder = -0.9; mesh.raycast = () => {}; grp.add(mesh); return mesh;
+  };
+  const grain = canvasTex(256, 64, (g, w, h) => {   // faint horizontal wood streaks, mean ~0.9 so the colour stays the wood colour
+    g.fillStyle = '#e6e6e6'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) { const y = Math.random() * h, l = 30 + Math.random() * 160, x = Math.random() * w, v = 150 + Math.random() * 90 | 0; g.strokeStyle = `rgba(${v},${v},${v},0.45)`; g.lineWidth = 0.6 + Math.random() * 1.4; g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + l * 0.3, y + 1.5, x + l * 0.7, y - 1.5, x + l, y); g.stroke(); }
+  }, true, true);
+  ring('frame-lip', 0, 0.004, 0xb08d4a, { shade: -0.25 });                    // brass lip against the glass
+  ring('frame-bevel-in', 0.004, 0.008, 0x7a5030, { shade: -0.5 });             // inner slope, lit from the bottom right
+  ring('frame-wood', 0.008, 0.020, 0x6b4427, { grain });                       // aged wood body
+  ring('frame-bevel-out', 0.020, 0.023, 0x8a5c33, { shade: 0.5 });             // outer rim, catch-light top left
+  ring('frame-inner-shadow-1', -0.0035, 0, 0x000000, { alpha: 0.22 });         // soft inset shadow laid over the glass edge
+  ring('frame-inner-shadow-2', -0.007, 0, 0x000000, { alpha: 0.2 });
+  ring('frame-inner-shadow-3', -0.011, 0, 0x000000, { alpha: 0.16 });
+  ring('frame-warm-rim', -0.0025, 0, 0xff9a4a, { additive: true, alpha: 0.2 }); // faint warm glow where glass meets brass
+  return grp;
+}
 function buildTV(tex) {
   const root = new THREE.Group(); root.name = 'photo-tv';
   const fade = [];     // { m, c0, env0, op0, kind }
@@ -618,7 +654,7 @@ export async function mountPhotoTV(opts) {
   // camera-locked far behind the scene, drawn right after the floor and before the guitar / amp / title.
   const PANEL = qs.get('panel') !== '0';
   S.mode = PANEL ? 'panel' : 'tv';
-  let panel = null, panelGlowM = null;
+  let panel = null, panelGlowM = null, panelFrameMats = [];
   if (PANEL) {
     tv.root.traverse(o => { if ((o.isMesh || o.isSprite) && o !== tv.screen) o.visible = false; });
     tv.meshes.length = 0; tv.meshes.push(tv.screen);
@@ -628,6 +664,8 @@ export async function mountPhotoTV(opts) {
     tv.screen.material.depthTest = false; tv.screen.material.depthWrite = false; tv.screen.renderOrder = -1;
     panelGlowM = new THREE.MeshBasicMaterial({ map: panelGlowTexture(), color: new THREE.Color(1.0, 0.72, 0.42), blending: THREE.AdditiveBlending, transparent: false, depthTest: false, depthWrite: false, toneMapped: false, opacity: 0 });
     const glow = new THREE.Mesh(new THREE.PlaneGeometry(SCR_W * 1.3, SCR_H * 1.42), panelGlowM); glow.renderOrder = -1.5; glow.position.z = -0.01; panel.add(glow);
+    glow.scale.set(1.07, 1.07, 1);   // border job: the halo now starts at the frame's outer edge
+    const panelFrame = buildPanelFrame(); panel.add(panelFrame); panelFrameMats = []; panelFrame.traverse(o => { if (o.isMesh) panelFrameMats.push(o.material); });
     const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
     const offE = new THREE.Euler(), offQ = new THREE.Quaternion();
     // Polish (Blake t405u "the panel should join the spinning background"): the panel is posed ONCE per frame against a fixed
@@ -726,6 +764,7 @@ export async function mountPhotoTV(opts) {
       else { if (e.c0) e.m.color.copy(e.c0).multiplyScalar(k); if (e.env0 !== undefined) e.m.envMapIntensity = e.env0 * k; if (e.em0) e.m.emissiveIntensity = e.em0 * k; }
     }
     U.uFade.value = k * (panelGlowM ? 0.72 : 1); fadeK = k; if (panelGlowM) panelGlowM.opacity = 0.42 * k;
+    for (const m of panelFrameMats) { if (!m.userData.c0) m.userData.c0 = m.color.clone(); m.opacity = m.userData.op0 * k; m.color.copy(m.userData.c0); if (m.blending === THREE.NormalBlending) m.color.multiplyScalar(k); }
   };
   let fadeK = 0; setFade(0);
 
