@@ -18,14 +18,15 @@ function startEditor() {
   const css = document.createElement('style');
   css.textContent = `
     body.le-edit, html.le-edit { overflow: hidden !important; }
-    #le-overlay{position:fixed;inset:0;z-index:40;touch-action:none;cursor:default;background:transparent}
+    #le-overlay{position:fixed;inset:0;z-index:40;touch-action:none;cursor:default;background:transparent;--le-k:1;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     #le-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
     #le-svg path{fill:rgba(240,200,120,.10);stroke:#f0c878;stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
     #le-svg path.halo{fill:none;stroke:rgba(0,0,0,.55);stroke-width:4}
     #le-svg line{stroke:#f0c878;stroke-width:1.5}
-    .le-h{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;background:#f0c878;border:2px solid #1a1208;border-radius:50%;touch-action:none;z-index:2}
-    .le-h::after{content:"";position:absolute;inset:-9px}
-    .le-h.rot{background:#1a1208;border-color:#f0c878}
+    /* handles are 44 screen px (--le-k = 1 / chrome scale of this iframe) so a finger can hit them; the drawn dot is smaller */
+    .le-h{position:absolute;width:calc(44px*var(--le-k));height:calc(44px*var(--le-k));margin:calc(-22px*var(--le-k)) 0 0 calc(-22px*var(--le-k));border:0;border-radius:50%;touch-action:none;z-index:2;
+      background:radial-gradient(circle,#f0c878 0 calc(9px*var(--le-k)),#1a1208 calc(9px*var(--le-k)) calc(11px*var(--le-k)),transparent calc(11.5px*var(--le-k)))}
+    .le-h.rot{background:radial-gradient(circle,#1a1208 0 calc(9px*var(--le-k)),#f0c878 calc(9px*var(--le-k)) calc(11px*var(--le-k)),transparent calc(11.5px*var(--le-k)))}
     #le-tag{position:absolute;font:12px/1.2 "Zuniga Mission",sans-serif;letter-spacing:.06em;color:#1a1208;background:#f0c878;padding:3px 8px;white-space:nowrap;pointer-events:none;transform:translateY(-100%)}
     body[data-edit="1"] #zg-explore, body[data-edit="1"] #zg-root { pointer-events: none !important; }
   `;
@@ -215,20 +216,29 @@ function startEditor() {
   }
 
   // ---- drawing ----
+  // The chrome shows this iframe scaled down (CSS transform). k = 1 / that scale, so "44 px" below means 44 px on the glass.
+  let lastK = 1;
+  function chromeK() {
+    try { const f = window.frameElement; if (f && innerWidth) { const w = f.getBoundingClientRect().width; if (w > 0) return Math.round(Math.min(5, Math.max(1, innerWidth / w)) * 1000) / 1000; } } catch (_) { }
+    return 1;
+  }
   function draw() {
     const s = selected && selected !== 'camera' ? shape(selected) : null;
     if (!s) { mainP.removeAttribute('d'); haloP.removeAttribute('d'); rotLine.setAttribute('x1', 0); rotLine.setAttribute('x2', 0); rotLine.setAttribute('y1', 0); rotLine.setAttribute('y2', 0); tag.hidden = true; Object.values(handles).forEach((h) => { h.hidden = true; }); return; }
     const d = 'M' + s.poly.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
     mainP.setAttribute('d', d); haloP.setAttribute('d', d);
-    const HM = 18;   // handles stay on-screen (inset) so they are always visible and hittable
+    const k = chromeK(); if (k !== lastK) { lastK = k; overlay.style.setProperty('--le-k', String(k)); }
+    const HM = Math.max(18, 22 * k);   // handles stay fully on-screen (inset >= half of the 44 px box) so they are always visible and hittable
     const place = (el, p) => { el.hidden = false; el.style.left = Math.max(HM, Math.min(innerWidth - HM, p[0])) + 'px'; el.style.top = Math.max(HM, Math.min(innerHeight - HM, p[1])) + 'px'; };
     place(handles.tl, extreme(s.poly, -1, -1)); place(handles.tr, extreme(s.poly, 1, -1));
     place(handles.bl, extreme(s.poly, -1, 1)); place(handles.br, extreme(s.poly, 1, 1));
     const top = extreme(s.poly, 0, -1);
-    tag.hidden = false; tag.textContent = LABELS[selected] || selected; tag.style.left = top[0] + 'px'; tag.style.top = (top[1] - (ROTATABLE[selected] ? 40 : 8)) + 'px';
+    tag.hidden = false; tag.textContent = LABELS[selected] || selected; tag.style.left = top[0] + 'px'; tag.style.top = (top[1] - (ROTATABLE[selected] ? 52 * k : 8)) + 'px';
     if (ROTATABLE[selected]) {
       const c = centroid(s.poly); let vx = top[0] - c[0], vy = top[1] - c[1]; const L = Math.hypot(vx, vy) || 1; vx /= L; vy /= L;
-      const rp = [top[0] + vx * 30, top[1] + vy * 30];
+      // keep the 44 px rotate handle clear of the corner handles: 48 screen px outside the top vertex, or (no room above) inside the shape
+      let rp = [top[0] + vx * 48 * k, top[1] + vy * 48 * k];
+      if (rp[1] < HM || rp[0] < HM || rp[0] > innerWidth - HM || rp[1] > innerHeight - HM) rp = [top[0] - vx * 48 * k, top[1] - vy * 48 * k];
       place(handles.rot, rp);
       rotLine.setAttribute('x1', top[0]); rotLine.setAttribute('y1', top[1]); rotLine.setAttribute('x2', rp[0]); rotLine.setAttribute('y2', rp[1]);
     } else { handles.rot.hidden = true; rotLine.setAttribute('x2', 0); rotLine.setAttribute('y2', 0); rotLine.setAttribute('x1', 0); rotLine.setAttribute('y1', 0); }
@@ -294,7 +304,10 @@ function startEditor() {
     const sel = selected && selected !== 'camera' ? selected : null;
     if (pointers.size === 2) {
       const pts = [...pointers.values()], dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      if (sel) { ensureItem(sel); step(true); const it = R.active()[sel] || {}; dragging = { kind: 'pinch', dist: dist || 1, startS: scaleOf(sel, it), item: sel, startW: it.w, startH: it.h }; }
+      if (sel) {
+        ensureItem(sel); step(true); const it = R.active()[sel] || {}, rk = ROTATABLE[sel];
+        dragging = { kind: 'pinch', dist: dist || 1, startS: scaleOf(sel, it), item: sel, startW: it.w, startH: it.h, ang: Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x), rkey: rk, rbase: rk && it[rk] != null ? it[rk] : 0, twist: false };
+      }
       return;
     }
     const handle = e.target && e.target.dataset && e.target.dataset.h;
@@ -305,7 +318,7 @@ function startEditor() {
       else dragging = { kind: 'resize', item: sel, c, d0: Math.hypot(e.clientX - c[0], e.clientY - c[1]) || 40, startS: scaleOf(sel, it), startW: it.w, startH: it.h };
       e.preventDefault(); return;
     }
-    const id = pick(e.clientX, e.clientY, e.pointerType === 'touch' ? 12 : 0);
+    const id = pick(e.clientX, e.clientY, e.pointerType === 'touch' ? 12 * lastK : 0);
     if (!id) { if (selected !== 'camera') select(null); dragging = null; return; }
     if (id !== selected) select(id);
     ensureItem(id); step(true);
@@ -320,6 +333,8 @@ function startEditor() {
     const id = dragging.item;
     if (dragging.kind === 'pinch' && pointers.size >= 2) {
       const pts = [...pointers.values()], dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      let da = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) - dragging.ang; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+      if (dragging.rkey && (dragging.twist || Math.abs(da) > 0.1)) { dragging.twist = true; setKeys(id, { [dragging.rkey]: dragging.rkey === 'ry' ? dragging.rbase + da : dragging.rbase - da }); }   // two-finger twist (same sign as the rotate handle)
       return applyScale(id, dragging.startS, dist / (dragging.dist || 1), dragging.startW, dragging.startH);
     }
     if (dragging.kind === 'resize') {

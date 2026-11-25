@@ -31,7 +31,7 @@ h1 { margin: 0 10px 0 0; font-size: 16px; font-weight: 400; letter-spacing: .1em
 .chip.on { background: var(--gold); color: #1a1208; border-color: var(--gold); }
 #status { margin: 6px 0 0; font-size: 13px; color: var(--dim); letter-spacing: .03em; }
 #status.ok { color: var(--gold); }
-#stage-wrap { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden; background: #050506; padding: 8px; }
+#stage-wrap { touch-action: none; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden; background: #050506; padding: 8px; }
 #stage-clip { overflow: hidden; background: #000; box-shadow: 0 0 0 1px rgba(232,196,122,.35), 0 12px 40px rgba(0,0,0,.55); }
 #stage { border: 0; display: block; background: #000; transform-origin: 0 0; }
 
@@ -50,4 +50,43 @@ h1 { margin: 0 10px 0 0; font-size: 16px; font-weight: 400; letter-spacing: .1em
   .seg button { min-width: 74px; }
   #inspector { max-height: 44vh; }
   #fields { grid-template-columns: 1fr; }
+}
+
+/* ---- phone chrome: body.compact is set by editor/ui.js for (max-width:700px), (max-height:500px) ----
+   Controls move into #sheet. #tabbar is a flex sibling under the stage; #sheet-body opens upward over the stage only when expanded. */
+.compact-only { display: none; }
+body.compact .compact-only { display: block; }
+body.compact { --tab-h: 52px; }
+body.compact #bar { display: flex; align-items: center; gap: 10px; padding: 2px 10px; min-height: 30px; }
+body.compact #bar-top { flex: 0 0 auto; margin: 0; }
+body.compact h1 { margin: 0; font-size: 13px; letter-spacing: .08em; }
+body.compact .hint { display: none !important; }
+body.compact #status { margin: 0; flex: 1 1 auto; min-width: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.compact #stage-wrap { padding: 4px; }
+body.compact #sheet { display: block; position: relative; flex: 0 0 auto; background: var(--panel); border-top: 1px solid var(--line); z-index: 5; }
+#tabbar { display: flex; align-items: center; gap: 6px; padding: 4px 6px; min-height: var(--tab-h, 52px); }
+#tabbar #mode-seg { display: contents; }
+#tabbar .seg button, #tabbar .tab { flex: 1 1 0; min-width: 0; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.06); color: var(--ink); font: inherit; font-size: 15px; letter-spacing: .06em; }
+#tabbar #mode-seg button { flex: 1 1 0; }
+#tabbar button.on, #tabbar button[aria-expanded="true"] { background: var(--gold); color: #1a1208; border-color: var(--gold); }
+#tabbar button[aria-expanded="true"]::after { content: " \25BE"; }
+#tabbar button.on[aria-expanded="false"]::after { content: " \25B4"; }
+#sheet-body { position: absolute; left: 0; right: 0; bottom: 100%; max-height: min(58vh, calc(100vh - 120px)); max-height: min(58dvh, calc(100dvh - 120px)); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: var(--panel); border-top: 1px solid var(--gold); padding: 8px 10px 10px; box-shadow: 0 -10px 30px rgba(0,0,0,.5); overscroll-behavior: contain; }
+#sheet-body[hidden] { display: none; }
+.pane[hidden] { display: none; }
+body.compact #pane-layout > * + * { margin-top: 8px; }
+body.compact #pane-layout .row { margin-top: 8px; }
+body.compact #pane-layout .seg { align-self: flex-start; }
+body.compact #pane-layout .seg button { min-width: 0; flex: 1 1 0; }
+body.compact #pane-layout #view-seg { display: flex; }
+body.compact #inspector { max-height: none; overflow: visible; border: 0; padding: 0; background: transparent; }
+body.compact .fld { min-height: 44px; grid-template-columns: 78px 1fr 70px; }
+body.compact .fld input[type=range] { height: 44px; }
+body.compact .fld input[type=number] { min-height: 40px; font-size: 16px; }
+#json-view { width: 100%; height: min(34vh, 260px); background: rgba(255,255,255,.05); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: 12px; line-height: 1.35; resize: none; -webkit-user-select: text; user-select: text; }
+#json-actions { margin-top: 8px; }
+@media (max-height: 500px) {
+  #json-view { height: 110px; }
+  body.compact #sheet-body { max-height: min(62vh, 240px); max-height: min(62dvh, 240px); }
 }

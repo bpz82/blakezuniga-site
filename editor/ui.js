@@ -7,8 +7,10 @@ import { FIELDS, LABELS, ORDER } from './schema.js';
 const VIEWS = { desktop: [1280, 800], phone: [393, 852] };
 const $ = (id) => document.getElementById(id);
 const iframe = $('stage'), clip = $('stage-clip'), chips = $('chips'), fields = $('fields'), inspector = $('inspector'), status = $('status');
+const jsonView = $('json-view');
 const btnDesk = $('btn-desk'), btnPhone = $('btn-phone'), btnUndo = $('btn-undo'), btnRedo = $('btn-redo'), btnSnap = $('btn-snap');
 
+const mqCompact = matchMedia('(max-width: 700px), (max-height: 500px)');
 let view = 'desktop', selected = null, snapOn = false;
 let state = { ready: false, values: null, doc: { version: 1, desktop: {}, phone: {} } };
 
@@ -119,21 +121,40 @@ window.addEventListener('message', (e) => {
   if (m.selected !== undefined && m.selected !== selected) { selected = m.selected; renderChips(); renderFields(); }
   else if (m.values) refreshFields();
   if (m.ready && !state.ready) { state.ready = true; say('Ready. Drag things into place.', true); }
-  window.__editorChrome = { view, selected, ready: state.ready, doc: state.doc, values: state.values, snap: snapOn };
+  if (sheetPane === 'json' && document.activeElement !== jsonView) jsonView.value = currentJSON();
+  window.__editorChrome = Object.assign(window.__editorChrome || {}, { view, selected, ready: state.ready, doc: state.doc, values: state.values, snap: snapOn });
 });
 
 // ---- toolbar ----
 const currentJSON = () => JSON.stringify(state.doc || { version: 1, desktop: {}, phone: {} }, null, 2);
 
-$('btn-copy').addEventListener('click', async () => {
+// Copy JSON must work on iOS Safari, where the user gesture is gone after any await. So everything that needs the gesture runs
+// synchronously inside the click: the async Clipboard API is started (not awaited) and a selected-textarea execCommand('copy') runs
+// right away. If neither works, the JSON pane's visible textarea is selected so the user can long-press > Copy, and Download still works.
+function legacyCopy(text) {
+  const vis = jsonView.offsetParent !== null;
+  const ta = vis ? jsonView : document.createElement('textarea');
+  if (!vis) { ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px'; document.body.appendChild(ta); }
+  ta.value = text;
+  try { ta.focus({ preventScroll: true }); } catch (_) { }
+  ta.select(); try { ta.setSelectionRange(0, text.length); } catch (_) { }
+  let ok = false; try { ok = !!document.execCommand('copy'); } catch (_) { }
+  if (!vis) ta.remove();
+  return ok;
+}
+$('btn-copy').addEventListener('click', () => {
   const text = currentJSON();
-  try { await navigator.clipboard.writeText(text); say('JSON copied. Send it back to apply it on the site.', true); }
-  catch (_) {
-    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); say('JSON copied. Send it back to apply it on the site.', true); } catch (e2) { say('Copy failed. Use Download instead.'); }
-    ta.remove();
-  }
   window.__editorChrome = Object.assign(window.__editorChrome || {}, { lastCopied: text });
+  jsonView.value = text;
+  const okMsg = 'JSON copied. Send it back to apply it on the site.';
+  let p = null; try { p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(text) : null; } catch (_) { p = null; }
+  const manual = () => {
+    if (mqCompact.matches) { openSheet('json'); jsonView.focus({ preventScroll: true }); jsonView.select(); try { jsonView.setSelectionRange(0, text.length); } catch (_) { } say('Could not copy silently. The JSON is selected: long-press it and tap Copy, or use Download.'); }
+    else say('Copy failed. Use Download instead.');
+  };
+  if (legacyCopy(text)) { say(okMsg, true); if (p) p.then(null, () => { }); }
+  else if (p) p.then(() => say(okMsg, true), manual);
+  else manual();
 });
 $('btn-dl').addEventListener('click', () => {
   const a = document.createElement('a');
@@ -164,4 +185,52 @@ addEventListener('keydown', (e) => {
 // the Photos tab changes the stage's size; re-fit when it flips back
 $('btn-mode-layout').addEventListener('click', () => setTimeout(sizeFrame, 50));
 
-setView('desktop', true);
+// ---- phone chrome: tabs (Layout / Photos / JSON) + collapsible bottom sheet ----
+// Compact mode (narrow or short screens) moves the controls into #sheet. Desktop keeps the toolbar header + inspector below the stage.
+const sheet = $('sheet'), sheetBody = $('sheet-body'), tabbar = $('tabbar'), btnJson = $('btn-json'), paneLayout = $('pane-layout'), paneJson = $('pane-json');
+const btnLayoutTab = $('btn-mode-layout'), btnPhotosTab = $('btn-mode-photos');
+let sheetPane = null;   // null = collapsed, 'layout' | 'json'
+let modePhotos = false;
+
+function openSheet(pane) {
+  sheetPane = pane || null;
+  sheetBody.hidden = !sheetPane; paneLayout.hidden = sheetPane !== 'layout'; paneJson.hidden = sheetPane !== 'json';
+  btnLayoutTab.setAttribute('aria-expanded', String(sheetPane === 'layout')); btnJson.setAttribute('aria-expanded', String(sheetPane === 'json'));
+  btnJson.setAttribute('aria-pressed', String(sheetPane === 'json')); btnJson.classList.toggle('on', sheetPane === 'json');
+  if (sheetPane === 'json') jsonView.value = currentJSON();
+}
+function placeChrome() {
+  const compact = mqCompact.matches, bar = $('bar'), tools = $('tools'), chipsEl = $('chips'), modeSeg = $('mode-seg'), viewSeg = $('view-seg'), top = $('bar-top');
+  document.body.classList.toggle('compact', compact);
+  if (compact) {
+    tabbar.insertBefore(modeSeg, btnJson);
+    paneLayout.append(tools, viewSeg, chipsEl, inspector);
+    $('json-actions').prepend($('btn-copy'), $('btn-dl'));
+    if (!paneLayout.dataset.init) { paneLayout.dataset.init = '1'; openSheet(null); }
+  } else {
+    top.insertBefore(modeSeg, top.children[1] || null); top.insertBefore(viewSeg, $('bar-top').querySelector('.hint'));
+    bar.append(tools, chipsEl, status);
+    tools.insertBefore($('btn-copy'), $('btn-reset')); tools.insertBefore($('btn-dl'), $('btn-reset'));
+    document.body.insertBefore(inspector, $('photo-manager'));
+    openSheet(null);
+  }
+  setTimeout(sizeFrame, 30);
+}
+mqCompact.addEventListener ? mqCompact.addEventListener('change', placeChrome) : mqCompact.addListener(placeChrome);
+// capture: read the mode before photo-manager.js flips it
+btnLayoutTab.addEventListener('click', () => {
+  if (!mqCompact.matches) return;
+  const wasPhotos = document.body.classList.contains('photos-mode') || modePhotos;
+  modePhotos = false;
+  openSheet(wasPhotos || sheetPane === 'layout' ? null : 'layout');
+}, true);
+btnPhotosTab.addEventListener('click', () => { modePhotos = true; if (mqCompact.matches) openSheet(null); }, true);
+btnJson.addEventListener('click', () => {
+  if (document.body.classList.contains('photos-mode')) { btnLayoutTab.click(); modePhotos = false; openSheet('json'); return; }
+  openSheet(sheetPane === 'json' ? null : 'json');
+});
+$('btn-json-select').addEventListener('click', () => { jsonView.value = currentJSON(); jsonView.focus({ preventScroll: true }); jsonView.select(); try { jsonView.setSelectionRange(0, jsonView.value.length); } catch (_) { } });
+// picking a chip or touching the stage in the scene should keep the sheet usable but never block the stage
+placeChrome();
+
+setView(mqCompact.matches ? 'phone' : 'desktop', true);

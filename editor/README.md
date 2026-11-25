@@ -34,3 +34,10 @@ Hit-test = point-in-polygon (+12 px edge tolerance for touch). Selected chip kee
 ## Extend
 Add an item: outline in `outlines.js` (`outlineOf` + `ITEM_IDS`), seed in `scene.js ensureItem`, move/scale branches in `onMove`/`applyScale`, fields in `schema.js`, chip comes from `ORDER`.
 Photos tab: `../layout/photo-manager.{js,css}` hooks only `#btn-mode-layout`, `#btn-mode-photos`, `#photo-manager`, `.layout-only`, `.photos-only`, `#stage-wrap`. Keep those.
+
+## Phone / touch (editor-v3)
+- Chrome is responsive: `body.compact` (set by `ui.js` for `(max-width:700px), (max-height:500px)`) moves the tools, view switch, chips and sliders into a bottom sheet. A 52 px tab bar (Layout / Photos / JSON) is a flex sibling under the stage, so a collapsed sheet never covers it; an expanded sheet opens upward over the stage and the same tab collapses it. Desktop keeps the toolbar header and the inspector under the stage. `placeChrome()` re-parents the nodes (no duplicate IDs). Compact starts in the Phone view.
+- JSON tab: read-only, selectable textarea of the current doc plus Copy JSON / Download / Select all.
+- Copy JSON (iOS-safe): everything that needs the user gesture runs synchronously in the click (`navigator.clipboard.writeText` started without await, plus textarea `execCommand('copy')`). If both fail the JSON tab opens with the text selected. `window.__editorChrome.lastCopied` is set synchronously.
+- Gestures (pointer events, `touch-action:none` on overlay and stage): one finger drags (Explore/tiles write x/y, panel/title cx/cy, 3D items x/y/z); corner handle resizes (panel w/h together, items `s`); two fingers pinch-scale and twist-rotate (`rz` for panel/title, `ry` for guitar/amp, 0.1 rad dead zone); rotate handle as before. Handle hits win over shape hits.
+- Handles are 44 screen px: the iframe computes its on-screen scale (`frameElement` rect) and sets `--le-k = 1/scale`; box size, edge clamp (`max(18, 22*k)` px) and touch hit tolerance all use it, so a handle is fully on-screen and hittable at any stage scale.
