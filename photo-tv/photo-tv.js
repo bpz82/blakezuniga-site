@@ -8,6 +8,7 @@
    (window.__dbg, window.__ampHandle, window.__amp8). No THREE lights are created. */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { neonLevel, NEON_DELAY_MS } from './neon-flicker.js';
 
 const now = () => Math.round(performance.now());
 const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -40,7 +41,8 @@ function glowTexture() {
   }, false, false);
 }
 /* the "Precious Memories" sign, look #4 (Blake t416u): a hand-lettered stained walnut plaque, gold-leaf letters in Zuniga Mission
-   v3, a thin cream pinstripe just inside the edge. Painted, not lit: no glow, no halo, no flicker. Two layers, drawn once:
+   v3, a thin cream pinstripe just inside the edge. Painted (round 2: plus a neon layer that stays off until 13 s after the panel
+   is running, then flickers; see neon-flicker.js). Layers, drawn once:
    a grey wood-grain map for the walnut board (tinted by the board material) + the gold lettering / pinstripe on transparent. */
 const NEON_CW = 1024, NEON_CH = 192, SIGN_TEXT_W = 800;
 const SIGN_WALNUT = 0x6a4126;   // stained walnut (sRGB), multiplied by the grain map
@@ -96,6 +98,18 @@ function signTextures(fontFamily) {
       }
     }
   }, true, false);
+  // round 2 (Blake t418u): the neon layer. The same lettering as a lit warm tube (bright core + soft halo), drawn ADDITIVELY over the
+  // gold leaf. Its opacity is 0 until 13 s after the panel is running, so before that the sign is exactly the painted look #4.
+  const glow = canvasTex(NEON_CW, NEON_CH, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    let px = 120; g.font = px + 'px ' + family;
+    const tw = g.measureText(NEON_TEXT).width || 1; px = Math.min(104, Math.floor(px * SIGN_TEXT_W / tw));
+    g.font = px + 'px ' + family; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    const tx = w / 2, ty = h / 2 + px * 0.04;
+    g.shadowColor = 'rgba(255,140,50,0.95)'; g.shadowBlur = 26; g.fillStyle = 'rgba(255,170,80,0.55)'; g.fillText(NEON_TEXT, tx, ty);   // wide halo
+    g.shadowColor = 'rgba(255,190,110,1)'; g.shadowBlur = 9; g.fillStyle = 'rgba(255,222,160,0.9)'; g.fillText(NEON_TEXT, tx, ty);    // hot tube core
+    g.shadowBlur = 0;
+  }, true, false);
   // tight ink box of the painted marks (alpha scan, canvas px) so neonRect() measures the sign, not the empty canvas
   let ink = { x0: 60, y0: 40, x1: NEON_CW - 60, y1: NEON_CH - 40 };
   try {
@@ -104,7 +118,7 @@ function signTextures(fontFamily) {
     for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
     if (x1 > x0 && y1 > y0) ink = { x0: Math.max(0, x0 - 4), y0: Math.max(0, y0 - 4), x1: Math.min(c.width, x1 + 4), y1: Math.min(c.height, y1 + 4) };
   } catch (_) { }
-  return { board, letters, ink };
+  return { board, letters, glow, ink };
 }
 function signBoardGeo(w, h) {   // the walnut board: a slightly rounded slab, uv 0..1 across it (ShapeGeometry uvs are raw x/y)
   const g = new THREE.ShapeGeometry(rrShape(w / 2, h / 2, h * 0.1), 6), p = g.attributes.position, uv = g.attributes.uv;
@@ -333,6 +347,10 @@ function buildTV(tex) {
     blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendEquation: THREE.AddEquation }), 't');
   const haloMesh = add(signBoardGeo(SIGN.w, ph), boardM, 0, SIGN.y, STAND ? PFZ + 0.007 : 0.1265, ped); haloMesh.renderOrder = 6; haloMesh.name = 'sign-plaque';
   const coreMesh = add(new THREE.PlaneGeometry(SIGN.w, ph), letterM, 0, SIGN.y, STAND ? PFZ + 0.0085 : 0.1278, ped); coreMesh.renderOrder = 7; coreMesh.name = 'sign-lettering';
+  // round 2: the neon glow over the lettering (additive, opacity driven by neon-flicker.js; not in the fade list, the tick owns it)
+  const neonGlowM = new THREE.MeshBasicMaterial({ map: tex.signGlow, color: new THREE.Color(1.0, 0.8, 0.55), transparent: true, opacity: 0, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending });
+  const glowMesh = tex.signGlow ? add(new THREE.PlaneGeometry(SIGN.w, ph), neonGlowM, 0, SIGN.y, STAND ? PFZ + 0.0095 : 0.129, ped) : null;
+  if (glowMesh) { glowMesh.renderOrder = 8; glowMesh.name = 'sign-neon-glow'; glowMesh.raycast = () => { }; }
 
   /* ----- legs: 4 tapered brass, splayed, ball feet ----- */
   const legs = [];
@@ -464,9 +482,9 @@ function buildTV(tex) {
   tubeAt(0.043, 0.0235, 0.065, false, GS);
   tubeAt(0.128, 0.0235, 0.065, false, GS);
   tubeAt(0.215, 0.036, 0.108, true, GT);
-  if (BOXY) { ped.position.y = 0; haloMesh.position.set(0, CAB.neonY, CAB.fz + 0.006); coreMesh.position.set(0, CAB.neonY, CAB.fz + 0.0075); }
+  if (BOXY) { ped.position.y = 0; haloMesh.position.set(0, CAB.neonY, CAB.fz + 0.006); coreMesh.position.set(0, CAB.neonY, CAB.fz + 0.0075); if (glowMesh) glowMesh.position.set(0, CAB.neonY, CAB.fz + 0.0085); }
   glowM.opacity = 0;
-  return { root, fade, meshes, screen, screenU, filM, glowM, sprites, signBoard: haloMesh, neonMesh: coreMesh, ped };
+  return { root, fade, meshes, screen, screenU, filM, glowM, sprites, signBoard: haloMesh, neonMesh: coreMesh, neonGlow: glowMesh, ped };
 }
 
 /* ---------- placement (photo-tv B5b, Blake t320u/t325u): a floor spot LEFT of both the amp and the guitar, the tv turned in toward
@@ -701,7 +719,7 @@ export async function mountPhotoTV(opts) {
   const fontOk = await ensureFont();
   S.neon.font = fontOk ? NEON_FONT : 'fallback';
   const nt = signTextures(NEON_FONT);
-  const tex = { grille: grilleTexture(), glow: glowTexture(), signBoard: nt.board, signLetters: nt.letters };
+  const tex = { grille: grilleTexture(), glow: glowTexture(), signBoard: nt.board, signLetters: nt.letters, signGlow: nt.glow };
   const ink = nt.ink;
   const tv = buildTV(tex);
   // Blake 9:50: the home scene shows a large photo PANEL in the dark background (behind the guitar and amp) instead of the TV
@@ -723,6 +741,21 @@ export async function mountPhotoTV(opts) {
     const panelFrame = buildPanelFrame(); panel.add(panelFrame); panelFrameMats = []; panelFrame.traverse(o => { if (o.isMesh) panelFrameMats.push(o.material); });
     const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
     const offE = new THREE.Euler(), offQ = new THREE.Quaternion();
+    const DESK_TILT = 12 * Math.PI / 180, tiltQ = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0), gW = new THREE.Vector3();
+    // round 2: the sign (board / lettering / glow, all SIGN.w x ph planes at scale s) kept inside the glass rounded rect inset by
+    // SIGN_INSET (panel units; the frame's brass lip starts at the glass edge). Shrinks only if it cannot fit; then clamps the
+    // centre; then, in a rounded corner, moves it the shortest way (toward the corner's arc centre) until the corner is inside.
+    const SIGN_INSET = 0.016, PHS = SIGN.w * NEON_CH / NEON_CW;
+    const insetSign = (x, y, s, rz) => {
+      const HW = SCR_W / 2 - SIGN_INSET, HH = SCR_H / 2 - SIGN_INSET, RR = SCR_R - SIGN_INSET, ca = Math.abs(Math.cos(rz)), sa = Math.abs(Math.sin(rz));
+      const ext = (k) => [(SIGN.w * k / 2) * ca + (PHS * k / 2) * sa, (SIGN.w * k / 2) * sa + (PHS * k / 2) * ca];
+      let [ex, ey] = ext(s);
+      const f = Math.min(1, HW / ex, HH / ey); if (f < 1) { s *= f * 0.999; [ex, ey] = ext(s); }
+      x = Math.max(-HW + ex, Math.min(HW - ex, x)); y = Math.max(-HH + ey, Math.min(HH - ey, y));
+      const qx = Math.abs(x) + ex - (HW - RR), qy = Math.abs(y) + ey - (HH - RR), d = Math.hypot(qx, qy);
+      if (qx > 0 && qy > 0 && d > RR) { const k = 1 - RR / d; x -= Math.sign(x) * qx * k; y -= Math.sign(y) * qy * k; }
+      return { x, y, s };
+    };
     // Polish (Blake t405u "the panel should join the spinning background"): the panel is posed ONCE per frame against a fixed
     // REFERENCE home camera (layout.json camera yaw / pitch on the live orbit centre and radius), not the live camera. So at the
     // saved pose (the 17 s hold, and the editor) it sits exactly where layout.json says (same cx, cy, w, h, depth, rz, ry mapping),
@@ -753,19 +786,29 @@ export async function mountPhotoTV(opts) {
       const cy = P.cy != null ? P.cy : (ph ? -0.01 : 0.0), cx = P.cx != null ? P.cx : 0;
       // Pivot follows the camera; tilt/turn live on the child so a later camera-quat copy cannot overwrite them.
       lock.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * cy).addScaledVector(rt, Wv * cx);
-      if (N && N.lx != null) {
+      {
+        // saved (layout.json lx / ly / s / rz) or default spot, then round 2 (Blake t418u "precious memories isnt touching the
+        // border of the panel"): kept inside the frame's inner edge (the glass rounded rect) with a clear SIGN_INSET gap
+        let sx, sy, sk, srz;
+        if (N && N.lx != null) { sx = N.lx * SCR_W; sy = N.ly * SCR_H; sk = N.s != null ? N.s : 1; srz = N.rz || 0; }
+        else { sx = ph ? SCR_W * 0.285 : SCR_W * 0.24; sy = SCR_H / 2; sk = ph ? 0.82 : 1; srz = 0; }   // Blake 10:18 default spot (desktop / phone)
+        const fit = insetSign(sx, sy, NS * sk, srz);
         for (const [m, ro, z] of neonParts) {
-          m.position.set(N.lx * SCR_W, N.ly * SCR_H, z); m.scale.setScalar(m.userData.s0 * (N.s != null ? N.s : 1));
-          if (N.rz) m.rotation.z = N.rz; else m.rotation.z = 0;
-          m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true;
+          m.position.set(fit.x, fit.y, z); m.scale.setScalar(m.userData.s0 * fit.s / NS); m.rotation.z = srz;
+          if (m.renderOrder !== (ph ? 50 + ro : ro) || m.material.transparent !== ph) { m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true; }
         }
-      } else {   // Blake 10:18: on phones the sign sits in the right corner of the top border, a bit smaller, drawn over the amp (never covered); desktop unchanged
-        for (const [m, ro, z] of neonParts) {
-          m.position.set(ph ? SCR_W * 0.285 : SCR_W * 0.24, SCR_H / 2, z); m.scale.setScalar(m.userData.s0 * (ph ? 0.82 : 1)); m.rotation.z = 0;
-          m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true;
-        }
+        S.neon.inset = fit;
       }
       lock.quaternion.copy(c.quaternion);
+      // round 2 (Blake t418u "on the desktop, the panel needs to tilt inward towards the guitar a little bit"). The saved Turn (ry,
+      // below) sits under the lock's non-uniform w/h scale (~500x in x/y, 1x in z), which squashes its depth ~500 times: the
+      // saved -17.8 deg showed as ~0.04 deg, i.e. flat. Desktop only: a RIGID turn of DESK_TILT toward the guitar on the lock
+      // itself (rotation applies after the scale), on top of the saved ry path (unchanged). Phones: no offset.
+      if (!ph) {
+        let side = cx >= 0 ? 1 : -1;   // the panel right of the guitar -> its right edge comes toward the camera
+        try { if (dbg.G) { dbg.G.getWorldPosition(gW).project(c); if (isFinite(gW.x)) side = 2 * cx >= gW.x ? 1 : -1; } } catch (_) { }
+        tiltQ.setFromAxisAngle(yAx, -side * DESK_TILT); lock.quaternion.multiply(tiltQ);
+      }
       if (P.w != null && P.h != null) lock.scale.set(w / SCR_W, h / SCR_H, 1); else lock.scale.setScalar(w / SCR_W);
       // Blake 11:20: Turn (ry) and Tilt (rx/rz) are the child's local rotation, applied after the camera lock.
       const ry = +P.ry || 0, rx = +P.rx || 0, rz = +P.rz || 0;
@@ -790,7 +833,7 @@ export async function mountPhotoTV(opts) {
     // t416u look #4: the walnut plaque (its own backing, so the old 0x050403 dark strip is gone) under the gold-leaf lettering.
     let neonPh = null; const neonParts = [];   // [mesh, desktop renderOrder, z]
     const NS = (SCR_W * 0.46) / SIGN.w;
-    for (const [m, ro, z] of [[tv.signBoard, -0.4, 0.01], [tv.neonMesh, -0.3, 0.02]]) {
+    for (const [m, ro, z] of [[tv.signBoard, -0.4, 0.01], [tv.neonMesh, -0.3, 0.02], [tv.neonGlow, -0.25, 0.025]]) {
       if (!m) continue; m.parent.remove(m); panel.add(m); m.visible = true; m.position.set(SCR_W * 0.24, SCR_H / 2, z); m.scale.setScalar(NS); m.renderOrder = ro;
       m.material.depthTest = false; m.material.depthWrite = false; m.material.needsUpdate = true; m.userData.s0 = NS; neonParts.push([m, ro, z]);
     }
@@ -859,7 +902,7 @@ export async function mountPhotoTV(opts) {
   try {
     if (panel) { panel.traverse(o => { o.layers.set(0); }); await Promise.race([renderer.compileAsync(panel, camera, scene), new Promise(r => setTimeout(r, 30000))]); panel.traverse(o => { o.layers.set(1); }); }
     await Promise.race([renderer.compileAsync(tv.root, camera, scene), new Promise(r => setTimeout(r, 30000))]);
-    for (const t of [tex.grille, tex.glow, tex.signBoard, tex.signLetters]) renderer.initTexture(t);
+    for (const t of [tex.grille, tex.glow, tex.signBoard, tex.signLetters, tex.signGlow]) if (t) renderer.initTexture(t);
   } catch (e) { console.warn('[photo-tv] precompile skipped', e); }
   await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
 
@@ -873,8 +916,10 @@ export async function mountPhotoTV(opts) {
   });
   setFade(1); S.shownT = now();
 
-  /* the sign is painted (look #4): it faded in with the panel above and stays steady. No ignition, no dip, no pulse. */
-  S.neon.state = 'on'; S.neon.onT = now(); S.neon.look = 'walnut-gold-leaf';
+  /* the sign is painted (look #4): it faded in with the panel above and stays the steady walnut + gold leaf. Round 2: 13 s after
+     the panel is running (S.poweredOnT, the CRT power-on done) the neon layer over the lettering ignites and then flickers on and
+     off now and then (neon-flicker.js; reduced motion: a soft fade-in, no flicker). Driven from the frame tick below. */
+  S.neon.state = 'on'; S.neon.onT = now(); S.neon.look = 'walnut-gold-leaf'; S.neon.delayMs = NEON_DELAY_MS; S.neon.glow = 0; S.neon.reduced = R;
 
   // frame loop (cheap: a handful of uniforms; no allocations)
   const sw = { on: false, t0: 0, next: null, swapped: false };
@@ -913,6 +958,12 @@ export async function mountPhotoTV(opts) {
       const fl = 1 + 0.05 * Math.sin(t * 0.0021) + 0.035 * Math.sin(t * 0.0067 + 1.3) + 0.02 * Math.sin(t * 0.017);
       tv.filM.emissiveIntensity = 6 * warm * fl * fadeK;
       tv.glowM.opacity = 0.42 * warm * fl * fadeK;
+    }
+    if (tv.neonGlow) {   // round 2: neon glow, 13 s after the panel is running (if it was already running, from that timestamp)
+      const runT = S.state === 'on' ? S.poweredOnT : null;
+      const lv = runT != null ? neonLevel(t - runT - NEON_DELAY_MS, R) : 0;
+      tv.neonGlow.material.opacity = lv * fadeK;
+      S.neon.glow = lv; S.neon.runT = runT;
     }
   };
   requestAnimationFrame(tick);

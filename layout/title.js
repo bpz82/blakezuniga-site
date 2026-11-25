@@ -29,32 +29,29 @@ function qApply(q, x, y, z, out) {   // rotate a unit axis by a quaternion witho
   return out;
 }
 
-// Always on top: once the intro reveal is done the letters (ZUNIGA + the "Folk Blues" child, they share one material) are drawn
-// after, and without a depth test against, the amp / guitar / panel, so nothing can hide them at any orbit angle. The billboard
-// placement is NOT moved. Stays transparent (opacity 1) so it lands in the transparent pass, which draws after all opaque
-// meshes and is sorted by renderOrder (title 1000 > everything else); depthWrite off so it punches no hole in later draws.
-// The tagline shadow stays depth-tested (it is a soft drop shadow, drawn under the letters at renderOrder 10).
-// Before the reveal is done the intro veil/fade (renderOrder 10, depthTest false) is left exactly as index.html built it.
-// Polish (Blake t405u):
-//  - "Folk Blues needs to pop up with ZUNIGA": the on-top treatment now also covers the intro (in / hold / down) in the home view.
-//    Before, during the intro the letters were depth-tested against the amp / guitar that sit (invisible) behind the black veil,
-//    so the lower line (Folk Blues) was cut out until zg-reveal-done. The veil is renderOrder 10 without a depth test; the
-//    letters at 1000 draw over it exactly as before, the fade (material opacity) is untouched.
-//  - "In Explore the title gets small": Explore (mode 'walk') no longer uses the home billboard at all. The billboard keeps a
-//    fixed world scale at 420 units in front of the camera, so with the wide Explore lens (fov up to 95) it became a small speck
-//    in the black far away. In Explore the site's own floating word (index.html zgWordTick: frozen in the world over the guitar,
-//    as before the layout module) places it again, big over the guitar, and it stays on top so the strings / body never cut into
-//    Folk Blues. Amp mode keeps the 6cf3945 billboard, depth-tested. Home placement and layout.json are unchanged.
+// Always on top (home + Explore; amp mode stays plain depth-tested): ZUNIGA + its "Folk Blues" child (one shared material) are the
+// last draws of the transparent pass (renderOrder 1000 / 1001), over the amp, guitar, panel and the intro veil, at every orbit angle.
+// Round 2 (Blake t418u "weird geometric things"): that used to be depthTest OFF, which let the extrusion's sides / back draw over its
+// front faces. Now depthTest + depthWrite stay ON (clean letters, as 0ed7f1d) and ZUNIGA clears the depth buffer right before it
+// draws (onBeforeRender), so Folk Blues (1001) is depth-tested against the letters only. Explore: index.html places the word.
 const TOP = 1000, BASE_RO = 11;   // 11 = index.html's own renderOrder for the word and its tagline
 const modeOf = () => document.body.dataset.mode || 'show';
+function clearDepthFirst(renderer) {
+  try {
+    const st = renderer && renderer.state, d = st && st.buffers && st.buffers.depth;
+    if (d && d.setMask) d.setMask(true);   // gl.clear honours the depth mask: the previous draw may have left it off
+    renderer.clearDepth();
+  } catch (_) { }
+}
 function setTop(mesh, on) {
   const m = mesh.material, tag = mesh.getObjectByName('zg-tagline');
   if (on) {
-    if (m && (m.depthTest !== false || m.depthWrite !== false || m.transparent !== true)) {
-      m.depthTest = false; m.depthWrite = false; m.transparent = true; m.needsUpdate = true;
+    if (m && (m.depthTest !== true || m.depthWrite !== true || m.transparent !== true)) {
+      m.depthTest = true; m.depthWrite = true; m.transparent = true; m.needsUpdate = true;
     }
-    if (mesh.renderOrder < TOP) mesh.renderOrder = TOP;   // above every other mesh (the amp has transparent parts at ~50)
-    if (tag && tag.renderOrder < TOP) tag.renderOrder = TOP;
+    if (mesh.renderOrder !== TOP) mesh.renderOrder = TOP;   // after every other mesh (the amp has transparent parts at ~50)
+    if (tag && tag.renderOrder !== TOP + 1) tag.renderOrder = TOP + 1;   // after the clear, depth-tested against ZUNIGA only
+    if (mesh.onBeforeRender !== clearDepthFirst) mesh.onBeforeRender = clearDepthFirst;
   } else {
     // back to index.html's own state: depth-tested, opaque once the fade is done
     const tr = !!(m && m.opacity < 1);
@@ -62,8 +59,64 @@ function setTop(mesh, on) {
       m.depthTest = true; m.depthWrite = true; m.transparent = tr; m.needsUpdate = true;
     }
     if (mesh.renderOrder === TOP) mesh.renderOrder = BASE_RO;
-    if (tag && tag.renderOrder === TOP) tag.renderOrder = BASE_RO;
+    if (tag && tag.renderOrder === TOP + 1) tag.renderOrder = BASE_RO;
+    if (Object.prototype.hasOwnProperty.call(mesh, 'onBeforeRender') && mesh.onBeforeRender === clearDepthFirst) delete mesh.onBeforeRender;
   }
+}
+
+// Round 2 OG intro (Blake t418u, as 0ed7f1d): 'in' / 'hold' = POP pose (screen centre, 1 / 0.78 larger, scale 0.84 -> 1), then
+// 'down' eases (easeInOut, 1.5 s, by elapsed time, so a late frame never stutters it) into the saved layout pose. Folk Blues is a
+// child and travels with it. index.html still owns the fade / veil / phases. Reduced motion, ?edit=1, a tap skip: saved pose.
+const IN_MS = 700, FLY_MS = 1500, POP_NEAR = 0.78, POP_MAX_W = 0.9;
+const I = { inAt: 0, downAt: 0, over: false };
+const easeOut = (u) => 1 - Math.pow(1 - Math.min(1, Math.max(0, u)), 3);
+const easeInOut = (u) => { u = Math.min(1, Math.max(0, u)); return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+const reducedMotion = () => { try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (_) { return false; } };
+const editMode = () => { try { return new URLSearchParams(location.search).get('edit') === '1'; } catch (_) { return false; } };
+try {
+  document.addEventListener('zg:reveal', (e) => {
+    const p = e && e.detail && e.detail.phase, t = performance.now();
+    if (p === 'in' && !I.inAt) I.inAt = t;
+    if ((p === 'down' || p === 'widgets') && !I.downAt) I.downAt = t;
+    if (p === 'done' && e.detail.skipped) I.over = true;   // a tap skips the intro: straight to the rest pose (as the OG did)
+  });
+} catch (_) { }
+const popBox = { ok: false, w: 0, cy: 0 };
+function measurePop(mesh) {   // local width of the word and the centre (y) of ZUNIGA + Folk Blues, so the pop is centred as a group
+  if (popBox.ok) return popBox;
+  try {
+    const g = mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    let y0 = g.boundingBox.min.y, y1 = g.boundingBox.max.y; const w = g.boundingBox.max.x - g.boundingBox.min.x;
+    const tag = mesh.getObjectByName('zg-tagline');
+    if (tag && tag.geometry) { if (!tag.geometry.boundingBox) tag.geometry.computeBoundingBox(); const b = tag.geometry.boundingBox; y0 = Math.min(y0, b.min.y * tag.scale.y + tag.position.y); y1 = Math.max(y1, b.max.y * tag.scale.y + tag.position.y); }
+    popBox.w = w; popBox.cy = (y0 + y1) / 2; popBox.ok = w > 0;
+  } catch (_) { }
+  return popBox;
+}
+// k: 0 = POP pose, 1 = saved pose. Returns null once the intro is over (saved pose).
+function introK(now) {
+  if (I.over) return null;
+  const done = document.body.classList.contains('zg-reveal-done'), ph = document.body.dataset.reveal || '';
+  if (reducedMotion() || editMode()) { I.over = true; return null; }
+  if (I.downAt) { const u = (now - I.downAt) / FLY_MS; if (u >= 1) { I.over = true; return null; } return easeInOut(u); }
+  if (ph === 'down') { I.downAt = now; return 0; }   // module hooked late: start the fly from here
+  if (done) { I.over = true; return null; }          // reveal finished without a 'down' (word failed / skipped): saved pose
+  return 0;                                           // pending / wait / in / hold: the pop pose
+}
+
+function billboard(mesh, cam, D, cx, cy, s, rz) {
+  const th = Math.tan(cam.fov * Math.PI / 360);
+  const Hv = 2 * D * th, Wv = Hv * cam.aspect;
+  const q = cam.quaternion;
+  qApply(q, 0, 0, -1, fw); qApply(q, 0, 1, 0, up); qApply(q, 1, 0, 0, rt);
+  const p = cam.position;
+  mesh.position.set(p.x + fw.x * D + up.x * Hv * cy + rt.x * Wv * cx,
+                    p.y + fw.y * D + up.y * Hv * cy + rt.y * Wv * cx,
+                    p.z + fw.z * D + up.z * Hv * cy + rt.z * Wv * cx);
+  mesh.quaternion.copy(cam.quaternion);
+  if (rz) mesh.rotateZ(rz);
+  if (s != null) mesh.scale.setScalar(s);
+  mesh.updateMatrixWorld(true);
 }
 
 export function place(mesh, cam, T) {
@@ -73,16 +126,17 @@ export function place(mesh, cam, T) {
   if (mode === 'walk') { setTop(mesh, true); return; }
   setTop(mesh, mode === 'show');
   const D = T.depth || 420;
-  const th = Math.tan(cam.fov * Math.PI / 360);
-  const Hv = 2 * D * th, Wv = Hv * cam.aspect;
-  const q = cam.quaternion;
-  qApply(q, 0, 0, -1, fw); qApply(q, 0, 1, 0, up); qApply(q, 1, 0, 0, rt);
-  const cx = T.cx || 0, cy = T.cy || 0, p = cam.position;
-  mesh.position.set(p.x + fw.x * D + up.x * Hv * cy + rt.x * Wv * cx,
-                    p.y + fw.y * D + up.y * Hv * cy + rt.y * Wv * cx,
-                    p.z + fw.z * D + up.z * Hv * cy + rt.z * Wv * cx);
-  mesh.quaternion.copy(cam.quaternion);
-  if (T.rz) mesh.rotateZ(T.rz);
-  if (T.s != null) mesh.scale.setScalar(T.s);
-  mesh.updateMatrixWorld(true);
+  if (I.s0 == null) I.s0 = mesh.scale.x;   // only used when the layout has no saved scale
+  const cx = T.cx || 0, cy = T.cy || 0, s = T.s != null ? T.s : I.s0, rz = T.rz || 0;
+  const now = performance.now();
+  const k = mode === 'show' ? introK(now) : null;
+  if (k === null) { billboard(mesh, cam, D, cx, cy, T.s, rz); return; }
+  // POP pose: screen centre (the ZUNIGA + Folk Blues group centred), POP_NEAR closer = 1 / 0.78 larger, capped to 90 % of the width
+  const th = Math.tan(cam.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * cam.aspect, pb = measurePop(mesh);
+  let ks = 1 / POP_NEAR;
+  if (pb.ok && s > 0) ks = Math.min(ks, Math.max(1, POP_MAX_W * Wv / (pb.w * s)));
+  const inU = I.inAt ? (now - I.inAt) / IN_MS : 0;
+  const popS = s * ks * (k === 0 && !I.downAt ? 0.84 + 0.16 * easeOut(inU) : 1);
+  const popCy = pb.ok ? -pb.cy * s * ks / Hv : 0;
+  billboard(mesh, cam, D, cx * k, popCy + (cy - popCy) * k, popS + (s - popS) * k, rz * k);
 }
