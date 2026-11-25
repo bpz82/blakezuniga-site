@@ -55,6 +55,14 @@
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <link rel="preload" href="assets/fonts/ZunigaMission-Regular-v3.woff2" as="font" type="font/woff2" crossorigin>
+<!-- round 2 load: three from the CDN + the addons' own imports, fetched up front (they were a 2nd round trip after the addons) -->
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/Pass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/MaskPass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/CopyShader.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/LuminosityHighPassShader.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/OutputShader.js">
+<link rel="preload" href="assets/fonts/zuniga-mission-v3.typeface.json" as="fetch" crossorigin>
 <link rel="stylesheet" href="harness.css">
 <link rel="stylesheet" href="chrome.css">
 <style>/* site1: canvas appears with the first frame; ZUNIGA / guitar reveal is animated in zuniga3d.js */
@@ -3451,7 +3459,13 @@ try { await bootFinish(); } catch (e) { console.warn('[zg] boot finish failed:',
 <button id="zg-home" type="button" aria-label="Back to home">Home</button>
 <div id="zg-root"></div>
 <script type="module" src="chrome.js"></script>
-<script type="module" src="walk-help.js"></script>
+<script type="module">/* round 2 load: the Explore directions (walk-help.js) are off the scene-ready path: loaded when the reveal is done, or at once on the first Explore / amp entry (its init opens the card for the mode it finds) */
+let wh = 0; const whGo = () => { if (!wh) { wh = 1; import('./walk-help.js').catch((e) => console.warn('[walk-help] load failed', e)); } };
+const whMode = () => { const d = document.body.dataset.mode; if (d === 'walk' || d === 'amp') whGo(); };
+document.addEventListener('zg:reveal', (e) => { if (e.detail && e.detail.phase === 'done') whGo(); });
+document.addEventListener('zg:mode', whMode); new MutationObserver(whMode).observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
+if (document.body.classList.contains('zg-reveal-done')) whGo(); whMode();
+</script>
 <script type="module" src="harness.js"></script>
 <!-- amp6 hook (WEBSITE, Nov 16): amp6 module, computed placement beyond the headstock, Explore Amp pop + fly -->
 <!-- amp7 (Blake t164u): no "Explore the Amp" button on the home screen; the only way in is the neck-end pop-up -->

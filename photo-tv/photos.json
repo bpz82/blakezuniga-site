@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 171,
+ "count": 164,
  "photos": [
   {
    "id": "2g0a5608",
@@ -73,15 +73,6 @@
    "tv": "photo-tv/photos/tv/adams-rd-my-room.webp",
    "full": "photo-tv/photos/full/adams-rd-my-room.webp",
    "alt": "Black and white room interior with a window, Blake Z music photo"
-  },
-  {
-   "id": "alex-and-jake-1",
-   "src": "thecurltapes.com",
-   "w": 957,
-   "h": 1400,
-   "tv": "photo-tv/photos/tv/alex-and-jake-1.webp",
-   "full": "photo-tv/photos/full/alex-and-jake-1.webp",
-   "alt": "Two friends posing together in a black and white portrait, Blake Zuniga"
   },
   {
    "id": "amp-1",
@@ -253,15 +244,6 @@
    "tv": "photo-tv/photos/tv/blake-edwina.webp",
    "full": "photo-tv/photos/full/blake-edwina.webp",
    "alt": "Vintage microphone in a red case lying on hay, Blake Z music"
-  },
-  {
-   "id": "blake-life-is-good-portrait-2",
-   "src": "thecurltapes.com",
-   "w": 957,
-   "h": 1400,
-   "tv": "photo-tv/photos/tv/blake-life-is-good-portrait-2.webp",
-   "full": "photo-tv/photos/full/blake-life-is-good-portrait-2.webp",
-   "alt": "Blake Zuniga - black and white portrait of a young man in a white t-shirt"
   },
   {
    "id": "blake-8376b-08",
@@ -1065,15 +1047,6 @@
    "alt": "Mixer on hay beside goats, Blake Zuniga, Blake Z guitar"
   },
   {
-   "id": "front",
-   "src": "thecurltapes.com",
-   "w": 750,
-   "h": 750,
-   "tv": "photo-tv/photos/tv/front.webp",
-   "full": "photo-tv/photos/full/front.webp",
-   "alt": "Rainbow over a house and field, Blake Z music"
-  },
-  {
    "id": "blake-8376b-34",
    "src": "blake",
    "w": 1600,
@@ -1459,42 +1432,6 @@
    "tv": "photo-tv/photos/tv/trio-bros-1.webp",
    "full": "photo-tv/photos/full/trio-bros-1.webp",
    "alt": "Trio of friends seated playing guitars on a small stage, Blake Zuniga photo"
-  },
-  {
-   "id": "uke-1",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 957,
-   "tv": "photo-tv/photos/tv/uke-1.webp",
-   "full": "photo-tv/photos/full/uke-1.webp",
-   "alt": "Natural wood ukulele on hay, close-up, Blake Z music photo"
-  },
-  {
-   "id": "uke-2",
-   "src": "thecurltapes.com",
-   "w": 957,
-   "h": 1400,
-   "tv": "photo-tv/photos/tv/uke-2.webp",
-   "full": "photo-tv/photos/full/uke-2.webp",
-   "alt": "Small ukulele standing in hay, Blake Zuniga"
-  },
-  {
-   "id": "uke-3",
-   "src": "thecurltapes.com",
-   "w": 1400,
-   "h": 957,
-   "tv": "photo-tv/photos/tv/uke-3.webp",
-   "full": "photo-tv/photos/full/uke-3.webp",
-   "alt": "Ukulele headstock on hay, close-up, Blake Z music"
-  },
-  {
-   "id": "uke-4",
-   "src": "thecurltapes.com",
-   "w": 957,
-   "h": 1400,
-   "tv": "photo-tv/photos/tv/uke-4.webp",
-   "full": "photo-tv/photos/full/uke-4.webp",
-   "alt": "Ukulele lying in hay, Blake music, Blake Zuniga"
   },
   {
    "id": "vert-red-and-white-guits",

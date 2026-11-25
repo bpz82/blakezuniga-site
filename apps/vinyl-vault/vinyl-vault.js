@@ -1,6 +1,7 @@
 /**
- * Vinyl Vault (Blake, 23 Nov 2026). A search bar + a grid of every record in records.json; tap a cover for a small popup with
- * Spotify / Apple Music / YouTube / Copy ("Artist — Album"). The grid is A–Z with a sticky letter header; "Discover & Listen" spins
+ * Vinyl Vault (Blake, 23 Nov 2026). A search bar + one flat grid of every record in records.json, in a fresh random order on each
+ * load; "Sort A-Z" sorts that same list alphabetically (and "Shuffle" goes back). Tap a cover for a small popup with
+ * Spotify / Apple Music / YouTube / Copy ("Artist — Album"). "Discover & Listen" spins
  * a random record plus one verified track from records.json. A service without a working https album link is not shown; the popup
  * says so (all three missing: only on vinyl; otherwise "Not on X" per missing service) and offers Copy (never a search page).
  *
@@ -41,9 +42,10 @@ const CSS = `
 .vv-disc:hover{background:#ff6b5a}
 .vv-disc:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @media (max-width:599px){.vv-disc{flex:1 1 100%}}
-.vv-sec[hidden]{display:none}
-.vv-L{position:sticky;top:var(--vv-bar,70px);z-index:4;margin:0;padding:6px 14px;font:400 22px/1.1 "Zuniga Mission",system-ui,sans-serif;
-  letter-spacing:.08em;color:#ff6b5a;background:rgba(18,12,14,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.1)}
+.vv-sort{flex:0 0 auto;min-height:46px;padding:8px 18px;color:#f4ecea;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);
+  border-radius:999px;font:14px/1.1 "Zuniga Mission",system-ui,sans-serif;letter-spacing:.06em;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.vv-sort:hover{background:rgba(255,255,255,.14)}
+.vv-sort:focus-visible{outline:2px solid #ff6b5a;outline-offset:2px}
 .vv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px;padding:12px 14px 14px}
 @media (min-width:600px){.vv-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 16px}}
 @media (min-width:1000px){.vv-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
@@ -119,15 +121,11 @@ function workingUrl(v) {
   }
 }
 
-// Sort rule: A–Z by artist, then album. For the sort key and the letter bucket only a leading English article "The " is ignored
+// Sort rule (A–Z mode): by artist, then album. For the sort key only a leading English article "The " is ignored
 // (case-insensitive, trailing space required). "A " / "An " are NOT stripped (AC/DC, America stay under A).
-// A key that does not start with a letter goes under "#". Tie-break: album (case-insensitive), then original order (stable).
+// Tie-break: album (case-insensitive), then original order (stable).
 function sortKey(artist) {
   return artist.replace(/^the /i, '').trim();
-}
-function bucket(artist) {
-  const c = sortKey(artist).normalize('NFD').charAt(0).toUpperCase();
-  return c >= 'A' && c <= 'Z' ? c : '#';
 }
 function sortRecords(list) {
   const cmp = (a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' });
@@ -135,6 +133,15 @@ function sortRecords(list) {
     .map((r, i) => ({ r, i }))
     .sort((x, y) => cmp(sortKey(x.r.artist), sortKey(y.r.artist)) || cmp(x.r.album, y.r.album) || x.i - y.i)
     .map((x) => x.r);
+}
+// Fisher–Yates on a copy: each position i swaps with a uniform random j <= i. Called once per mount, so every load is a new order.
+function shuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 // returns { list, skipped }; throws Error('...') when the file is not an array
@@ -178,7 +185,7 @@ function parseRecords(data, baseUrl) {
     }
   }
   if (!list.length) throw new Error('no usable records');
-  return { list: sortRecords(list), skipped };
+  return { list, skipped };
 }
 
 export function mountVinylVault(host, opts) {
@@ -242,23 +249,15 @@ export function mountVinylVault(host, opts) {
     search.enterKeyHint = 'search';
     const disc = el('button', 'vv-disc', 'Discover & Listen');
     disc.type = 'button';
+    // "Sort A-Z" is the sort control while the list is shuffled; in A–Z mode the same button reads "Shuffle" and goes back
+    const sortBtn = el('button', 'vv-sort', 'Sort A-Z');
+    sortBtn.type = 'button';
     const bar = el('div', 'vv-bar');
-    bar.append(search, disc);
+    bar.append(search, sortBtn, disc);
 
-    // A–Z sections, each with a sticky letter header (the header under the search bar is always the current letter)
-    const secs = [];
-    let curSec = null;
+    // one cell per record (Map: record -> cell, so filtering and sorting never depend on positions)
+    const cells = new Map();
     for (const r of list) {
-      const L = bucket(r.artist);
-      if (!curSec || curSec.letter !== L) {
-        const sec = el('section', 'vv-sec');
-        sec.dataset.letter = L;
-        const h = el('h2', 'vv-L', L);
-        const grid = el('div', 'vv-grid');
-        sec.append(h, grid);
-        curSec = { letter: L, sec, grid, cells: [] };
-        secs.push(curSec);
-      }
       const b = el('button', 'vv-cell');
       b.type = 'button';
       b.dataset.id = r.id;
@@ -274,11 +273,12 @@ export function mountVinylVault(host, opts) {
       cov.append(img);
       b.append(cov, el('span', 'vv-a', r.artist), el('span', 'vv-b', r.album));
       b.addEventListener('click', () => show(r, '', false, b));
-      curSec.grid.append(b);
-      curSec.cells.push(b);
+      cells.set(r, b);
     }
-    const listEl = el('div', 'vv-list');
-    listEl.append(...secs.map((x) => x.sec));
+    // one flat grid, no letter sections; the order is set below (shuffled on load, A–Z on request)
+    const grid = el('div', 'vv-grid');
+    const shuffled = shuffle(list);
+    grid.append(...shuffled.map((r) => cells.get(r)));
     const empty = el('p', 'vv-msg', 'No records match.');
     empty.setAttribute('role', 'status');
     empty.hidden = true;
@@ -299,38 +299,35 @@ export function mountVinylVault(host, opts) {
       const close = head.querySelector('.zg-close');
       head.insertBefore(desc, close || null);
       cleanups.push(() => desc.remove());
-      root.replaceChildren(bar, listEl, empty);
+      root.replaceChildren(bar, grid, empty);
     } else {
-      root.replaceChildren(desc, bar, listEl, empty);
+      root.replaceChildren(desc, bar, grid, empty);
     }
     root.dataset.count = String(list.length);
-
-    // letter headers stick just under the search bar, whatever height the bar wraps to
-    const setBar = () => { try { root.style.setProperty('--vv-bar', bar.offsetHeight + 'px'); } catch (_) { /* ignore */ } };
-    setBar();
-    window.addEventListener('resize', setBar);
-    cleanups.push(() => window.removeEventListener('resize', setBar));
 
     const filter = () => {
       const q = search.value.trim().toLowerCase();
       const terms = q ? q.split(/\s+/) : [];
       let shown = 0;
-      let i = 0;
-      for (const s of secs) {
-        let any = false;
-        for (const c of s.cells) {
-          const ok = terms.every((t) => list[i].hay.includes(t));
-          c.hidden = !ok;
-          if (ok) { shown++; any = true; }
-          i++;
-        }
-        s.sec.hidden = !any;
+      for (const [r, b] of cells) {
+        const ok = terms.every((t) => r.hay.includes(t));
+        b.hidden = !ok;
+        if (ok) shown++;
       }
       empty.hidden = shown > 0;
       root.dataset.shown = String(shown);
     };
     search.addEventListener('input', filter);
     root.dataset.shown = String(list.length);
+
+    // order: the mount's shuffle (default), or the existing A–Z sort. Same cells either way; the search filter is kept.
+    let az = false;
+    sortBtn.addEventListener('click', () => {
+      az = !az;
+      sortBtn.textContent = az ? 'Shuffle' : 'Sort A-Z';
+      grid.replaceChildren(...(az ? sortRecords(list) : shuffled).map((r) => cells.get(r)));
+      filter();
+    });
 
     // ---- popup (built on first use; serves both a record tap and Discover & Listen) ----
     const SERVICES = [['Spotify', 'spotify'], ['Apple Music', 'apple'], ['YouTube', 'youtube']];

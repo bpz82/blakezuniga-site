@@ -162,11 +162,15 @@ body:not(.zg-reveal-done) #zg-explore {
   z-index: 6;
   font-family: 'Zuniga Mission', sans-serif;
   color: #fff;
-  background: rgba(14, 14, 18, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* Near-opaque fill: the card must stay readable even where iOS Safari fails to composite backdrop-filter over the WebGL canvas
+     (blur is only an extra). translateZ(0) gives it its own compositing layer. */
+  background: rgba(14, 14, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -237,6 +241,8 @@ body:not(.zg-reveal-done) #zg-explore {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+/* automatic hide (timeout / first move): slower fade so it reads as fading, not as a glitch */
+#zg-walk-help.zg-wh-slow:not(.show) { transition: opacity 0.7s ease, visibility 0s linear 0.7s; }
 #zg-walk-help-btn:hover,
 #zg-walk-help .zg-wh-close:hover { background: rgba(255, 255, 255, 0.2); }
 #zg-walk-help-btn:focus-visible,
