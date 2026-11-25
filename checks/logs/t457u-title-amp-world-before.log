@@ -1,0 +1,12 @@
+FAIL place() mode amp fov 38: mesh untouched (calls: position,quaternion,rotateZ,scale)
+FAIL place() mode amp fov 38: drawn on top like walk (renderOrder 11)
+FAIL place() mode amp fov 72: mesh untouched (calls: position,quaternion,rotateZ,scale)
+FAIL place() mode amp fov 72: drawn on top like walk (renderOrder 11)
+FAIL place() mode amp fov 95: mesh untouched (calls: position,quaternion,rotateZ,scale)
+FAIL place() mode amp fov 95: drawn on top like walk (renderOrder 11)
+FAIL zgWordTick body amp page show: word tick mode show (want walk)
+ok   zgWordTick body amp page walk: word tick mode walk (want walk)
+ok   zgWordTick body show page show: word tick mode show (want show)
+ok   zgWordTick body walk page walk: word tick mode walk (want walk)
+FAIL t457u-title-amp-world
+exit 1

@@ -1,3 +1,7 @@
+// RETIRED (t457u MEASUREMENT CHANGE, Nov 25 2026): Blake t457u "Zuniga folk blues needs to stay in the air over by the guitar even
+// when I switch to the amp". In amp mode place() no longer billboards the title to the camera (it returns early like walk; the
+// word floats in world space via index.html zgWordTick), so a screen-size ratio in amp mode no longer measures anything. Kept
+// for the record, not gating; replaced by checks/t457u-title-amp-world.mjs. The fov factor stays in show mode (fov 38 -> 1).
 // t452u-title-amp-size (Blake ask t452u): the ZUNIGA title's saved layout scale is tuned for home fov 38. At amp/walk fov 72+
 // place() must scale it by tan(fov/2)/tan(19deg) so its ON-SCREEN size matches the home pose at any fov. Exits nonzero on fail.
 // Runs: Node (no browser). Runtime < 1 s.

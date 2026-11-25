@@ -39,7 +39,7 @@ export function inlaySign(input) {
   let fit = Math.min(1, outerHw / Math.max(ex, 1e-9), outerHh / Math.max(ey, 1e-9), straight / Math.max(ex, 1e-9));
   if (fit < 1) { s *= fit * 0.999; [ex, ey] = ext(s); }
   y = side === 'top' ? (outerHh - ey) : (-outerHh + ey);
-  x = Math.max(-straight + ex, Math.min(straight - ex, x));
+  x = 0;   // Blake t457u: centred on the panel (was layout.json lx, clamped to the straight rail); the plaque fits by `fit` above
   return {
     x, y, s, rz, side,
     zBoard: INLAY_Z.board, zLetter: INLAY_Z.letter, zGlow: INLAY_Z.glow,

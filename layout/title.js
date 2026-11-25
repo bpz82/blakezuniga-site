@@ -123,7 +123,8 @@ export function place(mesh, cam, T) {
   if (!mesh || !cam || !T || T.cx == null) return;
   const mode = modeOf();
   // Explore: the floating word from index.html places it (pre-layout behaviour), drawn on top so the guitar never cuts into it
-  if (mode === 'walk') { setTop(mesh, true); return; }
+  // Blake t457u: amp mode too, so the word stays in the air by the guitar (index.html's zgWordTick runs it as 'walk' there)
+  if (mode === 'walk' || mode === 'amp') { setTop(mesh, true); return; }
   setTop(mesh, mode === 'show');
   const D = T.depth || 420;
   if (I.s0 == null) I.s0 = mesh.scale.x;   // only used when the layout has no saved scale

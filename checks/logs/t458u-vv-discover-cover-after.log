@@ -1,0 +1,13 @@
+ok   .vv-pop top offset uses --vv-top var
+ok   .vv-pop still position:fixed
+ok   popTopInset used in source
+ok   --vv-top is set via style.setProperty
+ok   offset applied when the pop opens (show)
+ok   offset re-applied on resize
+ok   popTopInset exported
+ok   header bottom 70, panel top 20 -> 50
+ok   header bottom == panel top -> 0
+ok   negative clamps to 0
+ok   no header -> 0
+ok   NaN -> 0
+PASS

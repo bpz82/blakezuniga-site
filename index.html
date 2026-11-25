@@ -2666,6 +2666,9 @@ const zgW = {
 })();
 
 zgWordTick = function zgWordTick(dt, camera, mode) {
+  // Blake t457u: on the amp (body[data-mode]='amp', the page's own mode stays 'show') the word floats in the world by the guitar
+  // like Explore, instead of re-fitting to the amp camera frustum
+  if (document.body.dataset.mode === 'amp') mode = 'walk';
   if (zgW.tick) zgW.tick(dt, camera, mode);
 }
 // ---- end ZUNIGA snippet ----

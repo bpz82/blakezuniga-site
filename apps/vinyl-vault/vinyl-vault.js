@@ -62,7 +62,7 @@ const CSS = `
 .vv-a,.vv-b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vv-a{margin-top:8px;font-size:14px;letter-spacing:.05em;text-transform:uppercase}
 .vv-b{margin-top:1px;font:13px/1.3 system-ui,-apple-system,sans-serif;color:rgba(241,233,230,.68)}
-.vv-pop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;
+.vv-pop{position:fixed;inset:0;top:var(--vv-top,0px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;
   padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
   background:rgba(6,4,5,.82);overscroll-behavior:contain}
 .vv-pop[hidden]{display:none}
@@ -197,6 +197,12 @@ export function nextBarHidden(hidden, delta, top) {
   return delta > 0;
 }
 
+// Blake t458u: .vv-pop is fixed but the transformed .zg-panel makes inset:0 span the header too, which cut off the card's top.
+// Offset the pop's top to the header's bottom (px, never negative).
+export function popTopInset(headRect, panelRect) {
+  const v = headRect && panelRect ? headRect.bottom - panelRect.top : 0;
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
 export function mountVinylVault(host, opts) {
   const o = opts || {};
   let dead = false;
@@ -394,8 +400,22 @@ export function mountVinylVault(host, opts) {
       pop.addEventListener('click', (e) => { if (e.target === pop) closePop(); });
       root.append(pop);
     };
+    function placePop() {
+      if (!pop) return;
+      let v = 0;
+      try {
+        const sh = host.getRootNode && host.getRootNode();
+        const panel = sh && sh.host && sh.host.parentElement;
+        const hd = panel ? panel.querySelector(':scope > .zg-head') : null;
+        if (hd) v = popTopInset(hd.getBoundingClientRect(), panel.getBoundingClientRect());
+      } catch (_) { v = 0; }
+      pop.style.setProperty('--vv-top', v + 'px');
+    }
+    window.addEventListener('resize', placePop);
+    cleanups.push(() => window.removeEventListener('resize', placePop));
     function show(r, track, discover, opener) {
       if (!pop) buildPop();
+      placePop();
       const wasOpen = !pop.hidden;
       cur = r;
       if (opener && !wasOpen) lastCell = opener === spinBtn ? lastCell : opener;
