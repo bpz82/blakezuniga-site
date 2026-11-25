@@ -1,0 +1,26 @@
+ok   library has blurb notes to test with (40 incl. synthetic)
+ok   allItems() (feed source) has no role === "blurb"
+ok   allItems() count = all notes minus blurbs
+ok   full feed pass renders no "on this book"
+ok   full feed pass renders no blurb text
+ok   shuffled feed never yields a blurb
+ok   search "blurbword": no blurb notes returned
+ok   search "blurbword": results never show the "on this book" tag or a blurb
+ok   search "quixotic": no blurb notes returned
+ok   search "quixotic": results never show the "on this book" tag or a blurb
+ok   search "gnomic": no blurb notes returned
+ok   search "gnomic": results never show the "on this book" tag or a blurb
+ok   search "on this book": no blurb notes returned
+ok   search "on this book": results never show the "on this book" tag or a blurb
+ok   search "possible.": no blurb notes returned
+ok   search "possible.": results never show the "on this book" tag or a blurb
+ok   search for a blurb-only word finds nothing (blurb text not searched)
+ok   blurb-only word gives no book chip (title/author only)
+ok   book chips still match title / author
+ok   ordinary note search still works ("river" finds the synthetic quote and note)
+ok   Saved skips blurbs even when a blurb id is in the saved set
+ok   renderItem never emits the "Blake · on this book" tag for a blurb note
+ok   book page still renders the blurb section with its text
+ok   Meditations book page still has its blurb section
+ok   blurb is not repeated as a list card on the book page
+PASS

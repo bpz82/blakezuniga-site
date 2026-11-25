@@ -38,43 +38,43 @@ const LOG = '[zuniga-philosophy]';
 
 export const CSS = `
 @font-face{font-family:'Zuniga Mission';src:url("${FONT_URL}") format('woff2');font-weight:400;font-style:normal;font-display:swap}
-.zp{--zp-accent:#ff6b5a;--zp-ink:#f1e9e6;--zp-ink-hi:#f4ecea;--zp-dim:rgba(241,233,230,.62);--zp-line:rgba(255,255,255,.14);
-  box-sizing:border-box;min-height:100%;color:var(--zp-ink);background:rgba(18,12,14,.97);font-family:${UI_FONT};font-size:15px;line-height:1.4;
+.zp{--zp-accent:#b83a28;--zp-bg:#f7f1e6;--zp-paper:#fffaf0;--zp-ink:#2a221d;--zp-ink-hi:#1a1512;--zp-dim:rgba(42,34,29,.66);--zp-line:rgba(42,34,29,.16);
+  box-sizing:border-box;min-height:100%;color:var(--zp-ink);background:var(--zp-bg);font-family:${UI_FONT};font-size:15px;line-height:1.4;
   letter-spacing:.02em;-webkit-font-smoothing:antialiased}
 .zp *{box-sizing:border-box}
 .zp button,.zp input,.zp select{font-family:inherit;font-size:inherit;letter-spacing:inherit;color:inherit}
 .zp-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .zp-head{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:14px 18px 12px;
-  background:rgba(18,12,14,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--zp-line)}
+  background:rgba(247,241,230,.95);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--zp-line)}
 .zp-brand{display:flex;align-items:baseline;gap:12px;flex:1 1 auto;min-width:0}
 .zp-title{margin:0;font-family:${UI_FONT};font-weight:400;font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:var(--zp-ink-hi);white-space:nowrap}
 .zp-sample{font-family:${UI_FONT};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--zp-dim)}
 .zp-nav{display:flex;gap:6px;flex-wrap:wrap}
-.zp-nav button,.zp-btn{min-height:40px;padding:6px 16px;margin:0;background:rgba(255,255,255,.06);border:1px solid var(--zp-line);border-radius:999px;
+.zp-nav button,.zp-btn{min-height:40px;padding:6px 16px;margin:0;background:rgba(42,34,29,.05);border:1px solid var(--zp-line);border-radius:999px;
   font-family:${UI_FONT};font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.zp-nav button:hover,.zp-btn:hover{background:rgba(255,255,255,.13)}
-.zp-nav button[aria-current="page"]{background:rgba(255,107,90,.88);border-color:transparent;color:#fff4f0}
+.zp-nav button:hover,.zp-btn:hover{background:rgba(42,34,29,.11)}
+.zp-nav button[aria-current="page"]{background:var(--zp-accent);border-color:transparent;color:#fffaf0}
 .zp-nav button:focus-visible,.zp-btn:focus-visible,.zp-card:focus-visible,.zp-credit:focus-visible,.zp-fav:focus-visible{outline:2px solid var(--zp-accent);outline-offset:2px}
 .zp-close{margin-left:auto}
 .zp-main{max-width:1180px;margin:0 auto;padding:18px 18px 64px}
 .zp-msg{margin:28px 0;font-family:${UI_FONT};color:var(--zp-dim);text-align:center}
 .zp-empty{margin:28px 0;font-family:${UI_FONT};color:var(--zp-dim);text-align:center;letter-spacing:.04em}
-.zp-q,.zp-bq{display:block;width:100%;margin:0;padding:16px 22px;min-height:58px;color:var(--zp-ink-hi);background:#120c0e;
-  border:1px solid rgba(255,255,255,.24);border-radius:999px;font-family:${UI_FONT};font-size:20px;letter-spacing:.04em;outline:none;
+.zp-q,.zp-bq{display:block;width:100%;margin:0;padding:16px 22px;min-height:58px;color:var(--zp-ink-hi);background:var(--zp-paper);
+  border:1px solid rgba(42,34,29,.28);border-radius:999px;font-family:${UI_FONT};font-size:20px;letter-spacing:.04em;outline:none;
   -webkit-appearance:none;appearance:none}
 .zp-bq{min-height:46px;padding:10px 18px;font-size:16px;flex:1 1 240px;width:auto}
-.zp-q::placeholder,.zp-bq::placeholder{color:rgba(241,233,230,.45);font-family:${UI_FONT}}
+.zp-q::placeholder,.zp-bq::placeholder{color:rgba(42,34,29,.5);font-family:${UI_FONT}}
 .zp-q:focus,.zp-bq:focus{border-color:var(--zp-accent)}
 .zp-hint{margin:14px 4px 0;font-family:${UI_FONT};font-size:13px;color:var(--zp-dim);letter-spacing:.05em}
 .zp-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
-.zp-chip{min-height:34px;padding:4px 14px;margin:0;background:rgba(255,255,255,.05);border:1px solid var(--zp-line);border-radius:999px;
+.zp-chip{min-height:34px;padding:4px 14px;margin:0;background:rgba(42,34,29,.045);border:1px solid var(--zp-line);border-radius:999px;
   font-family:${UI_FONT};font-size:13px;letter-spacing:.06em;cursor:pointer}
 .zp-chip:hover{border-color:var(--zp-accent)}
 .zp-sub{margin:26px 4px 10px;font-family:${UI_FONT};font-size:12px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--zp-dim)}
 .zp-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
-.zp-item{position:relative;margin:0;padding:16px 52px 14px 20px;background:rgba(255,255,255,.035);border-left:2px solid rgba(255,107,90,.55);
+.zp-item{position:relative;margin:0;padding:16px 52px 14px 20px;background:var(--zp-paper);border-left:2px solid rgba(184,58,40,.6);
   border-radius:0 12px 12px 0}
-.zp-item--note{background:rgba(255,107,90,.075);border-left:2px solid rgba(255,214,200,.55);border-radius:12px}
+.zp-item--note{background:rgba(184,58,40,.07);border-left:2px solid rgba(184,58,40,.3);border-radius:12px}
 .zp-item--flash{animation:zp-flash 1.8s ease}
 @keyframes zp-flash{0%,30%{box-shadow:0 0 0 2px var(--zp-accent)}100%{box-shadow:0 0 0 0 transparent}}
 .zp-tag{display:inline-block;margin:0 0 6px;font-family:${UI_FONT};font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--zp-accent)}
@@ -82,10 +82,10 @@ export const CSS = `
 .zp-text{margin:0;font-family:${BODY_FONT};font-size:19px;line-height:1.5;letter-spacing:0;color:var(--zp-ink-hi);white-space:pre-line;overflow-wrap:break-word}
 .zp-item--star .zp-text{font-weight:700}
 .zp-attr{margin:8px 0 0;font-family:${BODY_FONT};font-size:16px;font-style:italic;letter-spacing:0;color:var(--zp-dim)}
-.zp-aside{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.04)}
+.zp-aside{margin:10px 0 0;padding:8px 12px;border-radius:8px;background:rgba(42,34,29,.05)}
 .zp-aside .zp-tag{margin:0 8px 0 0}
 .zp-aside-text{font-family:${BODY_FONT};font-size:16px;font-style:italic;letter-spacing:0;color:var(--zp-ink)}
-.zp-mark{font-family:inherit;background:rgba(255,107,90,.32);color:inherit;border-radius:2px;padding:0 1px}
+.zp-mark{font-family:inherit;background:rgba(255,196,60,.5);color:inherit;border-radius:2px;padding:0 1px}
 .zp-credit{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;margin:12px 0 0;padding:0;background:none;border:0;text-align:left;cursor:pointer;
   font-family:${UI_FONT}}
 .zp-credit-title{font-family:${UI_FONT};font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--zp-ink-hi)}
@@ -98,7 +98,7 @@ export const CSS = `
 .zp-session{margin:26px 4px 2px;font-family:${UI_FONT};font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--zp-dim)}
 .zp-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 18px}
 .zp-sort{display:flex;gap:6px;flex-wrap:wrap}
-.zp-btn[aria-pressed="true"]{border-color:var(--zp-accent);color:var(--zp-ink-hi);background:rgba(255,107,90,.18)}
+.zp-btn[aria-pressed="true"]{border-color:var(--zp-accent);color:var(--zp-ink-hi);background:rgba(184,58,40,.13)}
 .zp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px 18px}
 @media (min-width:700px){.zp-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr))}}
 .zp-letter{grid-column:1/-1;margin:8px 0 -10px;font-family:${UI_FONT};font-size:20px;letter-spacing:.1em;color:var(--zp-accent);
@@ -107,27 +107,28 @@ export const CSS = `
   touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .zp-card[hidden]{display:none}
 .zp-cover{position:relative;display:flex;flex-direction:column;justify-content:space-between;aspect-ratio:2/3;width:100%;padding:16px 14px;overflow:hidden;
-  isolation:isolate;border-radius:4px 8px 8px 4px;border:1px solid rgba(255,255,255,.1);
-  background:linear-gradient(160deg,hsl(var(--zp-h,8) 28% 18%),hsl(var(--zp-h,8) 24% 9%) 70%,rgba(18,12,14,1));
-  box-shadow:inset 6px 0 10px rgba(0,0,0,.35),0 8px 22px rgba(0,0,0,.5);transition:transform .2s ease}
-.zp-cover::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:var(--zp-grain,none);background-size:96px 96px;opacity:.22}
+  isolation:isolate;border-radius:4px 8px 8px 4px;border:1px solid rgba(42,34,29,.18);
+  background:linear-gradient(160deg,hsl(var(--zp-h,8) 42% 90%),hsl(var(--zp-h,8) 34% 82%) 70%,hsl(var(--zp-h,8) 30% 76%));
+  box-shadow:inset 6px 0 10px rgba(42,34,29,.14),0 6px 16px rgba(42,34,29,.22);transition:transform .2s ease}
+.zp-cover::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:var(--zp-grain,none);background-size:96px 96px;opacity:.12}
+.zp-cover-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block;background:var(--zp-paper)}
 .zp-card:hover .zp-cover{transform:scale(1.04)}
 .zp-cover-title{font-family:${UI_FONT};font-size:17px;line-height:1.15;letter-spacing:.07em;text-transform:uppercase;color:var(--zp-ink-hi);
   overflow-wrap:break-word;hyphens:auto}
 .zp-cover-rule{display:block;width:34px;height:2px;margin:12px 0;background:var(--zp-accent)}
 .zp-cover-author{font-family:${UI_FONT};font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--zp-dim)}
-.zp-cover-mark{font-family:${UI_FONT};font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(241,233,230,.38)}
+.zp-cover-mark{font-family:${UI_FONT};font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(42,34,29,.45)}
 .zp-cap{display:block;margin-top:9px}
 .zp-cap-title,.zp-cap-author,.zp-cap-count{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:${UI_FONT}}
 .zp-cap-title{font-size:14px;letter-spacing:.05em;color:var(--zp-ink-hi)}
 .zp-cap-author{font-size:12px;letter-spacing:.04em;color:var(--zp-dim)}
-.zp-cap-count{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(241,233,230,.42);margin-top:2px}
+.zp-cap-count{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(42,34,29,.55);margin-top:2px}
 .zp-grid--list{grid-template-columns:1fr;gap:0}
 .zp-grid--list .zp-letter{margin:18px 0 6px}
 .zp-grid--list .zp-card{display:flex;align-items:center;gap:14px;padding:10px 4px;border-bottom:1px solid var(--zp-line)}
 .zp-grid--list .zp-card[hidden]{display:none}
 .zp-grid--list .zp-cover{width:44px;flex:0 0 44px;padding:4px}
-.zp-grid--list .zp-cover>*{display:none}
+.zp-grid--list .zp-cover>*:not(.zp-cover-img){display:none}
 .zp-grid--list .zp-cap{flex:1 1 auto;min-width:0;margin:0;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) auto;gap:12px;align-items:baseline}
 .zp-grid--list .zp-card:hover .zp-cover{transform:none}
 .zp-book{max-width:760px;margin:0 auto}
@@ -135,10 +136,14 @@ export const CSS = `
 .zp-book-head .zp-cover{width:150px;flex:0 0 150px}
 .zp-book-title{margin:0;font-family:${UI_FONT};font-weight:400;font-size:28px;line-height:1.15;letter-spacing:.06em;text-transform:uppercase;color:var(--zp-ink-hi)}
 .zp-book-author{margin:6px 0 0;font-family:${UI_FONT};font-size:16px;letter-spacing:.05em;color:var(--zp-dim)}
-.zp-meta{margin:10px 0 0;font-family:${UI_FONT};font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(241,233,230,.5)}
+.zp-meta{margin:10px 0 0;font-family:${UI_FONT};font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(42,34,29,.58)}
 @media (max-width:520px){.zp-book-head{flex-direction:column;align-items:flex-start}.zp-book-head .zp-cover{width:120px;flex-basis:auto}.zp-title{font-size:18px}}
-.zp-blurb{margin:0 0 22px;padding:18px 20px;border-radius:12px;background:rgba(255,107,90,.08);border:1px solid rgba(255,107,90,.25)}
+.zp-blurb{margin:0 0 22px;padding:18px 20px;border-radius:12px;background:rgba(184,58,40,.06);border:1px solid rgba(184,58,40,.25)}
 .zp-blurb-text{margin:0;font-family:${BODY_FONT};font-size:19px;line-height:1.55;letter-spacing:0;font-style:italic;color:var(--zp-ink-hi)}
+.zp-buy{display:inline-block;margin:14px 0 0;padding:10px 20px;min-height:40px;background:var(--zp-accent);color:#fffaf0;border:1px solid var(--zp-accent);border-radius:999px;
+  font-family:${UI_FONT};font-size:13px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none}
+.zp-buy:hover{background:#9c2f20;border-color:#9c2f20}
+.zp-buy:focus-visible{outline:2px solid var(--zp-accent);outline-offset:2px}
 .zp-more-note{margin:26px 0 0;font-family:${UI_FONT};font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--zp-dim);text-align:center}
 .zp-pager{display:flex;justify-content:space-between;gap:10px;margin:30px 0 0}
 .zp-pager .zp-btn{max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -154,6 +159,40 @@ export function esc(s) {
 }
 
 const str = (v) => (typeof v === 'string' ? v : '');
+
+export const DEFAULT_META_URL = new URL('./data/books-meta.json', import.meta.url).href;
+export const DEFAULT_COVERS_BASE = new URL('./', import.meta.url).href;
+
+/** A jacket path: relative, under covers/, an image extension. Anything else is dropped (typographic cover stays). */
+export function safeCover(v) {
+  const s = str(v).trim();
+  return /^covers\/[\w.-]+\.(?:jpe?g|webp|png)$/i.test(s) && !s.includes('..') ? s : '';
+}
+/** Plain amazon.com link only (/dp/... or /s?k=...). No affiliate/tracking params; anything else returns '' (no button). */
+export function safeAmazon(v) {
+  try {
+    const u = new URL(str(v).trim());
+    if (!/^https?:$/.test(u.protocol) || !/^(?:www\.)?amazon\.com$/i.test(u.hostname)) return '';
+    if (u.username || u.password) return '';
+    if (/\/ref=/i.test(u.pathname)) return '';
+    for (const k of u.searchParams.keys()) if (!/^(?:k|i)$/i.test(k)) return '';
+    return u.href;
+  } catch { return ''; }
+}
+/** Merge books-meta.json ({ books: [{ id, cover, amazon }] }) onto a normalized library. Unknown fields ignored. */
+export function mergeMeta(lib, meta) {
+  const rows = meta && Array.isArray(meta.books) ? meta.books : [];
+  const byId = new Map();
+  for (const r of rows) if (r && typeof r === 'object' && str(r.id)) byId.set(r.id, r);
+  for (const b of lib.books) {
+    const r = byId.get(b.id);
+    if (!r) continue;
+    const c = safeCover(r.cover), a = safeAmazon(r.amazon);
+    if (c) b.cover = c;
+    if (a) b.amazon = a;
+  }
+  return lib;
+}
 
 /** Clean the JSON (sample or a later full set) into { books, sample, noteCount, fullNoteCount }. Malformed rows are skipped. */
 export function normalizeLibrary(json) {
@@ -183,6 +222,7 @@ export function normalizeLibrary(json) {
       id, title, author: str(b.author).trim(), blurb: str(b.blurb),
       toc_page: Number.isFinite(b.toc_page) ? b.toc_page : 1e6 + i, order: i,
       notes, fullCount: full,
+      cover: safeCover(b.cover), amazon: safeAmazon(b.amazon),
     });
   });
   books.sort((a, b) => a.toc_page - b.toc_page || a.order - b.order);
@@ -209,6 +249,7 @@ export async function loadLibrary(opts = {}) {
       if (!r || !r.ok) throw new Error('HTTP ' + (r ? r.status : '?'));
       const lib = normalizeLibrary(await r.json());
       if (!lib.books.length) throw new Error('no books in ' + url);
+      await loadMeta(lib, opts, f);
       return lib;
     } catch (err) {
       if (opts.signal && opts.signal.aborted) return { books: [], aborted: true };
@@ -217,6 +258,15 @@ export async function loadLibrary(opts = {}) {
     }
   }
   return { books: [], sample: true, error: lastErr };
+}
+
+/** Fetch the metadata-only books-meta.json (covers + amazon links). Missing/bad meta is fine: typographic covers, no buy button. */
+async function loadMeta(lib, opts, f) {
+  if (opts.metaUrl === false || opts.metaUrl === null) return;
+  try {
+    const r = await f(opts.metaUrl || DEFAULT_META_URL, { signal: opts.signal, credentials: 'same-origin', headers: { Accept: 'application/json' } });
+    if (r && r.ok) mergeMeta(lib, await r.json());
+  } catch { /* optional */ }
 }
 
 export function countLabel(n) {
@@ -267,18 +317,19 @@ export function bookMatches(book, ts) {
 }
 
 /**
- * Keyword search over note text, aside, attribution, book title, author and blurb. Every term must appear somewhere in the
+ * Keyword search over note text, aside, attribution, book title and author. Blurbs (role 'blurb', book.blurb) are never searched or returned (t463u). Every term must appear somewhere in the
  * note or its book's title/author; at least one term must be in the note itself. Returns { books, notes: [{book, note}], total }.
  */
 export function searchLibrary(lib, q, max = SEARCH_MAX) {
   const ts = terms(q);
   if (!ts.length || !lib || !lib.books) return { books: [], notes: [], total: 0 };
-  const books = lib.books.filter((b) => ts.every((t) => fold(b.title + '\n' + b.author + '\n' + b.blurb).includes(t)));
+  const books = lib.books.filter((b) => ts.every((t) => fold(b.title + '\n' + b.author).includes(t)));
   const notes = [];
   let total = 0;
   for (const book of lib.books) {
     const bh = fold(book.title + '\n' + book.author);
     for (const note of book.notes) {
+      if (note.role === 'blurb') continue;
       const nh = fold(note.text + '\n' + note.aside + '\n' + note.attribution);
       let inNote = false, ok = true;
       for (const t of ts) {
@@ -340,9 +391,10 @@ export function makeFeed(items, rng = Math.random) {
   };
 }
 
+/** Feed items: every note except the per-book blurb ("Blake · on this book"), which lives only on that book's page (t463u). */
 export function allItems(lib) {
   const out = [];
-  for (const book of (lib && lib.books) || []) for (const note of book.notes) out.push({ book, note });
+  for (const book of (lib && lib.books) || []) for (const note of book.notes) if (note.role !== 'blurb') out.push({ book, note });
   return out;
 }
 
@@ -359,8 +411,11 @@ export function sessionLabel(s) {
 
 /* ---------- render (pure: data -> HTML string) ---------- */
 
-export function renderCover(book) {
-  return `<span class="zp-cover" style="--zp-h:${hue(book.id)}" aria-hidden="true"><span class="zp-cover-title">${esc(book.title)}</span>` +
+export function renderCover(book, base) {
+  const img = book.cover
+    ? `<img class="zp-cover-img" src="${esc(new URL(book.cover, base || DEFAULT_COVERS_BASE).href)}" alt="${esc(book.title + (book.author ? ' by ' + book.author : ''))}" loading="lazy" decoding="async">`
+    : '';
+  return `<span class="zp-cover" style="--zp-h:${hue(book.id)}"${book.cover ? '' : ' aria-hidden="true"'}>${img}<span class="zp-cover-title">${esc(book.title)}</span>` +
     `<span><span class="zp-cover-rule"></span><span class="zp-cover-author">${esc(book.author || 'Notebook')}</span></span>` +
     `<span class="zp-cover-mark">Zuniga Philosophy</span></span>`;
 }
@@ -371,9 +426,10 @@ export function renderItem(book, note, opts = {}) {
   const isNote = note.kind === 'note';
   const saved = opts.saved && opts.saved.has(note.id);
   const cls = 'zp-item ' + (isNote ? 'zp-item--note' : 'zp-item--quote') + (note.starred ? ' zp-item--star' : '');
+  if (note.role === 'blurb') return ''; // never a feed / search / saved card (t463u)
   let h = `<li class="${cls}" data-note-id="${esc(note.id)}">`;
   if (isNote || note.starred) {
-    h += `<span class="zp-tag">${note.starred ? '<span class="zp-starmark" aria-label="Starred">★</span>' : ''}${isNote ? (note.role === 'blurb' ? 'Blake · on this book' : 'Blake') : 'Starred'}</span>`;
+    h += `<span class="zp-tag">${note.starred ? '<span class="zp-starmark" aria-label="Starred">★</span>' : ''}${isNote ? 'Blake' : 'Starred'}</span>`;
   }
   h += `<p class="zp-text">${highlight(note.text, ts)}</p>`;
   if (note.attribution) h += `<p class="zp-attr">— ${highlight(note.attribution, ts)}</p>`;
@@ -460,7 +516,8 @@ export function renderBook(lib, book, saved) {
     `<header class="zp-book-head">${renderCover(book)}<div><h2 class="zp-book-title">${esc(book.title)}</h2>` +
     `${book.author ? `<p class="zp-book-author">${esc(book.author)}</p>` : ''}` +
     `<p class="zp-meta">${countLabel(book.fullCount)} · notebook page ${esc(book.toc_page < 1e6 ? book.toc_page : '—')}` +
-    `${lib.sample && book.fullCount > book.notes.length ? ` · sample preview: ${book.notes.length} shown` : ''}</p></div></header>`;
+    `${lib.sample && book.fullCount > book.notes.length ? ` · sample preview: ${book.notes.length} shown` : ''}</p>` +
+    `${book.amazon ? `<a class="zp-buy" href="${esc(book.amazon)}" target="_blank" rel="noopener">Buy on Amazon</a>` : ''}</div></header>`;
   const blurb = blurbNote ? blurbNote.text : book.blurb;
   if (blurb && blurb.trim()) {
     h += `<section class="zp-blurb"${blurbNote ? ` data-note-id="${esc(blurbNote.id)}"` : ''}><span class="zp-tag">Blake · on this book</span>` +
@@ -499,7 +556,7 @@ export function renderFeed(cardsHtml) {
 
 export function renderSaved(lib, saved) {
   const items = [];
-  for (const b of lib.books) for (const n of b.notes) if (saved.has(n.id)) items.push({ book: b, note: n });
+  for (const b of lib.books) for (const n of b.notes) if (n.role !== 'blurb' && saved.has(n.id)) items.push({ book: b, note: n });
   if (!items.length) return `<p class="zp-empty">Nothing saved yet. Tap ☆ on any passage to keep it here (on this device only).</p>`;
   return `<h2 class="zp-sub">${countLabel(items.length).replace('note', 'saved passage')}</h2><ol class="zp-list">${renderFeedCards(items, saved)}</ol>`;
 }
@@ -715,6 +772,14 @@ export function mountZunigaPhilosophy(el, opts = {}) {
     }
     on(el, 'click', onClick);
     on(el, 'input', onInput);
+    // <img> error does not bubble: capture it, drop the broken jacket; the typographic cover underneath shows.
+    on(el, 'error', (e) => {
+      const im = e.target;
+      if (im && im.tagName === 'IMG' && im.classList && im.classList.contains('zp-cover-img')) {
+        const cov = im.parentNode;
+        try { if (cov && cov.setAttribute) cov.setAttribute('aria-hidden', 'true'); im.remove(); } catch { /* ignore */ }
+      }
+    }, true);
     if (useHash) on(window, 'hashchange', () => { const r = parseRoute(location.hash); if (r) applyRoute(r); });
     render();
   } catch (err) {
@@ -722,7 +787,7 @@ export function mountZunigaPhilosophy(el, opts = {}) {
     try { el.innerHTML = '<p class="zp-msg">Zuniga Philosophy could not start.</p>'; } catch { /* ignore */ }
   }
 
-  const ready = loadLibrary({ booksUrl: opts.booksUrl, fullUrl: opts.fullUrl, fetch: opts.fetch, signal: ctl ? ctl.signal : undefined })
+  const ready = loadLibrary({ booksUrl: opts.booksUrl, fullUrl: opts.fullUrl, metaUrl: opts.metaUrl, fetch: opts.fetch, signal: ctl ? ctl.signal : undefined })
     .then((res) => {
       if (dead || res.aborted) return;
       lib = res;

@@ -1,0 +1,17 @@
+ok   sample has 38 book ids
+FAIL data/books-meta.json exists
+FAIL covers/ directory exists
+FAIL books-meta.json parses as { books: [...] }
+FAIL books-meta.json has a row for every sample book id (and no unknown ids)
+FAIL every book has a non-empty cover file or coverFallback:true (0 files, 0 fallback) — missing/bad: meditations, tough, atomic-habits, millionaire-next-door, men-are-from-mars-women-are-from-venus, tax-free-wealth
+ok   cover images are small (each <= 400 KB)
+ok   covers/ holds only images
+FAIL every book has an amazon.com /dp/<ASIN> or /s?k=<query> link — bad: meditations, tough, atomic-habits, millionaire-next-door, men-are-from-mars-women-are-from-venus, tax-free-wealth
+FAIL no affiliate / tracking params (tag=, ref=, linkCode, creative, camp, th=, psc=)
+FAIL no secrets (keys, tokens, passwords, emails)
+FAIL books-meta.json has no long strings (no quote text)
+FAIL books-meta.json has no notes / text / quote / blurb keys
+FAIL books-meta.json is small (<= 80 KB)
+FAIL module exports mergeMeta / safeAmazon / safeCover
+FAIL Buy on Amazon wiring present in module source
+FAIL (13)

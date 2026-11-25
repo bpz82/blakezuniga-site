@@ -1,0 +1,338 @@
+{
+  "books": [
+    {
+      "id": "meditations",
+      "cover": "covers/meditations.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0812968255",
+      "amazonKind": "dp",
+      "edition": "Gregory Hays translation, Modern Library, 2003",
+      "isbn10": "0812968255"
+    },
+    {
+      "id": "tough",
+      "cover": "covers/tough.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0593329805",
+      "amazonKind": "dp",
+      "edition": "Penguin, 2022 (Tough: My Journey to True Power)",
+      "isbn10": "0593329805"
+    },
+    {
+      "id": "atomic-habits",
+      "cover": "covers/atomic-habits.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0735211299",
+      "amazonKind": "dp",
+      "edition": "Avery / Penguin Random House, 2018",
+      "isbn10": "0735211299"
+    },
+    {
+      "id": "millionaire-next-door",
+      "cover": "covers/millionaire-next-door.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0671015206",
+      "amazonKind": "dp",
+      "edition": "Pocket Books, 1998",
+      "isbn10": "0671015206"
+    },
+    {
+      "id": "men-are-from-mars-women-are-from-venus",
+      "cover": "covers/men-are-from-mars-women-are-from-venus.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0060574216",
+      "amazonKind": "dp",
+      "edition": "Harper Paperbacks, 2004",
+      "isbn10": "0060574216"
+    },
+    {
+      "id": "tax-free-wealth",
+      "cover": "covers/tax-free-wealth.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1937832058",
+      "amazonKind": "dp",
+      "edition": "RDA Press / Rich Dad Advisors, 2012",
+      "isbn10": "1937832058"
+    },
+    {
+      "id": "how-to-win-friends-and-influence-people",
+      "cover": "covers/how-to-win-friends-and-influence-people.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1439199191",
+      "amazonKind": "dp",
+      "edition": "Pocket Books, 2010",
+      "isbn10": "1439199191"
+    },
+    {
+      "id": "the-second-mountain",
+      "cover": "covers/the-second-mountain.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0812993268",
+      "amazonKind": "dp",
+      "edition": "Random House, 2019",
+      "isbn10": "0812993268"
+    },
+    {
+      "id": "my-effin-life",
+      "cover": "covers/my-effin-life.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0063159414",
+      "amazonKind": "dp",
+      "edition": "Harper, 2023",
+      "isbn10": "0063159414"
+    },
+    {
+      "id": "cant-hurt-me",
+      "cover": "covers/cant-hurt-me.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1544512279",
+      "amazonKind": "dp",
+      "edition": "Lioncrest Publishing paperback, 2018",
+      "isbn10": "1544512279"
+    },
+    {
+      "id": "the-lean-startup",
+      "cover": "covers/the-lean-startup.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0307887898",
+      "amazonKind": "dp",
+      "edition": "Crown Business, 2011",
+      "isbn10": "0307887898"
+    },
+    {
+      "id": "think-and-grow-rich",
+      "cover": "covers/think-and-grow-rich.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1585424331",
+      "amazonKind": "dp",
+      "edition": "Jeremy P. Tarcher / Penguin, 2005",
+      "isbn10": "1585424331"
+    },
+    {
+      "id": "chronicles-volume-1",
+      "cover": "covers/chronicles-volume-1.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0743230760",
+      "amazonKind": "dp",
+      "edition": "Simon & Schuster hardcover first edition, 2004",
+      "isbn10": "0743230760"
+    },
+    {
+      "id": "the-fountainhead",
+      "cover": "covers/the-fountainhead.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0451191153",
+      "amazonKind": "dp",
+      "edition": "Signet / Penguin, 1993",
+      "isbn10": "0451191153"
+    },
+    {
+      "id": "far-and-away",
+      "coverFallback": true,
+      "amazon": "https://www.amazon.com/dp/1770410597",
+      "amazonKind": "dp",
+      "edition": "ECW Press paperback, 2011 (Far and Away: A Prize Every Time)",
+      "isbn10": "1770410597"
+    },
+    {
+      "id": "brothers-karamasov",
+      "cover": "covers/brothers-karamasov.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0374528373",
+      "amazonKind": "dp",
+      "edition": "Pevear & Volokhonsky, Farrar, Straus and Giroux, 2002",
+      "isbn10": "0374528373"
+    },
+    {
+      "id": "purple-cow",
+      "cover": "covers/purple-cow.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/159184021X",
+      "amazonKind": "dp",
+      "edition": "Portfolio Hardcover first edition, 2003",
+      "isbn10": "159184021X"
+    },
+    {
+      "id": "38-letters-from-rockefeller-to-his-son",
+      "cover": "covers/38-letters-from-rockefeller-to-his-son.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/s?k=38+Letters+from+Rockefeller+to+His+Son",
+      "amazonKind": "search",
+      "edition": "Jacket from an English compilation listing; no official edition verified, so Amazon search is used"
+    },
+    {
+      "id": "its-a-long-story",
+      "cover": "covers/its-a-long-story.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0316403555",
+      "amazonKind": "dp",
+      "edition": "Little, Brown, 2015",
+      "isbn10": "0316403555"
+    },
+    {
+      "id": "take-me-home",
+      "cover": "covers/take-me-home.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0517595370",
+      "amazonKind": "dp",
+      "edition": "Harmony Books autobiography, 1994",
+      "isbn10": "0517595370"
+    },
+    {
+      "id": "freddie-mercury-a-life-in-his-own-words",
+      "cover": "covers/freddie-mercury-a-life-in-his-own-words.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/184772650X",
+      "amazonKind": "dp",
+      "edition": "Omnibus Press, 2008/09, compiled by Brooks & Lupton",
+      "isbn10": "184772650X"
+    },
+    {
+      "id": "atlas-shrugged",
+      "cover": "covers/atlas-shrugged.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0525948929",
+      "amazonKind": "dp",
+      "edition": "Dutton Adult Centennial hardcover, 2005",
+      "isbn10": "0525948929"
+    },
+    {
+      "id": "gary-moore-the-official-biography",
+      "coverFallback": true,
+      "amazon": "https://www.amazon.com/dp/1911036971",
+      "amazonKind": "dp",
+      "edition": "Jawbone / Outline Press, 2022",
+      "isbn10": "1911036971"
+    },
+    {
+      "id": "greenlights",
+      "cover": "covers/greenlights.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0593139135",
+      "amazonKind": "dp",
+      "edition": "Crown / Random House hardcover, 2020",
+      "isbn10": "0593139135"
+    },
+    {
+      "id": "poetics",
+      "cover": "covers/poetics.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0140446362",
+      "amazonKind": "dp",
+      "edition": "Penguin Classics, Malcolm Heath translation, 1996",
+      "isbn10": "0140446362"
+    },
+    {
+      "id": "born-of-this-land-chung-ju-yung",
+      "cover": "covers/born-of-this-land-chung-ju-yung.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/B07YNZF25Z",
+      "amazonKind": "dp",
+      "edition": "The Asan Academy English hardcover, 2019",
+      "asin": "B07YNZF25Z"
+    },
+    {
+      "id": "millionaire-real-estate-investor",
+      "cover": "covers/millionaire-real-estate-investor.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0071446370",
+      "amazonKind": "dp",
+      "edition": "McGraw-Hill, 2005",
+      "isbn10": "0071446370"
+    },
+    {
+      "id": "the-dream-of-solomelo",
+      "coverFallback": true,
+      "amazon": "https://www.amazon.com/dp/8807339153",
+      "amazonKind": "dp",
+      "edition": "Feltrinelli English paperback, 2018",
+      "isbn10": "8807339153"
+    },
+    {
+      "id": "the-art-of-loving",
+      "cover": "covers/the-art-of-loving.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0061129739",
+      "amazonKind": "dp",
+      "edition": "Harper Perennial Modern Classics, 2006",
+      "isbn10": "0061129739"
+    },
+    {
+      "id": "moonwalking-with-einstein",
+      "cover": "covers/moonwalking-with-einstein.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0143120530",
+      "amazonKind": "dp",
+      "edition": "Penguin Books paperback, 2012",
+      "isbn10": "0143120530"
+    },
+    {
+      "id": "jj-cale-guitar-player-magazine-interview",
+      "coverFallback": true,
+      "amazon": "https://www.amazon.com/s?k=JJ+Cale+Guitar+Player+Magazine+Interview",
+      "amazonKind": "search",
+      "edition": "Magazine interview, not a book"
+    },
+    {
+      "id": "peter-green",
+      "cover": "covers/peter-green.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1860745075",
+      "amazonKind": "dp",
+      "edition": "Sanctuary Publishing, 2003 (authorized biography)",
+      "isbn10": "1860745075"
+    },
+    {
+      "id": "the-wealthy-gardener",
+      "cover": "covers/the-wealthy-gardener.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0593189744",
+      "amazonKind": "dp",
+      "edition": "Portfolio / Penguin, 2020",
+      "isbn10": "0593189744"
+    },
+    {
+      "id": "how-to-outwit-the-devil",
+      "cover": "covers/how-to-outwit-the-devil.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1454900679",
+      "amazonKind": "dp",
+      "edition": "Published as Outwitting the Devil, Sterling, 2012",
+      "isbn10": "1454900679"
+    },
+    {
+      "id": "how-to-make-a-few-billion-dollars",
+      "cover": "covers/how-to-make-a-few-billion-dollars.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/B0CHTQP25T",
+      "amazonKind": "dp",
+      "edition": "Greenleaf Book Group Press hardcover, 2024",
+      "asin": "B0CHTQP25T"
+    },
+    {
+      "id": "ogilvy-unpublished",
+      "cover": "covers/ogilvy-unpublished.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/1781250871",
+      "amazonKind": "dp",
+      "edition": "Profile Books, 2012 (The Unpublished David Ogilvy)",
+      "isbn10": "1781250871"
+    },
+    {
+      "id": "scientific-advertising",
+      "cover": "covers/scientific-advertising.jpg",
+      "coverSource": "openlibrary-or-google-books",
+      "amazon": "https://www.amazon.com/dp/0844231010",
+      "amazonKind": "dp",
+      "edition": "McGraw-Hill combined edition with My Life in Advertising, 1997",
+      "isbn10": "0844231010"
+    },
+    {
+      "id": "extras",
+      "coverFallback": true,
+      "amazon": "https://www.amazon.com/s?k=Extras",
+      "amazonKind": "search",
+      "edition": "Notebook section, not a published book"
+    }
+  ]
+}

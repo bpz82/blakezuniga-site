@@ -81,7 +81,9 @@ const items = m.allItems(lib);
 let seed = 7; const rng = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const feed = m.makeFeed(items, rng);
 const pass1 = feed.next(items.length);
-t('feed: one pass shows every item exactly once', new Set(pass1).size === items.length && pass1.length === 113);
+// t463u (Blake's product change): blurbs ("on this book") are no longer feed items, so the feed is 113 notes minus the blurb notes.
+const blurbN = lib.books.reduce((n, b) => n + b.notes.filter((x) => x.role === 'blurb').length, 0);
+t('feed: one pass shows every item exactly once (all notes except blurbs, t463u)', new Set(pass1).size === items.length && pass1.length === 113 - blurbN && items.every((x) => x.note.role !== 'blurb'));
 const pass2 = feed.next(items.length);
 t('feed: second pass is a new order and does not repeat the boundary item', pass2[0] !== pass1[pass1.length - 1] && pass2.some((x, i) => x !== pass1[i]));
 

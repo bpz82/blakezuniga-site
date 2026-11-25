@@ -1,0 +1,37 @@
+# run on the worktree after Grok added apps/zuniga-philosophy/covers/ and data/books-meta.json
+ok   sample has 38 book ids
+ok   data/books-meta.json exists
+ok   covers/ directory exists
+ok   books-meta.json parses as { books: [...] }
+ok   books-meta.json has a row for every sample book id (and no unknown ids)
+ok   every book has a non-empty cover file or coverFallback:true (33 files, 5 fallback)
+ok   cover images are small (each <= 400 KB)
+ok   covers/ holds only images
+ok   every book has an amazon.com /dp/<ASIN> or /s?k=<query> link
+ok   no affiliate / tracking params (tag=, ref=, linkCode, creative, camp, th=, psc=)
+ok   no secrets (keys, tokens, passwords, emails)
+ok   books-meta.json has no long strings (no quote text)
+ok   books-meta.json has no notes / text / quote / blurb keys
+ok   books-meta.json is small (<= 80 KB)
+ok   module exports mergeMeta / safeAmazon / safeCover
+ok   safeAmazon accepts /dp/ and /s?k= links
+ok   safeAmazon rejects affiliate / foreign / javascript links
+ok   safeCover accepts covers/<id>.jpg|webp|png and rejects traversal / absolute / other types
+ok   meta merges by id (cover + amazon); unknown fields and ids ignored
+ok   Books grid: cover <img> with alt = "title by author" for a book with a cover
+ok   Books grid: typographic cover stays under the image, and is the only cover for a book without one
+ok   cover src resolves next to the module (apps/zuniga-philosophy/covers/...)
+ok   coversBase can be overridden
+ok   book page: jacket image shown
+ok   book page: "Buy on Amazon" link, target=_blank, rel=noopener, correct href
+ok   book page: no tag= / ref= / linkCode in any link
+ok   book page without an amazon link: no Buy button, no <img>
+ok   unsafe meta (affiliate tag, traversal) is dropped: no img, no Buy button
+ok   feed / search cards do not render Buy buttons or jackets
+ok   loadLibrary fetches books-meta.json by default (next to the module) and merges it
+ok   opts.metaUrl overrides the meta location
+ok   missing / failing books-meta.json: library still loads, typographic covers, no buy button
+ok   mount listens (capture) for <img> error events
+ok   a failed jacket is removed so the typographic cover shows
+PASS
+exit 0

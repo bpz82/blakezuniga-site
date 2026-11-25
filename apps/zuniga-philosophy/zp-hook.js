@@ -12,7 +12,7 @@ export async function openZpOverlay(doc = typeof document !== 'undefined' ? docu
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute('aria-modal', 'true');
     wrap.setAttribute('aria-label', 'Notebook (preview)');
-    wrap.style.cssText = 'position:fixed;inset:0;z-index:2147483000;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#120c0e';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:2147483000;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#f7f1e6';
     // Keys typed in the app (search) must not reach the home page's own key handlers (walk / amp controls).
     for (const ev of ['keydown', 'keyup', 'keypress']) wrap.addEventListener && wrap.addEventListener(ev, (e) => e.stopPropagation());
     doc.body.appendChild(wrap);

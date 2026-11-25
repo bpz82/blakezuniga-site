@@ -1,0 +1,28 @@
+ok   .zp page background resolves to a colour
+ok   page background is light (relative luminance > 0.80)
+ok   page background is warm (cream: red >= green >= blue, not pure white)
+ok   body ink is dark (luminance < 0.06)
+ok   ink / background contrast >= 10:1
+ok   accent reads on cream (contrast >= 4.5:1 for small tags)
+ok   dim text and hairlines are dark-on-light (not white/cream alpha)
+ok   module CSS has no old dark page / ink colours (#120c0e, #f1e9e6, rgba forms)
+ok   module source has no old dark colours
+ok   standalone index.html has no old dark colours
+ok   zp-hook.js overlay has no old dark colour
+ok   standalone page html/body background is light
+ok   standalone page ink is dark
+ok   theme-color meta is light (matches the page)
+ok   ?zp=1 overlay background is light
+ok   sticky header background is light
+ok   search field background is light
+ok   typographic cover fallback gradient is light (every HSL lightness >= 60%)
+ok   typographic cover has no dark rgba(0,0,0) heavy shadow (soft ink shadow)
+ok   typographic cover has no near-black stop
+ok   BODY_FONT is still 'Times New Roman', Times, serif
+ok   UI_FONT is still Zuniga Mission
+ok   .zp-text stays Times New Roman
+ok   .zp-blurb-text stays Times New Roman
+ok   .zp-aside-text stays Times New Roman
+ok   .zp-attr stays Times New Roman
+ok   no Founders Notes fonts or names added
+PASS
