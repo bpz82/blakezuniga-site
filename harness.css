@@ -241,8 +241,8 @@ a.zg-tile:visited {
 .zg-label {
   position: relative;
   box-sizing: border-box;
-  width: 94%;
-  max-width: 94%;
+  width: 98%;
+  max-width: 98%;
   min-width: 0;
   overflow: hidden;
   text-overflow: clip;
@@ -252,7 +252,7 @@ a.zg-tile:visited {
   line-height: 1.15;
   text-align: center;
   font-family: var(--zg-font-title);
-  font-size: calc(var(--zg-size) * 0.11);
+  font-size: calc(var(--zg-size) * 0.16);   /* t473u: was 0.11 (14.19px at 129); now 20.64px at 129, 18.88 at 118, 16.96 at 106 */
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: #141012;
@@ -278,7 +278,7 @@ a.zg-tile:visited {
     font-size: 0;
   }
   .zg-label {
-    font-size: calc(var(--zg-size) * 0.105);
+    font-size: calc(var(--zg-size) * 0.16);   /* t473u: was 0.105 (9.24px at 88); now 14.08px */
   }
 }
 .zg-badge {

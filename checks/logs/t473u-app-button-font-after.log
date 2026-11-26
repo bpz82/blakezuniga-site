@@ -1,0 +1,24 @@
+ok   .zg-label uses var(--zg-font-title)
+ok   --zg-font-title is Zuniga Mission
+ok   phone tile size formula still vw * 0.225, clamp 56..100
+ok   desktop tile size formula still vw * 0.168, clamp 106..129
+ok   phone breakpoint still vw < 600
+ok   parsed desktop .zg-label font-size: calc(var(--zg-size) * 0.16)
+ok   parsed phone .zg-label font-size: calc(var(--zg-size) * 0.16)
+ok   phone 393: tile size 88px, label font-size 14.08px >= 14px
+ok   phone 393: "Contact" fits in 84.3px at 14.08px (longest word, wrap at spaces ok)
+ok   phone 393: "Collaborative Projects" fits in 84.3px at 14.08px (longest word, wrap at spaces ok)
+ok   phone 393: "Vinyl Vault" fits in 84.3px at 14.08px (longest word, wrap at spaces ok)
+ok   desktop 700: tile size 118px, label font-size 18.88px >= 16px
+ok   desktop 700: "Contact" fits in 113.7px at 18.88px (longest word, wrap at spaces ok)
+ok   desktop 700: "Collaborative Projects" fits in 113.7px at 18.88px (longest word, wrap at spaces ok)
+ok   desktop 700: "Vinyl Vault" fits in 113.7px at 18.88px (longest word, wrap at spaces ok)
+ok   desktop 1280: tile size 129px, label font-size 20.64px >= 16px
+ok   desktop 1280: "Contact" fits in 124.5px at 20.64px (longest word, wrap at spaces ok)
+ok   desktop 1280: "Collaborative Projects" fits in 124.5px at 20.64px (longest word, wrap at spaces ok)
+ok   desktop 1280: "Vinyl Vault" fits in 124.5px at 20.64px (longest word, wrap at spaces ok)
+ok   widgets.js still has "Contact"
+ok   widgets.js still has "Collaborative Projects"
+ok   widgets.js still has "Vinyl Vault"
+PASS
+exit 0

@@ -756,8 +756,8 @@ function fitTileLabels() {
       let ls = parseFloat(getComputedStyle(label).letterSpacing);
       if (!isFinite(ls)) ls = fs * 0.03;
       for (let i = 0; i < 24 && label.scrollWidth > label.clientWidth; i++) {
-        if (ls > fs * 0.01) {
-          ls = Math.max(fs * 0.01, ls - fs * 0.005);
+        if (ls > 0) {
+          ls = Math.max(0, ls - fs * 0.005);
           label.style.letterSpacing = ls + 'px';
         } else {
           fs = Math.max(7, fs - 0.5);
