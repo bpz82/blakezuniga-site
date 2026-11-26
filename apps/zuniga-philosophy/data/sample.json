@@ -1,11 +1,11 @@
 {
   "sample": true,
-  "policy": "34 books; first 3 notes per book (includes TOC blurb when present). Full quote text is not in this file. Removed from the app at Blake's request (t464u/t466u), source notebook left untouched: The Dream of Solomeo, Scientific Advertising, Born of This Land, Ogilvy Unpublished.",
-  "generated": "2026-11-25T17:29:00-05:00",
+  "policy": "34 books; first 3 notes per book (includes TOC blurb when present), taken after the t467u fragment cleanup (split bullets rejoined, session locations and times moved to session metadata, context headings merged into their quote). This file is the sample set only; the full notebook is not in this repo. Removed from the app at Blake's request (t464u/t466u), source notebook left untouched: The Dream of Solomeo, Scientific Advertising, Born of This Land, Ogilvy Unpublished.",
+  "generated": "2026-11-25T20:15:00-05:00",
   "source": "zuniga-philosophy-notes/data/books.clean.json (not in the public repo)",
   "book_count": 34,
   "note_count": 101,
-  "full_note_count": 2451,
+  "full_note_count": 2418,
   "books": [
     {
       "id": "meditations",
@@ -147,17 +147,17 @@
           }
         },
         {
-          "id": "millionaire-next-door-n0002",
-          "text": "The Millionaire Nextdoor Checklist:",
+          "id": "millionaire-next-door-n0003",
+          "text": "The Millionaire Nextdoor Checklist:\nThey live below their means",
           "kind": "quote",
-          "source_line": 429,
+          "source_line": 430,
           "session": {
             "date": "7/11/2022"
           }
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 22
+      "full_note_count": 21
     },
     {
       "id": "men-are-from-mars-women-are-from-venus",
@@ -411,10 +411,10 @@
           }
         },
         {
-          "id": "the-lean-startup-n0002",
-          "text": "Entrepreneur Prerequisites:",
+          "id": "the-lean-startup-n0003",
+          "text": "Entrepreneur Prerequisites:\nProper Team Structure",
           "kind": "quote",
-          "source_line": 929,
+          "source_line": 930,
           "session": {
             "date": "1/25/2024",
             "time": "11:07",
@@ -423,7 +423,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 26
+      "full_note_count": 25
     },
     {
       "id": "think-and-grow-rich",
@@ -461,7 +461,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 394
+      "full_note_count": 390
     },
     {
       "id": "chronicles-volume-1",
@@ -718,7 +718,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 366
+      "full_note_count": 364
     },
     {
       "id": "its-a-long-story",
@@ -737,16 +737,6 @@
           "source_line": 95
         },
         {
-          "id": "its-a-long-story-n0001",
-          "text": "Ride to Texas (Right outside of Amarillo)",
-          "kind": "quote",
-          "source_line": 2447,
-          "session": {
-            "date": "4/7/2024",
-            "time": "10:24"
-          }
-        },
-        {
           "id": "its-a-long-story-n0002",
           "text": "The more intense my personal life became, the more I concentrated on making sounds that soothed my soul.",
           "kind": "quote",
@@ -754,12 +744,25 @@
           "session": {
             "date": "4/7/2024",
             "time": "10:24",
-            "label": "Willie Nelson Book"
+            "label": "Willie Nelson Book",
+            "place": "Ride to Texas (Right outside of Amarillo)"
+          }
+        },
+        {
+          "id": "its-a-long-story-n0003",
+          "text": "You live based on loyalty. You stay on the right side. You protect your own.",
+          "kind": "quote",
+          "source_line": 2450,
+          "session": {
+            "date": "4/7/2024",
+            "time": "10:24",
+            "label": "Willie Nelson Book",
+            "place": "Ride to Texas (Right outside of Amarillo)"
           }
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 25
+      "full_note_count": 22
     },
     {
       "id": "take-me-home",
@@ -778,16 +781,6 @@
           "source_line": 100
         },
         {
-          "id": "take-me-home-n0001",
-          "text": "Ride to Texas (Right outside of Amarillo)",
-          "kind": "quote",
-          "source_line": 2501,
-          "session": {
-            "date": "4/7/2024",
-            "time": "11:40"
-          }
-        },
-        {
           "id": "take-me-home-n0002",
           "text": "“They were so insecure about their place in the world that they couldn’t see giving anyone else a hand up.” (His parents)",
           "kind": "quote",
@@ -795,12 +788,25 @@
           "session": {
             "date": "4/7/2024",
             "time": "11:40",
-            "label": "John Denver Book"
+            "label": "John Denver Book",
+            "place": "Ride to Texas (Right outside of Amarillo)"
+          }
+        },
+        {
+          "id": "take-me-home-n0003",
+          "text": "The military was a very political environment, fraught with conflict and difficulty. And I think my folks were caught up in the classic struggle for professional respectability.",
+          "kind": "quote",
+          "source_line": 2504,
+          "session": {
+            "date": "4/7/2024",
+            "time": "11:40",
+            "label": "John Denver Book",
+            "place": "Ride to Texas (Right outside of Amarillo)"
           }
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 64
+      "full_note_count": 63
     },
     {
       "id": "freddie-mercury-a-life-in-his-own-words",
@@ -844,7 +850,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 47
+      "full_note_count": 46
     },
     {
       "id": "atlas-shrugged",
@@ -887,7 +893,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 95
+      "full_note_count": 94
     },
     {
       "id": "gary-moore-the-official-biography",
@@ -918,10 +924,10 @@
           }
         },
         {
-          "id": "gary-moore-the-official-biography-n0002",
-          "text": "Gary on getting back into the blues -",
+          "id": "gary-moore-the-official-biography-n0003",
+          "text": "Gary on getting back into the blues:\n“It was relearning. It was like stripping everything down, including the whole sound. You know, getting away from the huge wall of amplifiers, playing through little amps in the rehearsal room and just taking it right back to the essence and going from there again and rediscovering all the things you’d forgotten over the years, all kinds of nice things - All the reasons you started playing in the first place.”",
           "kind": "quote",
-          "source_line": 3160,
+          "source_line": 3161,
           "session": {
             "date": "9/13/2024",
             "time": "09:49",
@@ -931,7 +937,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 57
+      "full_note_count": 55
     },
     {
       "id": "greenlights",
@@ -975,7 +981,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 169
+      "full_note_count": 160
     },
     {
       "id": "poetics",
@@ -1061,7 +1067,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 20
+      "full_note_count": 19
     },
     {
       "id": "the-art-of-loving",
@@ -1105,7 +1111,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 69
+      "full_note_count": 68
     },
     {
       "id": "moonwalking-with-einstein",
@@ -1224,10 +1230,10 @@
           }
         },
         {
-          "id": "peter-green-n0002",
-          "text": "*Talking about John Mayall*",
+          "id": "peter-green-n0003",
+          "text": "*Talking about John Mayall*\nHere you have a front man who, if he admired someone's ability, was quite happy to step back and almost become a backdrop for talent. What often happened was that Eric, Peter or Mick Taylor “outfronted” the front man and John didn’t mind at all. John Mayall had an objective view with regard to the extent of his own talents, an ego which allowed him to see that musically the whole is almost always far bigger than the sum of the individual parts.",
           "kind": "quote",
-          "source_line": 4190,
+          "source_line": 4191,
           "session": {
             "date": "04/18/2025",
             "time": "06:58",
@@ -1237,7 +1243,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 24
+      "full_note_count": 23
     },
     {
       "id": "the-wealthy-gardener",
@@ -1281,7 +1287,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 194
+      "full_note_count": 192
     },
     {
       "id": "how-to-outwit-the-devil",
@@ -1325,7 +1331,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 196
+      "full_note_count": 194
     },
     {
       "id": "how-to-make-a-few-billion-dollars",
@@ -1369,7 +1375,7 @@
         }
       ],
       "sample_note_count": 3,
-      "full_note_count": 75
+      "full_note_count": 74
     },
     {
       "id": "extras",

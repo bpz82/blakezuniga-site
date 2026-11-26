@@ -1,0 +1,17 @@
+ok   no non-blurb sample note is a bare parenthetical
+FAIL no non-blurb sample note is a location / page / loc / time-only marker :: its-a-long-story/its-a-long-story-n0001 "Ride to Texas (Right outside of Amarillo)" ; take-me-home/take-me-home-n0001 "Ride to Texas (Right outside of Amarillo)"
+ok   no non-blurb sample note is a leading bullet character
+FAIL no non-blurb sample note is a dangling dash :: gary-moore-the-official-biography/gary-moore-the-official-biography-n0002 "Gary on getting back into the blues -"
+ok   sample is flagged sample:true
+ok   34 books, book_count 34
+ok   the four removed ids are still absent
+ok   <= 3 notes per book; blurb (if any) plus up to 2 body notes, else up to 3 body notes
+ok   note_count (101) equals notes present (101)
+ok   note_count stays in the expected range (95..102)
+ok   every book that has a blurb field still has its blurb note first
+ok   every book still has at least one body note except possibly none-for-empty books
+FAIL Take Me Home first Feed note is a real quote, not the Amarillo location :: Ride to Texas (Right outside of Amarillo)
+FAIL Gary Moore sample has no bare "Gary on getting back into the blues -" fragment
+ok   short legitimate quotes are still allowed (rule set does not match "Stay Mindful" / "Take Them!")
+FAIL (4)
+exit 1
