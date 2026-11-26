@@ -1,0 +1,10 @@
+FAIL photo-tv/panel-pose.js (applyPanelWorldPose / steadyPanel) missing
+ok   photo-tv.js: refCam() found
+FAIL refCam(): no `return c` live-camera fallback
+ok   photo-tv.js: place() found
+FAIL place(): goes through steadyPanel (stored world pose, camera-free apply)
+ok   place(): never copies the live camera onto the lock
+FAIL place(): pose camera is the reference camera (refCam(c0))
+FAIL place(): no per-frame "pivot follows the camera" path
+FAIL t470u-panel-steady
+exit 1

@@ -1,0 +1,17 @@
+ok   panel-pose.js exports bakePanelPose, applyPanelWorldPose, steadyPanel
+ok   applyPanelWorldPose: lock = stored pose exactly
+ok   steadyPanel, reference not ready: no live-camera pose, no bake (bakes 0)
+ok   steadyPanel, reference not ready: lock hidden until baked
+ok   steadyPanel, reference ready: baked once (bakes 1)
+ok   steadyPanel after bake, pointer-orbit camera: lock = baked pose, no rebake (bakes 1)
+ok   steadyPanel after bake, amp-walk camera: lock = baked pose, no rebake (bakes 1)
+ok   steadyPanel after bake, ref-lost camera: lock = baked pose, no rebake (bakes 1)
+ok   photo-tv.js: refCam() found
+ok   refCam(): no `return c` live-camera fallback
+ok   photo-tv.js: place() found
+ok   place(): goes through steadyPanel (stored world pose, camera-free apply)
+ok   place(): never copies the live camera onto the lock
+ok   place(): pose camera is the reference camera (n/a)
+ok   place(): no per-frame "pivot follows the camera" path
+PASS t470u-panel-steady
+exit 0

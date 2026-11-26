@@ -1,7 +1,10 @@
 // t457u-title-amp-world (Blake ask t457u "Zuniga folk blues needs to stay in the air over by the guitar even when I switch to the
 // amp"): in amp mode the ZUNIGA title must float in WORLD space by the guitar like Explore (walk), not be billboarded to the amp
 // camera. (1) layout/title.js place() in body mode 'amp' must not move / rotate / scale the mesh (zgWordTick places it) and must
-// keep it on top like walk. (2) index.html's zgWordTick must hand the word tick mode 'walk' while body[data-mode] is 'amp' (the
+// (t470u MEASUREMENT CHANGE, Blake t470u "this needs to disappear in any spots the amp would block regular vision": the old
+// "keep it on top like walk / renderOrder 1000" amp assertion is replaced by "NOT on top in amp" so the amp occludes the title;
+// world-pose and zgWordTick assertions unchanged; t470u log pair: checks/logs/t457u-title-amp-world-t470u-before.log (FAIL on
+// 1d248ab) / -t470u-after.log (PASS)). (2) index.html's zgWordTick must hand the word tick mode 'walk' while body[data-mode] is 'amp' (the
 // page's own `mode` stays 'show' there, which made the word re-fit to the amp camera frustum), and leave show / walk unchanged.
 // Exits nonzero on fail. Runs: Node (no browser). Runtime < 1 s.
 // Evidence (new check: FAIL before the fix, PASS after):
@@ -32,7 +35,8 @@ for (const fov of [38, 72, 95]) {
   const cam = { fov, aspect: 1.5, position: { x: 0, y: 0, z: 0 }, quaternion: { x: 0, y: 0, z: 0, w: 1 } };
   place(mesh, cam, T);
   report(calls.length === 0, `place() mode amp fov ${fov}: mesh untouched (calls: ${calls.join(',') || 'none'})`);
-  report(mesh.renderOrder === 1000, `place() mode amp fov ${fov}: drawn on top like walk (renderOrder ${mesh.renderOrder})`);
+  // t470u MEASUREMENT CHANGE: was `renderOrder === 1000` ("drawn on top like walk"); on top let the title show through the amp.
+  report(mesh.renderOrder !== 1000, `place() mode amp fov ${fov}: depth-tested, not on top (renderOrder ${mesh.renderOrder}, not 1000; t470u)`);
 }
 
 // (2) index.html zgWordTick: amp -> walk for the word tick

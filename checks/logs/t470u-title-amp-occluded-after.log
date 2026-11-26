@@ -1,0 +1,22 @@
+ok   walk: on top (renderOrder 1000, want 1000)
+ok   walk: depth-clear onBeforeRender hook set (Explore unchanged)
+ok   walk: mesh pose untouched (calls: none)
+ok   amp (fresh): mesh pose untouched (calls: none)
+ok   amp (fresh): depthTest true depthWrite true
+ok   amp (fresh): renderOrder 11 (want BASE_RO 11, not on-top 1000)
+ok   amp (fresh): Folk Blues renderOrder 11 (not on-top 1001)
+ok   amp (fresh): no depth-clearing onBeforeRender
+ok   amp (after walk): mesh pose untouched (calls: none)
+ok   amp (after walk): depthTest true depthWrite true
+ok   amp (after walk): renderOrder 11 (want BASE_RO 11, not on-top 1000)
+ok   amp (after walk): Folk Blues renderOrder 11 (not on-top 1001)
+ok   amp (after walk): no depth-clearing onBeforeRender
+ok   amp (after show): mesh pose untouched (calls: none)
+ok   amp (after show): depthTest true depthWrite true
+ok   amp (after show): renderOrder 11 (want BASE_RO 11, not on-top 1000)
+ok   amp (after show): Folk Blues renderOrder 11 (not on-top 1001)
+ok   amp (after show): no depth-clearing onBeforeRender
+ok   title.js place(): no setTop(mesh, true) on an amp line (0 found)
+ok   title.js place(): no clearDepth for amp
+PASS t470u-title-amp-occluded
+exit 0

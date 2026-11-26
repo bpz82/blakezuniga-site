@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { neonLevel, NEON_DELAY_MS } from './neon-flicker.js';
 import { inlaySign } from './sign-inlay.js';
+import { steadyPanel } from './panel-pose.js';
 
 const now = () => Math.round(performance.now());
 const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -750,14 +751,17 @@ export async function mountPhotoTV(opts) {
     // REFERENCE home camera (layout.json camera yaw / pitch on the live orbit centre and radius), not the live camera. So at the
     // saved pose (the 17 s hold, and the editor) it sits exactly where layout.json says (same cx, cy, w, h, depth, rz, ry mapping),
     // and once the orbit runs it stays put in the world and turns with the guitar, amp and floor like the background.
+    // Blake t470u ("stay kinda in one spot like how the amp does"): the lock's world pose is baked ONCE from that reference camera
+    // into a stored pose (panel-pose.js) and from then on applied camera-free, like applyAmp. No live-camera fallback: until the home
+    // orbit is ready the lock stays hidden instead of following the live camera.
     const refC = new THREE.PerspectiveCamera(38, 1, 2, 2000);
-    let placedOnce = false;
-    const refCam = (c) => {
+    const poseState = { pose: null };
+    const refCam = () => {
       const O = dbg.homeOrbit;
-      if (!O || !O.ok || !(O.R > 0)) return c;   // no home frame yet: fall back to the live camera (first frames only)
+      if (!O || !O.ok || !(O.R > 0)) return null;   // no home frame yet: wait (never the live camera)
       const Lc = (window.__homeLayout || {}).camera || {};
       const y = Lc.yaw != null ? +Lc.yaw : 0.6, p = Lc.pitch != null ? +Lc.pitch : 0.55;   // 0.6 / 0.55 = index.html BOOT_HOME
-      refC.fov = 38; refC.aspect = c.aspect; refC.near = 2; refC.far = 2000;   // 38 = the home (show) camera fov in index.html
+      refC.fov = 38; refC.aspect = camera.aspect; refC.near = 2; refC.far = 2000;   // 38 = the home (show) camera fov in index.html
       refC.position.set(O.cx + Math.sin(y) * Math.cos(p) * O.R, O.cy + Math.sin(p) * O.R, O.cz + Math.cos(y) * Math.cos(p) * O.R);
       refC.lookAt(O.cx, O.cy, O.cz);
       refC.updateMatrixWorld(true);
@@ -766,18 +770,18 @@ export async function mountPhotoTV(opts) {
     const place = (r, s, c0) => {   // upper-middle of the reference view on desktop, a wide band behind the scene on phones
       if (!c0 || !c0.isPerspectiveCamera) return;
       const orbit = dbg.homeOrbit, orbitReady = !!(orbit && orbit.ok && orbit.R > 0);
-      // Lock the world pose only after the home orbit is ready, so an earlier panel boot cannot freeze a first-frame camera.
-      if (placedOnce && orbitReady) return;
-      if (placedOnce && c0 !== camera) return;
-      const c = refCam(c0);
-      if (orbitReady) placedOnce = true;
+      // t470u: stored world pose; bakePanel runs once (reference camera only), every later call just re-applies the stored pose
+      steadyPanel(poseState, lock, c0, orbitReady, bakePanel);
+    };
+    const bakePanel = () => {
+      const c = refCam();
       const L = window.__homeLayout || {}, P = L.panel || {}, N = L.neon;
       const D = P.depth || 600, th = Math.tan(c.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * c.aspect, ph = innerWidth < 600 || innerWidth < innerHeight;
       let w = P.w != null ? Wv * P.w : Wv * (ph ? 0.96 : 0.5), h = P.h != null ? Hv * P.h : w * SCR_H / SCR_W;
       if (P.w == null || P.h == null) { const hm = Hv * (ph ? 0.4 : 0.56); if (h > hm) { h = hm; w = h * SCR_W / SCR_H; } }
       fw.set(0, 0, -1).applyQuaternion(c.quaternion); up.set(0, 1, 0).applyQuaternion(c.quaternion); rt.set(1, 0, 0).applyQuaternion(c.quaternion);
       const cy = P.cy != null ? P.cy : (ph ? -0.01 : 0.0), cx = P.cx != null ? P.cx : 0;
-      // Pivot follows the camera; tilt/turn live on the child so a later camera-quat copy cannot overwrite them.
+      // Pivot from the reference camera (baked once); tilt/turn live on the child.
       lock.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * cy).addScaledVector(rt, Wv * cx);
       {
         // saved (layout.json lx / ly / s / rz) or default spot, then round 3: inlaid into the wood/brass rail
