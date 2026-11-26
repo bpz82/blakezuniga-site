@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { neonLevel, NEON_DELAY_MS } from './neon-flicker.js';
+import { inlaySign } from './sign-inlay.js';
 
 const now = () => Math.round(performance.now());
 const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -742,20 +743,9 @@ export async function mountPhotoTV(opts) {
     const fw = new THREE.Vector3(), up = new THREE.Vector3(), rt = new THREE.Vector3();
     const offE = new THREE.Euler(), offQ = new THREE.Quaternion();
     const DESK_TILT = 12 * Math.PI / 180, tiltQ = new THREE.Quaternion(), yAx = new THREE.Vector3(0, 1, 0), gW = new THREE.Vector3();
-    // round 2: the sign (board / lettering / glow, all SIGN.w x ph planes at scale s) kept inside the glass rounded rect inset by
-    // SIGN_INSET (panel units; the frame's brass lip starts at the glass edge). Shrinks only if it cannot fit; then clamps the
-    // centre; then, in a rounded corner, moves it the shortest way (toward the corner's arc centre) until the corner is inside.
-    const SIGN_INSET = 0.016, PHS = SIGN.w * NEON_CH / NEON_CW;
-    const insetSign = (x, y, s, rz) => {
-      const HW = SCR_W / 2 - SIGN_INSET, HH = SCR_H / 2 - SIGN_INSET, RR = SCR_R - SIGN_INSET, ca = Math.abs(Math.cos(rz)), sa = Math.abs(Math.sin(rz));
-      const ext = (k) => [(SIGN.w * k / 2) * ca + (PHS * k / 2) * sa, (SIGN.w * k / 2) * sa + (PHS * k / 2) * ca];
-      let [ex, ey] = ext(s);
-      const f = Math.min(1, HW / ex, HH / ey); if (f < 1) { s *= f * 0.999; [ex, ey] = ext(s); }
-      x = Math.max(-HW + ex, Math.min(HW - ex, x)); y = Math.max(-HH + ey, Math.min(HH - ey, y));
-      const qx = Math.abs(x) + ex - (HW - RR), qy = Math.abs(y) + ey - (HH - RR), d = Math.hypot(qx, qy);
-      if (qx > 0 && qy > 0 && d > RR) { const k = 1 - RR / d; x -= Math.sign(x) * qx * k; y -= Math.sign(y) * qy * k; }
-      return { x, y, s };
-    };
+    // round 3 (Blake t440u): the sign is inlaid in the wood/brass frame rail (pure inlaySign: no DOM / THREE).
+    // Round 2 kept it inside the glass; that read as a card sitting on / overlapping the top of the frame.
+    const PHS = SIGN.w * NEON_CH / NEON_CW;
     // Polish (Blake t405u "the panel should join the spinning background"): the panel is posed ONCE per frame against a fixed
     // REFERENCE home camera (layout.json camera yaw / pitch on the live orbit centre and radius), not the live camera. So at the
     // saved pose (the 17 s hold, and the editor) it sits exactly where layout.json says (same cx, cy, w, h, depth, rz, ry mapping),
@@ -775,9 +765,12 @@ export async function mountPhotoTV(opts) {
     };
     const place = (r, s, c0) => {   // upper-middle of the reference view on desktop, a wide band behind the scene on phones
       if (!c0 || !c0.isPerspectiveCamera) return;
-      if (c0 !== camera && placedOnce) return;   // other cameras (none today) never move the world-fixed panel
-      placedOnce = true;
+      const orbit = dbg.homeOrbit, orbitReady = !!(orbit && orbit.ok && orbit.R > 0);
+      // Lock the world pose only after the home orbit is ready, so an earlier panel boot cannot freeze a first-frame camera.
+      if (placedOnce && orbitReady) return;
+      if (placedOnce && c0 !== camera) return;
       const c = refCam(c0);
+      if (orbitReady) placedOnce = true;
       const L = window.__homeLayout || {}, P = L.panel || {}, N = L.neon;
       const D = P.depth || 600, th = Math.tan(c.fov * Math.PI / 360), Hv = 2 * D * th, Wv = Hv * c.aspect, ph = innerWidth < 600 || innerWidth < innerHeight;
       let w = P.w != null ? Wv * P.w : Wv * (ph ? 0.96 : 0.5), h = P.h != null ? Hv * P.h : w * SCR_H / SCR_W;
@@ -787,14 +780,15 @@ export async function mountPhotoTV(opts) {
       // Pivot follows the camera; tilt/turn live on the child so a later camera-quat copy cannot overwrite them.
       lock.position.copy(c.position).addScaledVector(fw, D).addScaledVector(up, Hv * cy).addScaledVector(rt, Wv * cx);
       {
-        // saved (layout.json lx / ly / s / rz) or default spot, then round 2 (Blake t418u "precious memories isnt touching the
-        // border of the panel"): kept inside the frame's inner edge (the glass rounded rect) with a clear SIGN_INSET gap
+        // saved (layout.json lx / ly / s / rz) or default spot, then round 3: inlaid into the wood/brass rail
+        // (phone: top rail; desktop: bottom rail). layout.json itself is not edited.
         let sx, sy, sk, srz;
         if (N && N.lx != null) { sx = N.lx * SCR_W; sy = N.ly * SCR_H; sk = N.s != null ? N.s : 1; srz = N.rz || 0; }
         else { sx = ph ? SCR_W * 0.285 : SCR_W * 0.24; sy = SCR_H / 2; sk = ph ? 0.82 : 1; srz = 0; }   // Blake 10:18 default spot (desktop / phone)
-        const fit = insetSign(sx, sy, NS * sk, srz);
+        const fit = inlaySign({ x: sx, y: sy, s: NS * sk, rz: srz, scrW: SCR_W, scrH: SCR_H, scrR: SCR_R, signW: SIGN.w, signH: PHS });
         for (const [m, ro, z] of neonParts) {
-          m.position.set(fit.x, fit.y, z); m.scale.setScalar(m.userData.s0 * fit.s / NS); m.rotation.z = srz;
+          const zz = m === tv.signBoard ? fit.zBoard : m === tv.neonMesh ? fit.zLetter : fit.zGlow;
+          m.position.set(fit.x, fit.y, zz); m.scale.setScalar(m.userData.s0 * fit.s / NS); m.rotation.z = srz;
           if (m.renderOrder !== (ph ? 50 + ro : ro) || m.material.transparent !== ph) { m.renderOrder = ph ? 50 + ro : ro; m.material.transparent = ph; m.material.needsUpdate = true; }
         }
         S.neon.inset = fit;
@@ -829,7 +823,7 @@ export async function mountPhotoTV(opts) {
       const origRender = renderer.render.bind(renderer);
       renderer.render = (s, c) => { try { place(renderer, s, c); } catch (_) {} return origRender(s, c); };
     }
-    // Blake 9:53: the Precious Memories sign sits on the panel's top border (layout.json neon lx / ly / s / rz when present).
+    // Blake 9:53 / t440u: the Precious Memories sign is placed on the panel (layout.json neon lx / ly / s / rz when present); place() inlays it in the frame rail.
     // t416u look #4: the walnut plaque (its own backing, so the old 0x050403 dark strip is gone) under the gold-leaf lettering.
     let neonPh = null; const neonParts = [];   // [mesh, desktop renderOrder, z]
     const NS = (SCR_W * 0.46) / SIGN.w;
@@ -901,7 +895,8 @@ export async function mountPhotoTV(opts) {
   const first = loadNext();   // first photo loads while the materials compile
   try {
     if (panel) { panel.traverse(o => { o.layers.set(0); }); await Promise.race([renderer.compileAsync(panel, camera, scene), new Promise(r => setTimeout(r, 30000))]); panel.traverse(o => { o.layers.set(1); }); }
-    await Promise.race([renderer.compileAsync(tv.root, camera, scene), new Promise(r => setTimeout(r, 30000))]);
+    // Panel mode never draws the TV cabinet: skip compiling it so the panel can appear sooner (isolated from the unused model).
+    if (!PANEL) await Promise.race([renderer.compileAsync(tv.root, camera, scene), new Promise(r => setTimeout(r, 30000))]);
     for (const t of [tex.grille, tex.glow, tex.signBoard, tex.signLetters, tex.signGlow]) if (t) renderer.initTexture(t);
   } catch (e) { console.warn('[photo-tv] precompile skipped', e); }
   await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));

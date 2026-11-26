@@ -1,0 +1,12 @@
+ok   place() mode amp fov 38: mesh untouched (calls: none)
+ok   place() mode amp fov 38: drawn on top like walk (renderOrder 1000)
+ok   place() mode amp fov 72: mesh untouched (calls: none)
+ok   place() mode amp fov 72: drawn on top like walk (renderOrder 1000)
+ok   place() mode amp fov 95: mesh untouched (calls: none)
+ok   place() mode amp fov 95: drawn on top like walk (renderOrder 1000)
+ok   zgWordTick body amp page show: word tick mode walk (want walk)
+ok   zgWordTick body amp page walk: word tick mode walk (want walk)
+ok   zgWordTick body show page show: word tick mode show (want show)
+ok   zgWordTick body walk page walk: word tick mode walk (want walk)
+PASS t457u-title-amp-world
+exit 0

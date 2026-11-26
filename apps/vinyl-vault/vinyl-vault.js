@@ -30,8 +30,9 @@ const CSS = `
 .vv-desc{margin:0;padding:4px 14px 2px;font:400 14px/1.3 "Zuniga Mission",system-ui,-apple-system,sans-serif;letter-spacing:.03em;
   color:rgba(241,233,230,.72);white-space:normal;overflow-wrap:break-word}
 .vv-msg{margin:0;padding:22px;color:rgba(241,233,230,.85)}
-.vv-bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px;background:rgba(18,12,14,.88);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.vv-bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px;background:#120c0e;
+  transition:transform .22s ease}
+.vv-bar--hidden{transform:translateY(-100%)}
 .vv-search{display:block;flex:1 1 220px;min-width:0;margin:0;padding:12px 16px;min-height:46px;color:#f4ecea;background:rgba(255,255,255,.07);
   border:1px solid rgba(255,255,255,.2);border-radius:999px;font:16px/1.3 "Zuniga Mission",system-ui,sans-serif;letter-spacing:.04em;
   outline:none;-webkit-appearance:none;appearance:none}
@@ -61,7 +62,7 @@ const CSS = `
 .vv-a,.vv-b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vv-a{margin-top:8px;font-size:14px;letter-spacing:.05em;text-transform:uppercase}
 .vv-b{margin-top:1px;font:13px/1.3 system-ui,-apple-system,sans-serif;color:rgba(241,233,230,.68)}
-.vv-pop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;
+.vv-pop{position:fixed;inset:0;top:var(--vv-top,0px);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;
   padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
   background:rgba(6,4,5,.82);overscroll-behavior:contain}
 .vv-pop[hidden]{display:none}
@@ -188,6 +189,20 @@ function parseRecords(data, baseUrl) {
   return { list, skipped };
 }
 
+// Blake t453u: the search bar hides on scroll down and returns on scroll up. Pure: hidden = current state, delta = scrollTop change
+// since the last event, top = scrollTop. Jitter (< 6 px) keeps the state; near the top (<= 8 px) the bar always shows.
+export function nextBarHidden(hidden, delta, top) {
+  if (top <= 8) return false;
+  if (Math.abs(delta) < 6) return !!hidden;
+  return delta > 0;
+}
+
+// Blake t458u: .vv-pop is fixed but the transformed .zg-panel makes inset:0 span the header too, which cut off the card's top.
+// Offset the pop's top to the header's bottom (px, never negative).
+export function popTopInset(headRect, panelRect) {
+  const v = headRect && panelRect ? headRect.bottom - panelRect.top : 0;
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
 export function mountVinylVault(host, opts) {
   const o = opts || {};
   let dead = false;
@@ -320,6 +335,21 @@ export function mountVinylVault(host, opts) {
     search.addEventListener('input', filter);
     root.dataset.shown = String(list.length);
 
+    // t453u: hide the bar on scroll down, show on scroll up; never while the search field has focus (the app lives in a shadow root,
+    // so the focused input is root.getRootNode().activeElement; document.activeElement is only the host there)
+    const scroller = (() => { try { const rn = root.getRootNode(); return (rn && rn.host) || host; } catch (_) { return host; } })();
+    let lastTop = scroller.scrollTop || 0, barHidden = false;
+    const onScroll = () => {
+      const top = scroller.scrollTop || 0, delta = top - lastTop;
+      lastTop = top;
+      const rn = root.getRootNode && root.getRootNode();
+      const focused = (rn && rn.activeElement) || document.activeElement;
+      const next = focused === search ? false : nextBarHidden(barHidden, delta, top);
+      if (next !== barHidden) { barHidden = next; bar.classList.toggle('vv-bar--hidden', next); }
+    };
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    cleanups.push(() => scroller.removeEventListener('scroll', onScroll));
+
     // order: the mount's shuffle (default), or the existing A–Z sort. Same cells either way; the search filter is kept.
     let az = false;
     sortBtn.addEventListener('click', () => {
@@ -370,8 +400,22 @@ export function mountVinylVault(host, opts) {
       pop.addEventListener('click', (e) => { if (e.target === pop) closePop(); });
       root.append(pop);
     };
+    function placePop() {
+      if (!pop) return;
+      let v = 0;
+      try {
+        const sh = host.getRootNode && host.getRootNode();
+        const panel = sh && sh.host && sh.host.parentElement;
+        const hd = panel ? panel.querySelector(':scope > .zg-head') : null;
+        if (hd) v = popTopInset(hd.getBoundingClientRect(), panel.getBoundingClientRect());
+      } catch (_) { v = 0; }
+      pop.style.setProperty('--vv-top', v + 'px');
+    }
+    window.addEventListener('resize', placePop);
+    cleanups.push(() => window.removeEventListener('resize', placePop));
     function show(r, track, discover, opener) {
       if (!pop) buildPop();
+      placePop();
       const wasOpen = !pop.hidden;
       cur = r;
       if (opener && !wasOpen) lastCell = opener === spinBtn ? lastCell : opener;

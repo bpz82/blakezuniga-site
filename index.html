@@ -2666,6 +2666,9 @@ const zgW = {
 })();
 
 zgWordTick = function zgWordTick(dt, camera, mode) {
+  // Blake t457u: on the amp (body[data-mode]='amp', the page's own mode stays 'show') the word floats in the world by the guitar
+  // like Explore, instead of re-fitting to the amp camera frustum
+  if (document.body.dataset.mode === 'amp') mode = 'walk';
   if (zgW.tick) zgW.tick(dt, camera, mode);
 }
 // ---- end ZUNIGA snippet ----
@@ -4719,25 +4722,34 @@ async function bootAmp() {   // amp8 (Blake t174u): staged boot, see the amp8 bl
   const qs = new URLSearchParams(location.search);
   const assetBase = new URL('./amp13/assets/', import.meta.url).href;
   let place, THREE = null, box = null, homeK = 1, am = null, homeO = [0, 0];   // amp9 (Blake t188u): + orbit-centre offset
-  // 1. wait for the guitar (its textures are loaded before window.__dbg exists, so the amp never competes with them)
+  // 1. wait for the guitar scene, then split network and GPU work (round 3, Blake t440u / t443u).
+  // Guitar textures load before window.__dbg exists, so the amp never competes with them on the network.
   while (!(window.__dbg && window.__dbg.scene)) await amp8AfterFrame();
-  while (!(window.__zgBoot && window.__zgBoot.ready) && performance.now() < 60000) await amp8AfterFrame();   // amp10 (Blake t196u) 10e: after the guitar's boot (compile + warm) so they never compete
-  // amp8d (Grok per Blake t176u): and nothing of the amp is requested before ZUNIGA starts (it then loads during the intro)
-  while (!amp8Phase() && (performance.now() < 30000 || window.__zgWordPending)) await amp8AfterFrame();   // intro-polish: a live word that is still waiting for BOOT.ready is not a reason to start the amp
+  // Prefetch (network only) starts once the intro has begun, and does not wait for the guitar's GPU warm
+  // (zgBoot.ready). A prefetch failure is ignored; the build below still loads its own textures. The amp
+  // *build/show* still waits for zgBoot.ready so the two compiles do not compete.
   let texP = null, hookP = null;
-  try {
-    THREE = await import('three');
-    am = await import('./amp13/amp.js');
-    if (qs.get('ampFail') !== '1' && typeof am.prefetchAmpTextures === 'function') texP = am.prefetchAmpTextures(assetBase);
-    AMP8.prefetchT = amp8Now();
-    if (texP) texP.then(() => { AMP8.texturesT = amp8Now(); }, () => { });
-    hookP = import('./amp13/amp-hook.js');
-    try { const l = document.createElement('link'); l.rel = 'modulepreload'; l.href = new URL('./amp13/amp-walk.js', import.meta.url).href; document.head.appendChild(l); } catch (_) { }   // network only
-    if (typeof am.ampWalkBox === 'function') box = am.ampWalkBox();
-    // amp9 (Blake t188u) 9g2: test/debug hook (placement probe): the rule object and a synchronous re-run of the search
-    // (report only: it rewrites __ampPlace / __amp9Home but never moves the amp)
-    window.__amp9PlaceDbg = { RULE: AMP9_RULE, run: () => amp9Place(THREE, box, qs, 'dbg') };
-  } catch (e) { console.warn('[amp] amp module unavailable:', e); }
+  const startAmpPrefetch = async () => {
+    try {
+      THREE = await import('three');
+      am = await import('./amp13/amp.js');
+      if (qs.get('ampFail') !== '1' && typeof am.prefetchAmpTextures === 'function') texP = am.prefetchAmpTextures(assetBase);
+      AMP8.prefetchT = amp8Now();
+      if (texP) texP.then(() => { AMP8.texturesT = amp8Now(); }, () => { });
+      hookP = import('./amp13/amp-hook.js');
+      try { const l = document.createElement('link'); l.rel = 'modulepreload'; l.href = new URL('./amp13/amp-walk.js', import.meta.url).href; document.head.appendChild(l); } catch (_) { }   // network only
+      if (typeof am.ampWalkBox === 'function') box = am.ampWalkBox();
+      // amp9 (Blake t188u) 9g2: test/debug hook (placement probe): the rule object and a synchronous re-run of the search
+      // (report only: it rewrites __ampPlace / __amp9Home but never moves the amp)
+      window.__amp9PlaceDbg = { RULE: AMP9_RULE, run: () => amp9Place(THREE, box, qs, 'dbg') };
+    } catch (e) { console.warn('[amp] amp module unavailable:', e); }
+  };
+  const prefetchOnceIntro = (async () => {
+    while (!amp8Phase() && (performance.now() < 30000 || window.__zgWordPending)) await amp8AfterFrame();   // intro-polish: a live word that is still waiting for BOOT.ready is not a reason to start the amp
+    await startAmpPrefetch();
+  })();
+  while (!(window.__zgBoot && window.__zgBoot.ready) && performance.now() < 60000) await amp8AfterFrame();   // amp10 (Blake t196u) 10e: build after the guitar's boot (compile + warm) so they never compete
+  await prefetchOnceIntro;
   // 2. placement in idle slices once the ZUNIGA word exists (the search keeps clear of its rest box)
   // amp9 (Blake t188u) 9g: the search now runs ALONGSIDE the build + warm draws (it never reads the amp object; the
   // built amp is moved to its spot afterwards, as the 9d model-box re-place already did), so the warm draws get the

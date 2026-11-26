@@ -1,0 +1,14 @@
+FAIL apps/zuniga-philosophy/ absent — 38 file(s): apps/zuniga-philosophy/.gitignore, apps/zuniga-philosophy/covers/38-letters-from-rockefeller-to-his-son.jpg, apps/zuniga-philosophy/covers/atlas-shrugged.jpg, apps/zuniga-philosophy/covers/atomic-habits.jpg, apps/zuniga-philosophy/covers/brothers-karamasov.jpg, apps/zuniga-philosophy/covers/cant-hurt-me.jpg, apps/zuniga-philosophy/covers/chronicles-volume-1.jpg, apps/zuniga-philosophy/covers/far-and-away.jpg…
+FAIL no zp-hook.js file — apps/zuniga-philosophy/zp-hook.js
+FAIL index.html has no ZP hook — matched get('zp')
+ok   widgets.js has no ZP hook
+ok   widget-ids.js has no ZP hook
+ok   harness.js has no ZP hook
+ok   sitemap.xml has no ZP hook
+ok   404.html has no ZP hook
+ok   chrome.js has no ZP hook
+ok   chrome.css has no ZP hook
+ok   layout-runtime.js has no ZP hook
+ok   layout/index.js has no ZP hook
+FAIL t468u-launch-no-zp
+exit 1

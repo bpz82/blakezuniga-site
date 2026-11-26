@@ -1,0 +1,8 @@
+FAIL .vv-pop top offset uses --vv-top var
+ok   .vv-pop still position:fixed
+FAIL popTopInset used in source
+FAIL --vv-top is set via style.setProperty
+FAIL offset applied when the pop opens (show)
+FAIL offset re-applied on resize
+FAIL popTopInset exported
+FAIL (6)

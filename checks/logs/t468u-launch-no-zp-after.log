@@ -1,0 +1,14 @@
+ok   apps/zuniga-philosophy/ absent
+ok   no zp-hook.js file
+ok   index.html has no ZP hook
+ok   widgets.js has no ZP hook
+ok   widget-ids.js has no ZP hook
+ok   harness.js has no ZP hook
+ok   sitemap.xml has no ZP hook
+ok   404.html has no ZP hook
+ok   chrome.js has no ZP hook
+ok   chrome.css has no ZP hook
+ok   layout-runtime.js has no ZP hook
+ok   layout/index.js has no ZP hook
+PASS t468u-launch-no-zp
+exit 0
