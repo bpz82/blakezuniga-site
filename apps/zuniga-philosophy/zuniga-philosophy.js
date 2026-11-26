@@ -148,6 +148,14 @@ export const CSS = `
 .zp-pager{display:flex;justify-content:space-between;gap:10px;margin:30px 0 0}
 .zp-pager .zp-btn{max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .zp-back{margin:0 0 4px}
+.zp-feed-thumb{position:relative;float:left;display:flex;flex-direction:column;justify-content:space-between;width:42px;aspect-ratio:2/3;margin:2px 14px 6px 0;padding:4px 3px;overflow:hidden;
+  isolation:isolate;border-radius:2px 4px 4px 2px;border:1px solid rgba(42,34,29,.18);
+  background:linear-gradient(160deg,hsl(var(--zp-h,8) 42% 90%),hsl(var(--zp-h,8) 34% 82%) 70%,hsl(var(--zp-h,8) 30% 76%));box-shadow:inset 2px 0 3px rgba(42,34,29,.14),0 2px 5px rgba(42,34,29,.18)}
+.zp-feed-thumb-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block;background:var(--zp-paper)}
+.zp-thumb-title{font-family:${UI_FONT};font-size:5.5px;line-height:1.15;letter-spacing:.04em;text-transform:uppercase;color:var(--zp-ink-hi);overflow:hidden;overflow-wrap:break-word;max-height:30px}
+.zp-thumb-rule{display:block;width:10px;height:1px;margin:2px 0;background:var(--zp-accent)}
+.zp-thumb-author{font-family:${UI_FONT};font-size:4px;letter-spacing:.06em;text-transform:uppercase;color:var(--zp-dim);overflow:hidden;max-height:10px}
+.zp-item--thumb::after{content:"";display:block;clear:both}
 .zp-feed-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 16px}
 .zp-feed-more{display:flex;justify-content:center;margin:22px 0 0}
 `;
@@ -420,14 +428,24 @@ export function renderCover(book, base) {
     `<span class="zp-cover-mark">Zuniga Philosophy</span></span>`;
 }
 
-/** One passage. opts: { credit: show book credit, ts: highlight terms, saved: Set of saved ids } */
+/** Small top-left book photo for a Feed card (t469u). Typographic cover always present underneath; the jacket <img> (if any) covers it. */
+export function renderFeedThumb(book, base) {
+  const img = book.cover
+    ? `<img class="zp-feed-thumb-img" src="${esc(new URL(book.cover, base || DEFAULT_COVERS_BASE).href)}" alt="${esc(book.title + (book.author ? ' by ' + book.author : ''))}" loading="lazy" decoding="async">`
+    : '';
+  return `<span class="zp-feed-thumb" style="--zp-h:${hue(book.id)}"${book.cover ? '' : ' aria-hidden="true"'}>${img}<span class="zp-thumb-title">${esc(book.title)}</span>` +
+    `<span><span class="zp-thumb-rule"></span><span class="zp-thumb-author">${esc(book.author || 'Notebook')}</span></span></span>`;
+}
+
+/** One passage. opts: { credit: show book credit, ts: highlight terms, saved: Set of saved ids, thumb: Feed-only book photo top-left (t469u) } */
 export function renderItem(book, note, opts = {}) {
   const ts = opts.ts || null;
   const isNote = note.kind === 'note';
   const saved = opts.saved && opts.saved.has(note.id);
-  const cls = 'zp-item ' + (isNote ? 'zp-item--note' : 'zp-item--quote') + (note.starred ? ' zp-item--star' : '');
+  const cls = 'zp-item ' + (isNote ? 'zp-item--note' : 'zp-item--quote') + (note.starred ? ' zp-item--star' : '') + (opts.thumb ? ' zp-item--thumb' : '');
   if (note.role === 'blurb') return ''; // never a feed / search / saved card (t463u)
   let h = `<li class="${cls}" data-note-id="${esc(note.id)}">`;
+  if (opts.thumb) h += renderFeedThumb(book);
   if (isNote || note.starred) {
     h += `<span class="zp-tag">${note.starred ? '<span class="zp-starmark" aria-label="Starred">★</span>' : ''}${isNote ? 'Blake' : 'Starred'}</span>`;
   }
@@ -544,7 +562,7 @@ export function renderBook(lib, book, saved) {
 }
 
 export function renderFeedCards(entries, saved) {
-  return entries.map(({ book, note }) => renderItem(book, note, { credit: true, saved })).join('');
+  return entries.map(({ book, note }) => renderItem(book, note, { credit: true, saved, thumb: true })).join('');
 }
 
 export function renderFeed(cardsHtml) {
@@ -558,7 +576,7 @@ export function renderSaved(lib, saved) {
   const items = [];
   for (const b of lib.books) for (const n of b.notes) if (n.role !== 'blurb' && saved.has(n.id)) items.push({ book: b, note: n });
   if (!items.length) return `<p class="zp-empty">Nothing saved yet. Tap ☆ on any passage to keep it here (on this device only).</p>`;
-  return `<h2 class="zp-sub">${countLabel(items.length).replace('note', 'saved passage')}</h2><ol class="zp-list">${renderFeedCards(items, saved)}</ol>`;
+  return `<h2 class="zp-sub">${countLabel(items.length).replace('note', 'saved passage')}</h2><ol class="zp-list">${items.map(({ book, note }) => renderItem(book, note, { credit: true, saved })).join('')}</ol>`;
 }
 
 /** '#zp/feed' -> {view:'feed'}; '#zp/meditations/meditations-n0001' -> {view:'book', bookId, noteId}. Anything else -> null. */
@@ -776,6 +794,10 @@ export function mountZunigaPhilosophy(el, opts = {}) {
     on(el, 'error', (e) => {
       const im = e.target;
       if (im && im.tagName === 'IMG' && im.classList && im.classList.contains('zp-cover-img')) {
+        const cov = im.parentNode;
+        try { if (cov && cov.setAttribute) cov.setAttribute('aria-hidden', 'true'); im.remove(); } catch { /* ignore */ }
+      } else if (im && im.tagName === 'IMG' && im.classList && im.classList.contains('zp-feed-thumb-img')) {
+        // Feed thumb: same idea, own class so book-page / Books-grid jackets are untouched.
         const cov = im.parentNode;
         try { if (cov && cov.setAttribute) cov.setAttribute('aria-hidden', 'true'); im.remove(); } catch { /* ignore */ }
       }

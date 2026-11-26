@@ -1,0 +1,29 @@
+ok   library loads (34 books, items present)
+ok   feed has one card per item (67/67)
+ok   JJ Cale and Extras are coverFallback in meta (unchanged)
+FAIL every Feed card has a .zp-feed-thumb — missing on 67, e.g. meditations-n0001
+FAIL thumb comes before the quote text (.zp-text) in DOM order
+FAIL cards with a jacket file: <img> src maps to an existing non-empty file under covers/
+FAIL jacket <img> alt = "title by author"
+FAIL jacket <img> is lazy loaded
+FAIL JJ Cale and Extras cards: designed typographic thumb, no <img>, no fake jacket
+FAIL every thumb carries the typographic cover (title, rule, author) under the jacket
+ok   save star .zp-fav is still on every card
+ok   quote text is still in .zp-text on every card
+ok   feed still has no Buy buttons
+ok   renderItem without opts: no thumb
+ok   renderItem with credit:true (Search/Saved) does not grow a thumb
+ok   Search results: no thumbs
+ok   Saved: has saved cards but no thumbs
+ok   book page: notes have no thumbs, large header jacket still there
+ok   Books grid: covers unchanged (zp-cover, no thumbs)
+FAIL .zp-feed-thumb: 36-48px wide, 2:3 aspect
+FAIL .zp-feed-thumb: sits top-left (float:left), slightly rounded, overflow hidden
+FAIL jacket img in thumb is object-fit:cover
+ok   .zp-fav stays absolute top/right
+ok   .zp-text stays BODY_FONT (Times New Roman)
+ok   .zp-cover hover scale is still Books-grid only (.zp-card:hover .zp-cover)
+FAIL thumb typographic text is UI font (Zuniga Mission), never Times
+ok   no third-party URLs / affiliate tags in thumb markup
+FAIL (11)
+exit 1

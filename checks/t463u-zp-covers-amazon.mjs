@@ -93,7 +93,7 @@ t('book page without an amazon link: no Buy button, no <img>', !/Buy on Amazon|z
 const bad = m.mergeMeta(m.normalizeLibrary(mk()), { books: [{ id: 'bk1', cover: '../../etc/x.jpg', amazon: 'https://www.amazon.com/dp/0140449337?tag=evil-20' }] });
 t('unsafe meta (affiliate tag, traversal) is dropped: no img, no Buy button', !/<img |zp-buy/.test(m.renderBook(bad, bad.books[0], new Set())));
 const feedHtml = m.renderFeed(m.renderFeedCards(m.allItems(lib), new Set()));
-t('feed / search cards do not render Buy buttons or jackets', !/zp-buy|<img /.test(feedHtml));
+t('feed cards do not render Buy buttons (t469u: Feed cards may now carry small jacket thumbs)', !/zp-buy/.test(feedHtml));
 
 // loadLibrary: merges ./data/books-meta.json (or opts.metaUrl); a missing meta still loads the library
 const seen = [];
