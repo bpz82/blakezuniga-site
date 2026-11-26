@@ -1,0 +1,12 @@
+# run on a git-archive export of 67d6527 (pre-change tree) at /tmp/zp-t464-before
+FAIL VIEWS starts with feed, then search, books, saved
+FAIL header tab order is Feed, Search, Books, Saved
+ok   on the default Feed view, the Feed tab is aria-current="page"
+FAIL parseRoute('#zp') and parseRoute('#zp/') open Feed
+ok   parseRoute('#zp/search') still opens Search
+ok   parseRoute('#zp/feed') opens Feed
+ok   parseRoute('#zp/books') opens Books
+FAIL mount without a hash opens Feed (feed landmark/cards, no search field as the main view)
+FAIL Search remains a nav tab after Feed
+FAIL (5)
+exit 1

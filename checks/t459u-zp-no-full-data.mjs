@@ -2,7 +2,7 @@
 // Only apps/zuniga-philosophy/data/sample.json (sample:true, <= 3 notes per book) is public. Checks:
 //  - apps/zuniga-philosophy/.gitignore exists and git ignores books.clean.json / full.json / books.json there;
 //  - no path named books.clean.json / full.json is tracked or addable (git ls-files --cached --others --exclude-standard);
-//  - sample.json has sample:true, 38 books, <= 3 notes each, note_count == the notes actually present (113);
+//  - sample.json has sample:true, 34 books (t466u), <= 3 notes each, note_count == the notes actually present (101);
 //  - a distinctive late Think and Grow Rich quote that is NOT in the sample appears in no tracked or addable file (backups *.pre-*
 //    and *.bak-* are excluded; they are never added). The needle is stored base64 so this file does not contain it;
 //  - no obvious secrets (API keys, tokens, passwords, private keys) in the new app files or the index.html hook.
@@ -44,7 +44,7 @@ t('sample.json has sample:true', !!sample && sample.sample === true);
 if (sample) {
   const books = Array.isArray(sample.books) ? sample.books : [];
   const notes = books.reduce((s, b) => s + (Array.isArray(b.notes) ? b.notes.length : 0), 0);
-  t('sample.json: 38 books', books.length === 38);
+  t('sample.json: 34 books (t464u/t466u removals)', books.length === 34);
   t('sample.json: at most 3 notes per book', books.every((b) => Array.isArray(b.notes) && b.notes.length <= 3));
   t(`sample.json: note_count (${sample.note_count}) == notes present (${notes}) and well under the full set (${sample.full_note_count})`, sample.note_count === notes && notes <= 0.1 * sample.full_note_count);
   t('sample.json: does not contain the late Think and Grow Rich needle', !JSON.stringify(sample).includes(NEEDLE));

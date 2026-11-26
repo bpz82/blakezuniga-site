@@ -30,7 +30,7 @@ export const UI_FONT = "'Zuniga Mission', system-ui, -apple-system, 'Segoe UI', 
 export const SAVED_KEY = 'zuniga-philosophy:saved';
 const FONT_URL = new URL('../../assets/fonts/ZunigaMission-Regular-v3.woff2', import.meta.url).href;
 export const DEFAULT_BOOKS_URL = new URL('./data/sample.json', import.meta.url).href;
-const VIEWS = ['search', 'feed', 'books', 'saved'];
+export const VIEWS = ['feed', 'search', 'books', 'saved'];
 const FEED_BATCH = 12;
 const FEED_MAX_CARDS = 240;
 const SEARCH_MAX = 150;
@@ -445,7 +445,7 @@ export function renderItem(book, note, opts = {}) {
 
 export function renderHeader(state, lib, hasBack) {
   const v = state.view === 'book' ? 'books' : state.view;
-  const nav = [['search', 'Search'], ['feed', 'Feed'], ['books', 'Books'], ['saved', 'Saved']]
+  const nav = [['feed', 'Feed'], ['search', 'Search'], ['books', 'Books'], ['saved', 'Saved']]
     .map(([id, label]) => `<button type="button" data-act="view" data-view="${id}"${v === id ? ' aria-current="page"' : ''}>${label}</button>`).join('');
   return `<header class="zp-head"><div class="zp-brand"><h1 class="zp-title">Zuniga Philosophy</h1>` +
     `${lib && lib.sample ? '<span class="zp-sample" title="A short sample of each book">Sample preview</span>' : ''}</div>` +
@@ -566,7 +566,7 @@ export function parseRoute(hash) {
   const m = /^#zp(?:\/([^/?#]*))?(?:\/([^/?#]*))?/.exec(String(hash || ''));
   if (!m) return null;
   const a = m[1] ? safeDecode(m[1]) : '', b = m[2] ? safeDecode(m[2]) : '';
-  if (!a) return { view: 'search' };
+  if (!a) return { view: 'feed' };
   if (VIEWS.includes(a)) return { view: a };
   return { view: 'book', bookId: a, noteId: b || null };
 }
@@ -619,7 +619,7 @@ export function mountZunigaPhilosophy(el, opts = {}) {
   let io = null;
   const useHash = opts.hash === true && typeof window !== 'undefined' && typeof location !== 'undefined';
   const hasBack = typeof opts.onBack === 'function';
-  const state = { view: 'search', bookId: null, noteId: null, query: '', bq: '', sort: 'toc', layout: 'grid' };
+  const state = { view: 'feed', bookId: null, noteId: null, query: '', bq: '', sort: 'toc', layout: 'grid' };
   const saved = readSaved();
   let lib = null;
   let feed = null, feedCount = 0;

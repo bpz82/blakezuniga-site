@@ -1,0 +1,15 @@
+# run on a git-archive export of 67d6527 (pre-change tree) at /tmp/zp-t464-before
+FAIL sample has 34 books
+FAIL the four removed ids are absent from sample.json
+ok   Meditations remains first and Extras remains last
+FAIL no cover files remain for the four removed books
+FAIL books-meta.json has 34 rows, none of the removed ids, and matches sample ids
+FAIL far-and-away has a non-empty cover file (not coverFallback) and a /dp/ Amazon link
+FAIL gary-moore-the-official-biography has a non-empty cover file (not coverFallback) and a /dp/ Amazon link
+FAIL 38 Letters has a verified /dp/ Amazon link (not a search URL) and a cover file
+ok   jj-cale-guitar-player-magazine-interview stays typographic (coverFallback) with an Amazon search link
+ok   extras stays typographic (coverFallback) with an Amazon search link
+ok   no affiliate / tracking params in books-meta amazon URLs
+ok   books.clean.json is not in the app or repo worktree path used by the check
+FAIL (7)
+exit 1

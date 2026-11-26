@@ -1,6 +1,6 @@
 // t459u-zp-module (Blake t459u): the Zuniga Philosophy app exists as an isolated module + standalone page and works on the sample.
 // Covers: standalone page apps/zuniga-philosophy/index.html imports the module; mountZunigaPhilosophy is exported and mounts on a
-// minimal fake element; renders all 38 books (Meditations, Eric Ries, Brothers Karamazov); counts use full_note_count; search finds a
+// minimal fake element; renders all 34 books (Meditations, Eric Ries, Brothers Karamazov); counts use full_note_count; search finds a
 // known string; sort orders (TOC / A-Z / author); feed shows each item once per pass; a bad fetch never throws and shows a message;
 // fullUrl failure falls back to the sample; unmount aborts the fetch and empties el.
 // Runs: Node (no browser). Runtime < 1 s. Exits nonzero on fail.
@@ -38,9 +38,9 @@ const warn = console.warn; console.warn = () => {};
 
 // load + normalize
 const lib = m.normalizeLibrary(json);
-t('38 books', lib.books.length === 38);
+t('34 books (t464u/t466u: Solomelo, Scientific Advertising, Born of This Land, and Ogilvy Unpublished removed from the app)', lib.books.length === 34);
 t('sample flag carried', lib.sample === true);
-t('books in TOC order by default (Meditations first, Extras last)', lib.books[0].id === 'meditations' && lib.books[37].title === 'Extras');
+t('books in TOC order by default (Meditations first, Extras last)', lib.books[0].id === 'meditations' && lib.books[lib.books.length - 1].title === 'Extras');
 const med = lib.books.find((b) => b.title === 'Meditations');
 t('counts use full_note_count (Meditations: 87 notes, 3 in sample)', med && med.fullCount === 87 && med.notes.length === 3);
 t('cleaned spellings present: Eric Ries, Brothers Karamazov', lib.books.some((b) => b.author === 'Eric Ries') && lib.books.some((b) => b.title === 'Brothers Karamazov'));
@@ -50,13 +50,13 @@ const el = fakeEl();
 const h = m.mountZunigaPhilosophy(el, { booksUrl: 'sample.json', fetch: okFetch(json) });
 t('mount returns { unmount }', h && typeof h.unmount === 'function');
 await h.ready;
-t('after load: title "Zuniga Philosophy", Search field and nav render', /Zuniga Philosophy/.test(el.innerHTML) && /class="zp-q"/.test(el.innerHTML) && />Feed</.test(el.innerHTML) && />Books</.test(el.innerHTML));
+t('after load: title "Zuniga Philosophy" and nav render (Feed is the default view, t465u)', /Zuniga Philosophy/.test(el.innerHTML) && />Feed</.test(el.innerHTML) && />Search</.test(el.innerHTML) && />Books</.test(el.innerHTML));
 t('quiet "Sample preview" note shown (not an error)', /Sample preview/.test(el.innerHTML) && !/could not/.test(el.innerHTML));
 h.unmount();
 t('unmount empties el', el.innerHTML === '');
 
 const books = m.renderBooks(lib, { sort: 'toc', layout: 'grid', bq: '' });
-t('Books grid renders 38 cards incl. Meditations and Extras', (books.match(/class="zp-card"/g) || []).length === 38 && /Meditations/.test(books) && /Extras/.test(books));
+t('Books grid renders 34 cards incl. Meditations and Extras', (books.match(/class="zp-card"/g) || []).length === 34 && /Meditations/.test(books) && /Extras/.test(books));
 t('Books grid shows "87 notes" for Meditations', /Meditations<\/span><span class="zp-cap-author">Marcus Aurelius<\/span><span class="zp-cap-count">87 notes/.test(books));
 const filtered = m.renderBooksGrid(lib, 'toc', 'grid', 'hill');
 t('Books search "hill" leaves only the two Napoleon Hill books visible', (filtered.match(/class="zp-card" data-act="open" data-book="[^"]+"(?! hidden) aria-label/g) || []).length === 2);
@@ -81,9 +81,9 @@ const items = m.allItems(lib);
 let seed = 7; const rng = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 const feed = m.makeFeed(items, rng);
 const pass1 = feed.next(items.length);
-// t463u (Blake's product change): blurbs ("on this book") are no longer feed items, so the feed is 113 notes minus the blurb notes.
+// t463u (Blake's product change): blurbs ("on this book") are no longer feed items, so the feed is the remaining sample notes minus the blurb notes (t466u: 101 notes in the 34-book sample).
 const blurbN = lib.books.reduce((n, b) => n + b.notes.filter((x) => x.role === 'blurb').length, 0);
-t('feed: one pass shows every item exactly once (all notes except blurbs, t463u)', new Set(pass1).size === items.length && pass1.length === 113 - blurbN && items.every((x) => x.note.role !== 'blurb'));
+t('feed: one pass shows every item exactly once (all notes except blurbs, t463u)', new Set(pass1).size === items.length && pass1.length === items.length && items.every((x) => x.note.role !== 'blurb'));
 const pass2 = feed.next(items.length);
 t('feed: second pass is a new order and does not repeat the boundary item', pass2[0] !== pass1[pass1.length - 1] && pass2.some((x, i) => x !== pass1[i]));
 
@@ -107,9 +107,9 @@ threw = false;
 try { m.mountZunigaPhilosophy(null).unmount(); } catch { threw = true; }
 t('null element: no throw', !threw);
 const fb = await m.loadLibrary({ fullUrl: '/api/zuniga-philosophy/books', booksUrl: 'sample', fetch: async (u) => (u === 'sample' ? { ok: true, json: async () => json } : { ok: false, status: 402 }) });
-t('fullUrl failure falls back to the sample', fb.books.length === 38 && fb.sample === true);
+t('fullUrl failure falls back to the sample', fb.books.length === 34 && fb.sample === true);
 const full = await m.loadLibrary({ fullUrl: '/api/full', booksUrl: 'sample', fetch: async (u) => ({ ok: true, json: async () => (u === '/api/full' ? { books: json.books } : json) }) });
-t('fullUrl success is used (sample:false)', full.sample === false && full.books.length === 38);
+t('fullUrl success is used (sample:false)', full.sample === false && full.books.length === 34);
 
 // unmount aborts the fetch
 let sig = null;

@@ -1,11 +1,11 @@
 {
   "sample": true,
-  "policy": "All 38 books; first 3 notes per book (includes TOC blurb when present). Full quote text is not in this file.",
+  "policy": "34 books; first 3 notes per book (includes TOC blurb when present). Full quote text is not in this file. Removed from the app at Blake's request (t464u/t466u), source notebook left untouched: The Dream of Solomeo, Scientific Advertising, Born of This Land, Ogilvy Unpublished.",
   "generated": "2026-11-25T17:29:00-05:00",
   "source": "zuniga-philosophy-notes/data/books.clean.json (not in the public repo)",
-  "book_count": 38,
-  "note_count": 113,
-  "full_note_count": 2637,
+  "book_count": 34,
+  "note_count": 101,
+  "full_note_count": 2451,
   "books": [
     {
       "id": "meditations",
@@ -1022,48 +1022,6 @@
       "full_note_count": 19
     },
     {
-      "id": "born-of-this-land-chung-ju-yung",
-      "title": "Born of this Land: Chung Ju Yung",
-      "author": "",
-      "toc_page": 412,
-      "heading_as_written": "Born of this Land: Chung Ju Yung",
-      "blurb": "Wonderful overlap with Rockefeller. A healthy mindset towards success will bring success. Diligence.",
-      "images": [],
-      "notes": [
-        {
-          "id": "born-of-this-land-chung-ju-yung-blurb",
-          "text": "Wonderful overlap with Rockefeller. A healthy mindset towards success will bring success. Diligence.",
-          "kind": "note",
-          "role": "blurb",
-          "source_line": 116
-        },
-        {
-          "id": "born-of-this-land-chung-ju-yung-n0001",
-          "text": "“I think there's nothing more foolish than living life according to the mantra of doing just enough to get by, not knowing how precious one’s time is. In one lifetime we can become a revered politician, a scholar, a revolutionary, a writer, a musician, a painter, or a businessman like those we admire. These remarkable people did not take two or three lifetimes to accomplish what they did, they did it in one. If you make full use of your time by living diligently, you can excel in any field.",
-          "kind": "quote",
-          "source_line": 3638,
-          "session": {
-            "date": "12/29/2024",
-            "time": "16:55",
-            "label": "Airplane to Maryland"
-          }
-        },
-        {
-          "id": "born-of-this-land-chung-ju-yung-n0002",
-          "text": "If a loss yields an experience, then it’s truly not a loss. If you can learn from a loss, then you can turn it into a gain. Sometimes you get more from losing money than you do making it.",
-          "kind": "quote",
-          "source_line": 3639,
-          "session": {
-            "date": "12/29/2024",
-            "time": "16:55",
-            "label": "Airplane to Maryland"
-          }
-        }
-      ],
-      "sample_note_count": 3,
-      "full_note_count": 25
-    },
-    {
       "id": "millionaire-real-estate-investor",
       "title": "Millionaire Real Estate Investor",
       "author": "Gary Keller",
@@ -1104,50 +1062,6 @@
       ],
       "sample_note_count": 3,
       "full_note_count": 20
-    },
-    {
-      "id": "the-dream-of-solomelo",
-      "title": "The Dream of Solomeo",
-      "author": "Brunello Cucinelli",
-      "toc_page": 427,
-      "heading_as_written": "The Dream of Solomeo by Brunello Cucinelli",
-      "blurb": "The importance of books as a timeless mechanism for connection with the great minds that preceded us. Simplicity is everything. More on focus. Importance of enthusiasm.",
-      "images": [],
-      "notes": [
-        {
-          "id": "the-dream-of-solomelo-blurb",
-          "text": "The importance of books as a timeless mechanism for connection with the great minds that preceded us. Simplicity is everything. More on focus. Importance of enthusiasm.",
-          "kind": "note",
-          "role": "blurb",
-          "source_line": 120
-        },
-        {
-          "id": "the-dream-of-solomelo-n0001",
-          "text": "I would always read when I was alone, especially philosophy. It reminds me of Machiavelli during his exile, he too spent his afternoons playing board games and drinking wine. While at night, in the austere silence of his studio, he engaged in solitary literary conversations with the great ancient scholars.",
-          "kind": "quote",
-          "source_line": 3803,
-          "session": {
-            "date": "02/07/2025",
-            "time": "14:57",
-            "label": "Brunello Cucinelli: The Dream of Solomeo",
-            "place": "Winter House, Brunswick, ME"
-          }
-        },
-        {
-          "id": "the-dream-of-solomelo-n0002",
-          "text": "Because of the help and the pleasure they give me, books come first and foremost. I cannot do without books because they teach us how to listen to the voice of man, both others and our own. This is why they are irreplaceable for the soul.",
-          "kind": "quote",
-          "source_line": 3804,
-          "session": {
-            "date": "02/07/2025",
-            "time": "14:57",
-            "label": "Brunello Cucinelli: The Dream of Solomeo",
-            "place": "Winter House, Brunswick, ME"
-          }
-        }
-      ],
-      "sample_note_count": 3,
-      "full_note_count": 44
     },
     {
       "id": "the-art-of-loving",
@@ -1456,94 +1370,6 @@
       ],
       "sample_note_count": 3,
       "full_note_count": 75
-    },
-    {
-      "id": "ogilvy-unpublished",
-      "title": "Ogilvy Unpublished",
-      "author": "David Ogilvy",
-      "toc_page": 587,
-      "heading_as_written": "Ogilvy Unpublished by David Ogilvy",
-      "blurb": "Concepts of timeless advertising, which means, tons of lessons on human nature. Brand building 101. Creating a contrived personality in your brand.",
-      "images": [],
-      "notes": [
-        {
-          "id": "ogilvy-unpublished-blurb",
-          "text": "Concepts of timeless advertising, which means, tons of lessons on human nature. Brand building 101. Creating a contrived personality in your brand.",
-          "kind": "note",
-          "role": "blurb",
-          "source_line": 140
-        },
-        {
-          "id": "ogilvy-unpublished-n0001",
-          "text": "Every advertisement must tell the whole sales story.",
-          "kind": "quote",
-          "source_line": 5118,
-          "session": {
-            "date": "1/24/2026",
-            "time": "09:29",
-            "label": "Piano House",
-            "place": "Orrs Island, ME"
-          }
-        },
-        {
-          "id": "ogilvy-unpublished-n0002",
-          "text": "The copy must be human and very simple.",
-          "kind": "quote",
-          "source_line": 5119,
-          "session": {
-            "date": "1/24/2026",
-            "time": "09:29",
-            "label": "Piano House",
-            "place": "Orrs Island, ME"
-          }
-        }
-      ],
-      "sample_note_count": 3,
-      "full_note_count": 65
-    },
-    {
-      "id": "scientific-advertising",
-      "title": "Scientific Advertising",
-      "author": "Claude C. Hopkins",
-      "toc_page": 596,
-      "heading_as_written": "Scientific Advertising by Claude C. Hopkins",
-      "blurb": "Viewing advertisements as salesmen. Think of individuals, not the masses. The power of curiosity.",
-      "images": [],
-      "notes": [
-        {
-          "id": "scientific-advertising-blurb",
-          "text": "Viewing advertisements as salesmen. Think of individuals, not the masses. The power of curiosity.",
-          "kind": "note",
-          "role": "blurb",
-          "source_line": 142
-        },
-        {
-          "id": "scientific-advertising-n0001",
-          "text": "Individuals come and go, but they leave their records and ideas behind them. They become a guide to all who follow.",
-          "kind": "quote",
-          "source_line": 5240,
-          "session": {
-            "date": "1/24/2026",
-            "time": "13:18",
-            "label": "Piano House",
-            "place": "Orrs Island, ME"
-          }
-        },
-        {
-          "id": "scientific-advertising-n0002",
-          "text": "Nearly every selling question which arises in business is accurately answered by many experiences.",
-          "kind": "quote",
-          "source_line": 5241,
-          "session": {
-            "date": "1/24/2026",
-            "time": "13:18",
-            "label": "Piano House",
-            "place": "Orrs Island, ME"
-          }
-        }
-      ],
-      "sample_note_count": 3,
-      "full_note_count": 52
     },
     {
       "id": "extras",

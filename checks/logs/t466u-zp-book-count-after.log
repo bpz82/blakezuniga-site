@@ -1,0 +1,15 @@
+# run on the post-change worktree
+ok   sample has 34 books
+ok   the four removed ids are absent from sample.json
+ok   Meditations remains first and Extras remains last
+ok   no cover files remain for the four removed books
+ok   books-meta.json has 34 rows, none of the removed ids, and matches sample ids
+ok   far-and-away has a non-empty cover file (not coverFallback) and a /dp/ Amazon link
+ok   gary-moore-the-official-biography has a non-empty cover file (not coverFallback) and a /dp/ Amazon link
+ok   38 Letters has a verified /dp/ Amazon link (not a search URL) and a cover file
+ok   jj-cale-guitar-player-magazine-interview stays typographic (coverFallback) with an Amazon search link
+ok   extras stays typographic (coverFallback) with an Amazon search link
+ok   no affiliate / tracking params in books-meta amazon URLs
+ok   books.clean.json is not in the app or repo worktree path used by the check
+PASS
+exit 0

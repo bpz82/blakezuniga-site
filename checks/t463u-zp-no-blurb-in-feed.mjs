@@ -28,7 +28,7 @@ const synth2 = { id: 'blurb-chip', title: 'Plain Title', author: 'Plain Author',
 ] };
 const lib = m.normalizeLibrary({ sample: true, books: [...sample.books, synth, synth2] });
 const blurbs = lib.books.flatMap((b) => b.notes.filter((n) => n.role === 'blurb').map((n) => ({ b, n })));
-t(`library has blurb notes to test with (${blurbs.length} incl. synthetic)`, blurbs.length >= 38);
+t(`library has blurb notes to test with (${blurbs.length} incl. synthetic)`, blurbs.length >= sample.books.length + 2);
 
 // ---- feed
 const items = m.allItems(lib);

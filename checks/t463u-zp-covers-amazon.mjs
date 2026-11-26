@@ -1,5 +1,5 @@
 // t463u-zp-covers-amazon (Blake t463u): jacket images and a "Buy on Amazon" button, wired from data/books-meta.json (metadata only).
-// DATA: every one of the 38 sample book ids has a non-empty cover file under apps/zuniga-philosophy/covers/ (jpg/jpeg/webp/png) or is
+// DATA: every one of the sample book ids has a non-empty cover file under apps/zuniga-philosophy/covers/ (jpg/jpeg/webp/png) or is
 // listed in books-meta.json with coverFallback:true; every book has an amazon.com link (/dp/ or /s?k=); no affiliate / tracking params;
 // no secrets; books-meta.json holds no quote text (no long string fields, no notes/text keys).
 // WIRING (module behaviour): meta merges by id; the Books grid and book page render <img> with alt = title + author when cover is set and
@@ -18,7 +18,7 @@ const done = () => { console.log(fails ? `FAIL (${fails})` : 'PASS'); process.ex
 
 const sample = JSON.parse(readFileSync(path.join(dir, 'data/sample.json'), 'utf8'));
 const ids = sample.books.map((b) => b.id);
-t('sample has 38 book ids', ids.length === 38);
+t('sample has 34 book ids (t464u/t466u)', ids.length === 34);
 
 // ---------- DATA
 const metaPath = path.join(dir, 'data/books-meta.json');

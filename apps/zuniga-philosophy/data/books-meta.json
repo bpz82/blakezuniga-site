@@ -128,11 +128,12 @@
     },
     {
       "id": "far-and-away",
-      "coverFallback": true,
       "amazon": "https://www.amazon.com/dp/1770410597",
       "amazonKind": "dp",
       "edition": "ECW Press paperback, 2011 (Far and Away: A Prize Every Time)",
-      "isbn10": "1770410597"
+      "isbn10": "1770410597",
+      "cover": "covers/far-and-away.jpg",
+      "coverSource": "amazon"
     },
     {
       "id": "brothers-karamasov",
@@ -155,10 +156,11 @@
     {
       "id": "38-letters-from-rockefeller-to-his-son",
       "cover": "covers/38-letters-from-rockefeller-to-his-son.jpg",
-      "coverSource": "openlibrary-or-google-books",
-      "amazon": "https://www.amazon.com/s?k=38+Letters+from+Rockefeller+to+His+Son",
-      "amazonKind": "search",
-      "edition": "Jacket from an English compilation listing; no official edition verified, so Amazon search is used"
+      "coverSource": "amazon",
+      "amazon": "https://www.amazon.com/dp/B09BY8189Q",
+      "amazonKind": "dp",
+      "edition": "English Version Paperback 2nd Edition; Amazon page title verified 2026-11-25",
+      "asin": "B09BY8189Q"
     },
     {
       "id": "its-a-long-story",
@@ -198,11 +200,12 @@
     },
     {
       "id": "gary-moore-the-official-biography",
-      "coverFallback": true,
       "amazon": "https://www.amazon.com/dp/1911036971",
       "amazonKind": "dp",
       "edition": "Jawbone / Outline Press, 2022",
-      "isbn10": "1911036971"
+      "isbn10": "1911036971",
+      "cover": "covers/gary-moore-the-official-biography.jpg",
+      "coverSource": "amazon"
     },
     {
       "id": "greenlights",
@@ -223,15 +226,6 @@
       "isbn10": "0140446362"
     },
     {
-      "id": "born-of-this-land-chung-ju-yung",
-      "cover": "covers/born-of-this-land-chung-ju-yung.jpg",
-      "coverSource": "openlibrary-or-google-books",
-      "amazon": "https://www.amazon.com/dp/B07YNZF25Z",
-      "amazonKind": "dp",
-      "edition": "The Asan Academy English hardcover, 2019",
-      "asin": "B07YNZF25Z"
-    },
-    {
       "id": "millionaire-real-estate-investor",
       "cover": "covers/millionaire-real-estate-investor.jpg",
       "coverSource": "openlibrary-or-google-books",
@@ -239,14 +233,6 @@
       "amazonKind": "dp",
       "edition": "McGraw-Hill, 2005",
       "isbn10": "0071446370"
-    },
-    {
-      "id": "the-dream-of-solomelo",
-      "coverFallback": true,
-      "amazon": "https://www.amazon.com/dp/8807339153",
-      "amazonKind": "dp",
-      "edition": "Feltrinelli English paperback, 2018",
-      "isbn10": "8807339153"
     },
     {
       "id": "the-art-of-loving",
@@ -308,24 +294,6 @@
       "amazonKind": "dp",
       "edition": "Greenleaf Book Group Press hardcover, 2024",
       "asin": "B0CHTQP25T"
-    },
-    {
-      "id": "ogilvy-unpublished",
-      "cover": "covers/ogilvy-unpublished.jpg",
-      "coverSource": "openlibrary-or-google-books",
-      "amazon": "https://www.amazon.com/dp/1781250871",
-      "amazonKind": "dp",
-      "edition": "Profile Books, 2012 (The Unpublished David Ogilvy)",
-      "isbn10": "1781250871"
-    },
-    {
-      "id": "scientific-advertising",
-      "cover": "covers/scientific-advertising.jpg",
-      "coverSource": "openlibrary-or-google-books",
-      "amazon": "https://www.amazon.com/dp/0844231010",
-      "amazonKind": "dp",
-      "edition": "McGraw-Hill combined edition with My Life in Advertising, 1997",
-      "isbn10": "0844231010"
     },
     {
       "id": "extras",
