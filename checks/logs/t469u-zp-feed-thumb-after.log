@@ -3,6 +3,7 @@ ok   feed has one card per item (67/67)
 ok   JJ Cale and Extras are coverFallback in meta (unchanged)
 ok   every Feed card has a .zp-feed-thumb
 ok   thumb comes before the quote text (.zp-text) in DOM order
+ok   bottom-right wrap markup: every card is .zp-feed-body > .zp-feed-flow > [spacer, thumb, quote]; attribution, aside and credit come after the flow
 ok   cards with a jacket file: <img> src maps to an existing non-empty file under covers/
 ok   jacket <img> alt = "title by author"
 ok   jacket <img> is lazy loaded
@@ -18,7 +19,11 @@ ok   Saved: has saved cards but no thumbs
 ok   book page: notes have no thumbs, large header jacket still there
 ok   Books grid: covers unchanged (zp-cover, no thumbs)
 ok   .zp-feed-thumb: 36-48px wide, 2:3 aspect
-ok   .zp-feed-thumb: sits top-left (float:left), slightly rounded, overflow hidden
+ok   .zp-feed-thumb: floats RIGHT and clears right (bottom-right), no float:left, slightly rounded, overflow hidden
+ok   .zp-feed-push spacer: zero-width float:right, height calc(100% - thumb height) so the thumb drops to the bottom
+ok   .zp-feed-body is a grid and .zp-feed-flow is its stretched item, so the spacer percentage height resolves (CSS only)
+ok   .zp-feed-thumb is not absolutely positioned (it floats in the quote flow)
+ok   star clearance: card right padding >= 46px (star spans 10-46px from the right), so the thumb cannot sit under .zp-fav
 ok   jacket img in thumb is object-fit:cover
 ok   .zp-fav stays absolute top/right
 ok   .zp-text stays BODY_FONT (Times New Roman)

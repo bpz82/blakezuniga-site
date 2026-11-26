@@ -148,7 +148,13 @@ export const CSS = `
 .zp-pager{display:flex;justify-content:space-between;gap:10px;margin:30px 0 0}
 .zp-pager .zp-btn{max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .zp-back{margin:0 0 4px}
-.zp-feed-thumb{position:relative;float:left;display:flex;flex-direction:column;justify-content:space-between;width:42px;aspect-ratio:2/3;margin:2px 14px 6px 0;padding:4px 3px;overflow:hidden;
+/* t471u bottom-right wrap: .zp-feed-body (grid) > .zp-feed-flow (stretched grid item) > [.zp-feed-push, .zp-feed-thumb, tag, .zp-text].
+   The zero-width push floats right at full flow height minus the thumb (63px = 42px x 2:3), so the clear:right thumb drops to the bottom-right;
+   quote words wrap to its left. Credit / attribution / aside come after the flow. The card's right padding (52px) keeps the thumb clear of the star. */
+.zp-feed-body{display:grid;grid-template-columns:minmax(0,1fr)}
+.zp-feed-flow{display:block;min-width:0}
+.zp-feed-push{float:right;width:0;height:calc(100% - 63px);margin:0;padding:0}
+.zp-feed-thumb{position:relative;float:right;clear:right;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;width:42px;aspect-ratio:2/3;margin:0 0 0 14px;padding:4px 3px;overflow:hidden;
   isolation:isolate;border-radius:2px 4px 4px 2px;border:1px solid rgba(42,34,29,.18);
   background:linear-gradient(160deg,hsl(var(--zp-h,8) 42% 90%),hsl(var(--zp-h,8) 34% 82%) 70%,hsl(var(--zp-h,8) 30% 76%));box-shadow:inset 2px 0 3px rgba(42,34,29,.14),0 2px 5px rgba(42,34,29,.18)}
 .zp-feed-thumb-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;display:block;background:var(--zp-paper)}
@@ -428,7 +434,7 @@ export function renderCover(book, base) {
     `<span class="zp-cover-mark">Zuniga Philosophy</span></span>`;
 }
 
-/** Small top-left book photo for a Feed card (t469u). Typographic cover always present underneath; the jacket <img> (if any) covers it. */
+/** Small book photo for a Feed card (t469u; placed bottom-right with wrap in t471u). Typographic cover always present underneath; the jacket <img> (if any) covers it. */
 export function renderFeedThumb(book, base) {
   const img = book.cover
     ? `<img class="zp-feed-thumb-img" src="${esc(new URL(book.cover, base || DEFAULT_COVERS_BASE).href)}" alt="${esc(book.title + (book.author ? ' by ' + book.author : ''))}" loading="lazy" decoding="async">`
@@ -437,7 +443,7 @@ export function renderFeedThumb(book, base) {
     `<span><span class="zp-thumb-rule"></span><span class="zp-thumb-author">${esc(book.author || 'Notebook')}</span></span></span>`;
 }
 
-/** One passage. opts: { credit: show book credit, ts: highlight terms, saved: Set of saved ids, thumb: Feed-only book photo top-left (t469u) } */
+/** One passage. opts: { credit: show book credit, ts: highlight terms, saved: Set of saved ids, thumb: Feed-only book photo bottom-right with wrap (t469u, t471u) } */
 export function renderItem(book, note, opts = {}) {
   const ts = opts.ts || null;
   const isNote = note.kind === 'note';
@@ -445,11 +451,13 @@ export function renderItem(book, note, opts = {}) {
   const cls = 'zp-item ' + (isNote ? 'zp-item--note' : 'zp-item--quote') + (note.starred ? ' zp-item--star' : '') + (opts.thumb ? ' zp-item--thumb' : '');
   if (note.role === 'blurb') return ''; // never a feed / search / saved card (t463u)
   let h = `<li class="${cls}" data-note-id="${esc(note.id)}">`;
-  if (opts.thumb) h += renderFeedThumb(book);
+  let flow = '';
   if (isNote || note.starred) {
-    h += `<span class="zp-tag">${note.starred ? '<span class="zp-starmark" aria-label="Starred">★</span>' : ''}${isNote ? 'Blake' : 'Starred'}</span>`;
+    flow += `<span class="zp-tag">${note.starred ? '<span class="zp-starmark" aria-label="Starred">★</span>' : ''}${isNote ? 'Blake' : 'Starred'}</span>`;
   }
-  h += `<p class="zp-text">${highlight(note.text, ts)}</p>`;
+  flow += `<p class="zp-text">${highlight(note.text, ts)}</p>`;
+  if (opts.thumb) h += `<div class="zp-feed-body"><div class="zp-feed-flow"><span class="zp-feed-push" aria-hidden="true"></span>${renderFeedThumb(book)}${flow}</div></div>`;
+  else h += flow;
   if (note.attribution) h += `<p class="zp-attr">— ${highlight(note.attribution, ts)}</p>`;
   if (note.aside) h += `<p class="zp-aside"><span class="zp-tag">Blake</span><span class="zp-aside-text">${highlight(note.aside, ts)}</span></p>`;
   if (opts.credit) {
