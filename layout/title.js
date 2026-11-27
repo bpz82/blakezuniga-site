@@ -29,7 +29,7 @@ function qApply(q, x, y, z, out) {   // rotate a unit axis by a quaternion witho
   return out;
 }
 
-// Always on top (home + Explore; amp mode stays plain depth-tested): ZUNIGA + its "Folk Blues" child (one shared material) are the
+// Always on top (home + Explore; amp mode stays plain depth-tested, Blake t470u): ZUNIGA + its "Folk Blues" child (one shared material) are the
 // last draws of the transparent pass (renderOrder 1000 / 1001), over the amp, guitar, panel and the intro veil, at every orbit angle.
 // Round 2 (Blake t418u "weird geometric things"): that used to be depthTest OFF, which let the extrusion's sides / back draw over its
 // front faces. Now depthTest + depthWrite stay ON (clean letters, as 0ed7f1d) and ZUNIGA clears the depth buffer right before it
@@ -124,7 +124,9 @@ export function place(mesh, cam, T) {
   const mode = modeOf();
   // Explore: the floating word from index.html places it (pre-layout behaviour), drawn on top so the guitar never cuts into it
   // Blake t457u: amp mode too, so the word stays in the air by the guitar (index.html's zgWordTick runs it as 'walk' there)
-  if (mode === 'walk' || mode === 'amp') { setTop(mesh, true); return; }
+  // Blake t470u: in amp the word is NOT drawn on top (no depth clear, renderOrder BASE_RO) so the amp hides it where it blocks the view
+  if (mode === 'walk') { setTop(mesh, true); return; }
+  if (mode === 'amp') { setTop(mesh, false); return; }
   setTop(mesh, mode === 'show');
   const D = T.depth || 420;
   if (I.s0 == null) I.s0 = mesh.scale.x;   // only used when the layout has no saved scale
