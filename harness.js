@@ -120,7 +120,7 @@ function snapshot(def) {
   }
   // amp12 (Blake t208u): optional panel:'wide' (large panel, used by Photos); anything else = the normal panel
   // intro-polish: optional href (https only) makes the tile a new-tab link and skips the in-page panel
-  return { id, title, icon: icon || '', iconSrc, href, mount, unmount: unmount || null, wide: def.panel === 'wide' };
+  return { id, title, icon: icon || '', iconSrc, href, mount, unmount: unmount || null, wide: def.panel === 'wide', full: def.panel === 'full' };
 }
 
 const ICON_SRC_RE = /^(\.\/)?[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\.(png|webp|jpe?g|gif|svg)$/i;
@@ -426,7 +426,7 @@ function openPanel(entry, returnFocus) {
   onTap(scrim, () => closePanel(session));
 
   const panel = document.createElement('div');
-  panel.className = def.wide ? 'zg-panel zg-panel--wide' : 'zg-panel';   // amp12 (Blake t208u)
+  panel.className = def.full ? 'zg-panel zg-panel--full' : def.wide ? 'zg-panel zg-panel--wide' : 'zg-panel';   // amp12 (Blake t208u); t475u: full = Vinyl Vault fills the viewport
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-labelledby', 'zg-title-' + uid);

@@ -474,6 +474,39 @@ a.zg-tile:visited {
   }
 }
 
+/* t475u (Blake): Vinyl Vault only. Fills the whole viewport: no border, no rounded inset, no gap showing the 3D scene. Opaque so nothing shows through.
+   Safe-area padding keeps the title / close button out from under a notch. Title + description are much bigger (scoped here; Contact / Collab keep 22px / 14px). */
+.zg-panel--full {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #120c0e;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.zg-panel--full .zg-head {
+  padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 12px max(22px, env(safe-area-inset-left));
+}
+.zg-panel--full .zg-title {
+  font-size: 32px;
+}
+.zg-panel--full .zg-sub {
+  font-size: 18px;
+  line-height: 1.4;
+}
+@media (min-width: 700px) {
+  .zg-panel--full .zg-title {
+    font-size: 44px;
+  }
+  .zg-panel--full .zg-sub {
+    font-size: 22px;
+  }
+}
+
 /* contact form: let the panel shrink with the visual viewport (iPhone keyboard) */
 .zg-panel--form {
   max-height: 100dvh;

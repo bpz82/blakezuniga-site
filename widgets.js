@@ -257,7 +257,7 @@ function vinylVaultWidget() {
     title: 'Vinyl Vault',
     icon: '◉',
     iconSrc: 'apps/vinyl-vault/icon.svg',
-    panel: 'wide',
+    panel: 'full',
     async mount(el, api) {
       gone = false;
       handle = null;

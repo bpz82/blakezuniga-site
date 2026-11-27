@@ -1,0 +1,56 @@
+ok   vinyl-vault widget declares panel: 'full'
+ok   harness.js maps def.panel full -> zg-panel--full
+ok   Photos still uses wide (not changed)
+ok   only Vinyl Vault uses panel 'full' (Contact / Collab keep the inset panel)
+ok   [390] full width is 100%/100vw
+ok   [390] full height is 100%/100vh/100dvh
+ok   [390] margin 0
+ok   [390] border none/0
+ok   [390] border-radius 0
+ok   [390] no max-width/max-height cap
+ok   [390] no min() size cap
+ok   [700] full width is 100%/100vw
+ok   [700] full height is 100%/100vh/100dvh
+ok   [700] margin 0
+ok   [700] border none/0
+ok   [700] border-radius 0
+ok   [700] no max-width/max-height cap
+ok   [700] no min() size cap
+ok   [1280] full width is 100%/100vw
+ok   [1280] full height is 100%/100vh/100dvh
+ok   [1280] margin 0
+ok   [1280] border none/0
+ok   [1280] border-radius 0
+ok   [1280] no max-width/max-height cap
+ok   [1280] no min() size cap
+ok   inset 0 on the base panel (no gap)
+ok   full panel background is opaque (no 3D background showing through)
+ok   safe-area padding on the full panel header
+ok   [390] title >= 32px
+ok   [1280] title >= 40px
+ok   [390] description >= 18px
+ok   [1280] description >= 20px
+ok   title family Zuniga Mission (var(--zg-font-title)), not overridden
+ok   description family Zuniga Mission (var(--zg-font-title)), not overridden
+ok   title stays uppercase
+ok   description wraps in full
+ok   [390] default panel width min(92vw, 560px)
+ok   [390] default panel height min(78dvh, 640px)
+ok   [390] default panel radius 22px
+ok   [390] default panel border 1px
+ok   [390] shared .zg-title 22px
+ok   [390] shared .zg-sub 14px
+ok   [1280] default panel width min(92vw, 560px)
+ok   [1280] default panel height min(78dvh, 640px)
+ok   [1280] default panel radius 22px
+ok   [1280] default panel border 1px
+ok   [1280] shared .zg-title 22px
+ok   [1280] shared .zg-sub 14px
+ok   .zg-panel--wide untouched (Photos)
+ok   search bar (.vv-bar)
+ok   Sort A-Z button (.vv-sort)
+ok   close button (.zg-close) in harness
+ok   record grid (.vv-grid)
+ok   cover grain (grain.png used in CSS)
+PASS
+exit 0
