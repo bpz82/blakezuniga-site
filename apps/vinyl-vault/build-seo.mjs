@@ -3,8 +3,9 @@
 // Generates, from apps/vinyl-vault/records.json and the same coverAlt() the vault uses at runtime:
 //   1. sitemap.xml: the homepage <url> with the OG image plus one <image:image> (loc, title, caption) per cover.
 //   2. apps/vinyl-vault/collection.jsonld: schema.org Collection (#vinyl-vault, creator #blake) with every MusicAlbum.
-//      Crawler-only: no page links or fetches it, so it costs visitors nothing.
-//   3. index.html: one tiny Collection node (name, creator #blake, collectionSize) appended to the existing JSON-LD @graph,
+//      Crawler-only: nothing fetches it, so it costs visitors nothing. Since t495u index.html names it with one
+//      <link rel="alternate" type="application/ld+json"> (browsers do not download alternate links; added by hand, not here).
+//   3. index.html: one tiny Collection node (name, url, creator #blake, collectionSize) appended to the existing JSON-LD @graph,
 //      replaced in place on re-runs. No albums are inlined there (load-time budget).
 // Commit the outputs (GitHub Pages has no build step). Gate: checks/t479u-vv-seo.mjs.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -76,7 +77,7 @@ const coll = {
 writeFileSync(path.join(here, 'collection.jsonld'), JSON.stringify(coll, null, 1) + '\n');
 
 // ---- 3. tiny node in index.html's existing @graph ----
-const node = JSON.stringify({ '@type': 'Collection', '@id': COLL_ID, name: coll.name, creator: { '@id': BLAKE_ID }, collectionSize: records.length });
+const node = JSON.stringify({ '@type': 'Collection', '@id': COLL_ID, name: coll.name, url: SITE, creator: { '@id': BLAKE_ID }, collectionSize: records.length }); // url: t495u
 const htmlPath = path.join(root, 'index.html');
 let html = readFileSync(htmlPath, 'utf8');
 const open = '<script type="application/ld+json">';

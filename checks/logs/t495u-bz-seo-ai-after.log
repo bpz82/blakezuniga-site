@@ -1,0 +1,62 @@
+ok   A. no .seo-copy CSS rule or element left in index.html — 0 mention(s)
+ok   A. exactly one <noscript> block — 1
+ok   A. <noscript> has no attributes (not styled or hidden)
+ok   A. <noscript> is byte-identical to the baseline fallback (same facts)
+ok   A. <noscript> holds one h1 and the existing bio
+ok   A. bio / h1 appear nowhere outside <noscript> (no second hidden copy)
+ok   B. index.html has one JSON-LD block and it parses — 1 block(s)
+ok   B. @ids stable: #website, #blake, #zuniga, #profilepage, #vinyl-vault
+ok   B. node types unchanged (WebSite, Person, MusicGroup, ProfilePage, Collection)
+     Person description: Blake Z, also known as Blake Zuniga, is a blues folk guitarist and songwriter, a former member of The Curl Tapes, now working on Zuniga Volume One. blakezuniga.com is the official website for Blake Z music and Zuniga Music.
+ok   B. Person #blake description carries the official-site / Blake Z / Zuniga Music / former member / Zuniga Volume One facts
+ok   B. description never calls him a current member ("member of The Curl Tapes" only after "former")
+     Person -> #band references: ["OrganizationRole(former member)/alumniOf","OrganizationRole(former member)/byArtist","OrganizationRole(former member)/byArtist","OrganizationRole(former member)/byArtist","OrganizationRole(former member)/byArtist","OrganizationRole(former member)/byArtist"]
+ok   B. band relation is former-member (OrganizationRole roleName "former member", or alumniOf + "former member" wording)
+ok   B. no unqualified current member / memberOf of #band from Person
+ok   B. no node lists #blake as a current member
+ok   B. no endDate / startDate invented in the Person graph
+     Person sameAs: ["https://www.youtube.com/@blakezmusic","https://link.me/bpz82","https://thecurltapes.com/aboutpage/blakezuniga/","https://bzmp.carrd.co/","https://open.spotify.com/show/3E3xb4zOz9kBCKBmEE7L7v","https://podcasts.apple.com/us/podcast/blake-zs-music-philosophy/id1796681949","https://www.pandora.com/podcast/blake-zs-music-philosophy/PC:1001099386"]
+ok   B. Person sameAs keeps youtube, link.me, carrd and the apex slash Curl Tapes about URL
+ok   B. Person sameAs holds only verified URLs (no duplicates)
+ok   B. JSON-LD has no www.thecurltapes.com, instagram, bandcamp or music.apple.com/profile
+ok   B. target phrases still in the Person / WebSite graph (Blake Zuniga, Blake Z Music, Zuniga, Zuniga Music, guitar, blues folk)
+ok   B. tiny Collection #vinyl-vault: creator #blake, url set, no inlined albums, < 600 B — 208 B
+ok   B. index.html has exactly one rel=alternate application/ld+json link to collection.jsonld — <link rel="alternate" type="application/ld+json" href="apps/vinyl-vault/collection.jsonld">
+ok   B. collection.jsonld is referenced by index.html only through that link (no preload, script, fetch)
+ok   B. linked collection.jsonld exists, parses and is #vinyl-vault
+ok   C. /llms.txt exists at the site root
+ok   C. llms.txt is plain text (no HTML wrapper or tags)
+ok   C. llms.txt states he is a former member of The Curl Tapes
+ok   C. llms.txt never calls him a current member
+ok   C. llms.txt names blakezuniga.com
+ok   C. llms.txt lists the key pages and entity @ids
+     llms.txt phrase counts: Blake Zuniga=6, Blake Z Music=2, Zuniga=12, Zuniga Music=3, Blake Zuniga guitar=1, folk blues=1; 1942 B
+ok   C. llms.txt uses all six phrases
+ok   C. llms.txt reads naturally (each multi-word phrase <= 6 times, no bare keyword-list line, < 4 KB)
+ok   C. llms.txt has no secrets (key / token / password patterns)
+     script-src + link tags: before 19 -> after 20; added ["<link rel=\"alternate\" type=\"application/ld+json\" href=\"apps/vinyl-vault/collection.jsonld\">"]; removed []
+ok   D. first-paint script/link tags unchanged except the one alternate jsonld link (same order)
+ok   D. inline <script> / <style> block counts unchanged
+ok   D. index.html identical to baseline outside JSON-LD except: -.seo-copy CSS line, -.seo-copy div, +alternate link
+ok   D. no hidden-text CSS in index.html (1px box, clip, sr-only, text-indent) — before 5 -> after 0
+ok   D. no CSS file gains hidden-text rules
+ok   D. apps/vinyl-vault/records.json byte-identical to baseline
+ok   D. apps/vinyl-vault/collection.jsonld byte-identical to baseline
+ok   D. apps/vinyl-vault/vinyl-vault.js byte-identical to baseline
+ok   D. sitemap.xml byte-identical to baseline
+ok   D. robots.txt byte-identical to baseline
+ok   D. harness.css byte-identical to baseline
+ok   D. harness.js byte-identical to baseline
+ok   D. widgets.js byte-identical to baseline
+ok   D. chrome.css byte-identical to baseline
+ok   D. chrome.js byte-identical to baseline
+ok   D. amp-chrome.css byte-identical to baseline
+ok   D. amp-chrome.js byte-identical to baseline
+ok   D. amp-transit.css byte-identical to baseline
+ok   D. layout.json byte-identical to baseline
+ok   D. 404.html byte-identical to baseline
+ok   D. CNAME byte-identical to baseline
+     index.html raw 342272 -> 342364 (delta 92 B); gzip-6 106469 -> 106541 (delta 72 B); gzip-9 106257 -> 106328 (delta 71 B)
+ok   D. index.html gzip-6 and gzip-9 deltas each < 1024 B
+PASS t495u-bz-seo-ai
+exit=0

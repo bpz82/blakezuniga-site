@@ -19,6 +19,25 @@
 //     produced with the final version of this file run inside `git archive ba754ae` (extracted outside the repo, GIT_DIR set to
 //     this repo so the baseline reads still work). An earlier draft was also run on the untouched worktree: FAIL (exit 1).
 //   after  (t479u implementation):          checks/logs/t479u-vv-seo-after.log  -> PASS (exit 0)
+// MEASUREMENT CHANGE (Blake t495u, Nov 27 2026; same commit as the t495u fix, gate for the new parts: checks/t495u-bz-seo-ai.mjs).
+//   t495u intentionally (1) removes the hidden 1px .seo-copy div and its CSS line from index.html (noscript kept),
+//   (2) adds ONE <link rel="alternate" type="application/ld+json" href="apps/vinyl-vault/collection.jsonld"> (browsers never
+//   download alternate links), (3) changes Person #blake description / sameAs and wraps alumniOf in an OrganizationRole
+//   ("former member") around the SAME band node, and (4) gives the tiny Collection node a url. Only the assertions those four
+//   edits touch are adjusted, each to accept exactly that edit and nothing else:
+//     e. "existing graph unchanged": WebSite, MusicGroup #zuniga, ProfilePage still byte-equal to ba754ae; Person equal outside
+//        description / sameAs / alumniOf; alumniOf.alumniOf deep-equal to the ba754ae alumniOf band node; every ba754ae sameAs
+//        kept (www no-slash Curl Tapes URL accepted only in its apex slash form). Collection node test unchanged (url allowed).
+//     f. "index.html identical outside JSON-LD": the exact .seo-copy CSS line + div are removed from the baseline and the exact
+//        alternate link line from the current file before comparing; any other byte change still FAILS.
+//     f. "index.html does not reference collection.jsonld": that one exact alternate link is the only allowed reference.
+//     g. "first-paint references unchanged": that one link:apps/vinyl-vault/collection.jsonld entry is removed (once) from
+//        the after list before comparing; every other reference, the count and the order must still match.
+//   Not changed: alts, families, image sitemap, collection.jsonld contents, records.json immutability, byte-identity of
+//   harness / widgets / chrome / amp files and vinyl-vault.js, gzip < 2048 B, robots, ZP / editor bans.
+//   Evidence: checks/logs/t479u-vv-seo-t495u-base.log (old file, 58d2532 tree: PASS exit 0),
+//             checks/logs/t479u-vv-seo-t495u-oldfile-after.log (old file, t495u tree: FAIL exit 1, only the four assertions above),
+//             checks/logs/t479u-vv-seo-t495u-after.log (this file, t495u tree: PASS exit 0).
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -164,7 +183,18 @@ const g1 = graphOf(html), g0 = graphOf(baseHtml);
 t('e. index.html JSON-LD parses', !!g1);
 if (g1 && g0) {
   const others = g1.filter((n) => n['@id'] !== COLL);
-  t('e. existing graph (WebSite, Person #blake, MusicGroup, ProfilePage) unchanged', JSON.stringify(others) === JSON.stringify(g0));
+  // t495u MEASUREMENT CHANGE: Person description / sameAs / alumniOf (former-member role around the same band node) may change
+  const T495U_KEYS = ['description', 'sameAs', 'alumniOf'];
+  const omit = (n) => Object.fromEntries(Object.entries(n).filter(([k]) => !(n['@id'] === BLAKE && T495U_KEYS.includes(k))));
+  const p1 = others.find((n) => n['@id'] === BLAKE) || {}, p0 = g0.find((n) => n['@id'] === BLAKE) || {};
+  const role = p1.alumniOf || {};
+  const apex = (u) => u === 'https://www.thecurltapes.com/aboutpage/blakezuniga' ? 'https://thecurltapes.com/aboutpage/blakezuniga/' : u;
+  t('e. existing graph (WebSite, Person #blake, MusicGroup, ProfilePage) unchanged outside the t495u Person edits',
+    JSON.stringify(others.map(omit)) === JSON.stringify(g0.map(omit)));
+  t('e. t495u: Person alumniOf = OrganizationRole "former member" around the unchanged baseline band node',
+    role['@type'] === 'OrganizationRole' && role.roleName === 'former member' && JSON.stringify(role.alumniOf) === JSON.stringify(p0.alumniOf));
+  t('e. t495u: every baseline Person sameAs kept (Curl Tapes about URL in apex slash form)',
+    Array.isArray(p1.sameAs) && (p0.sameAs || []).every((u) => p1.sameAs.includes(apex(u))));
   const n = g1.find((x) => x['@id'] === COLL);
   t('e. index.html has one tiny Collection node linked to #blake (no inlined albums)', !!n && n['@type'] === 'Collection' &&
     n.creator && n.creator['@id'] === BLAKE && n.collectionSize === records.length && !('hasPart' in n) && JSON.stringify(n).length < 600,
@@ -177,7 +207,12 @@ for (const p of ['harness.css', 'harness.js', 'widgets.js', 'chrome.css', 'chrom
   t(`f. ${p} byte-identical to baseline`, !!b && !!c && Buffer.compare(b, c) === 0);
 }
 const noLd = (h) => h.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, '');
-t('f. index.html identical to baseline outside the JSON-LD block', noLd(html) === noLd(baseHtml));
+// t495u MEASUREMENT CHANGE: exactly the .seo-copy CSS line + div removed and exactly one alternate link added
+const T495U_LINK = '<link rel="alternate" type="application/ld+json" href="apps/vinyl-vault/collection.jsonld">';
+const T495U_CSS = '  .seo-copy{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}\n';
+const T495U_DIV = /<div class="seo-copy">[\s\S]*?<\/div>\n/;
+t('f. index.html identical to baseline outside the JSON-LD block (t495u: -.seo-copy CSS line, -.seo-copy div, +alternate link)',
+  noLd(html).replace(T495U_LINK + '\n', '') === noLd(baseHtml).replace(T495U_CSS, '').replace(T495U_DIV, ''));
 const normVV = (s) => s.replace(/\n[ \t]*\/\/ t479u-seo-begin[\s\S]*?\/\/ t479u-seo-end[^\n]*/g, '')
   .split('\n').filter((l) => !/^\s*\/\//.test(l) && !/^\s*(img|popImg)\.alt = .*;\s*$/.test(l)).join('\n');
 const baseVV = base(vvPath).toString('utf8');
@@ -187,8 +222,9 @@ t('f. helper block is pure (no fetch / import / URL / src / DOM / style)', !!hel
 const net = (s) => ['fetch(', 'import(', 'new URL(', '.src =', 'preload', 'createElement(\'img\')'].map((k) => s.split(k).length - 1).join(',');
 t('f. vinyl-vault.js network primitives unchanged (fetch, import(), new URL, .src, preload, img)', net(vv) === net(baseVV), `${net(baseVV)} -> ${net(vv)}`);
 for (const p of ['index.html', 'widgets.js', 'harness.js', 'apps/vinyl-vault/vinyl-vault.js', '404.html']) {
-  const s = rdOpt(p) || '';
-  t(`f. ${p} does not reference collection.jsonld or the build script`, !/collection\.jsonld|build-seo/.test(s));
+  let s = rdOpt(p) || '';
+  if (p === 'index.html') s = s.replace(T495U_LINK, ''); // t495u MEASUREMENT CHANGE: that one alternate link only (once)
+  t(`f. ${p} does not reference collection.jsonld or the build script${p === 'index.html' ? ' (except the one t495u alternate link)' : ''}`, !/collection\.jsonld|build-seo/.test(s));
 }
 
 // ---------- g: sizes + first-paint requests ----------
@@ -232,7 +268,11 @@ function firstPaintRefs(readF) {
 const fpA = firstPaintRefs((p) => rdOpt(p));
 const fpB = firstPaintRefs((p) => { const b = base(p); return b ? b.toString('utf8') : null; });
 info(`first-paint URL references: before ${fpB.refs.length} (${fpB.files.length} local modules) -> after ${fpA.refs.length} (${fpA.files.length} local modules)`);
-t('g. first-paint request references unchanged (same count, same set)', fpA.refs.length === fpB.refs.length && fpA.refs.join('\n') === fpB.refs.join('\n'));
+// t495u MEASUREMENT CHANGE: drop the one rel=alternate jsonld link (never downloaded by browsers) from the after list, once
+const altRef = 'index.html:link:apps/vinyl-vault/collection.jsonld';
+const fpA2 = fpA.refs.slice(); const ai = fpA2.indexOf(altRef); if (ai >= 0) fpA2.splice(ai, 1);
+info(`t495u alternate link reference ${ai >= 0 ? 'found and excluded' : 'not present'}`);
+t('g. first-paint request references unchanged (same count, same set; t495u alternate jsonld link excluded once)', fpA2.length === fpB.refs.length && fpA2.join('\n') === fpB.refs.join('\n'));
 t('g. vinyl-vault.js not in the first-paint module set', !fpA.files.includes('apps/vinyl-vault/vinyl-vault.js'));
 
 // ---------- h: robots ----------

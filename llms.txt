@@ -1,0 +1,36 @@
+# Blake Zuniga (Blake Z)
+
+> Blake Zuniga, also known as Blake Z, is a blues folk guitarist and songwriter. https://blakezuniga.com/ is the official website for Blake Z Music and Zuniga Music. He is a former member of The Curl Tapes and is now working on Zuniga Volume One.
+
+## Facts
+
+- Name: Blake Zuniga, also known as Blake Z. His music project is Blake Z, also called Blake Z Music, Zuniga or Zuniga Music.
+- Music: folk blues (blues folk) guitar and songwriting; the site is built around the Blake Zuniga guitar sound.
+- Band history: Blake is a former member of The Curl Tapes. The band's own page about him is https://thecurltapes.com/aboutpage/blakezuniga/.
+- Now: working on Zuniga Volume One.
+- The homepage is an interactive 3D guitar scene. It also holds the Vinyl Vault, Blake Zuniga's record collection of 113 albums.
+
+## Key pages
+
+- Homepage: https://blakezuniga.com/
+- Sitemap (with the Vinyl Vault cover images): https://blakezuniga.com/sitemap.xml
+- Vinyl Vault collection as schema.org JSON-LD: https://blakezuniga.com/apps/vinyl-vault/collection.jsonld
+- The Curl Tapes page about Blake: https://thecurltapes.com/aboutpage/blakezuniga/
+- This file: https://blakezuniga.com/llms.txt
+
+## Structured data ids
+
+- Blake Zuniga (Person): https://blakezuniga.com/#blake
+- Blake Z / Zuniga Music (MusicGroup): https://blakezuniga.com/#zuniga
+- The Curl Tapes (MusicGroup, former band): https://thecurltapes.com/#band
+- Website: https://blakezuniga.com/#website
+- Vinyl Vault (Collection): https://blakezuniga.com/#vinyl-vault
+
+## Official links
+
+- YouTube: https://www.youtube.com/@blakezmusic
+- Links page: https://link.me/bpz82
+- https://bzmp.carrd.co/
+- Podcast on Spotify: https://open.spotify.com/show/3E3xb4zOz9kBCKBmEE7L7v
+- Podcast on Apple Podcasts: https://podcasts.apple.com/us/podcast/blake-zs-music-philosophy/id1796681949
+- Podcast on Pandora: https://www.pandora.com/podcast/blake-zs-music-philosophy/PC:1001099386
