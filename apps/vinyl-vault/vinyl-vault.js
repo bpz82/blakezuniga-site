@@ -203,6 +203,40 @@ export function popTopInset(headRect, panelRect) {
   const v = headRect && panelRect ? headRect.bottom - panelRect.top : 0;
   return Number.isFinite(v) && v > 0 ? v : 0;
 }
+// t479u-seo-begin
+// Blake t479u: descriptive cover alt (img alt only; the button aria-label and all visible text stay as they were).
+// Pure, no DOM, no requests. Also used by the SEO build script in this folder for the image sitemap captions and the collection structured data, so the wording
+// matches. One collection phrase per record, family = numeric id % 6 (six families, equal weight), variant = (id / 6) % 2.
+const VV_TAILS = [
+  ["part of Blake Zuniga's collection", "from Blake Zuniga's record collection"],
+  ["in Blake Z Music's record collection", 'from the Blake Z Music vinyl collection'],
+  ["from Zuniga's vinyl collection", "in Zuniga's record collection"],
+  ['from the Zuniga Music vinyl vault', 'in the Zuniga Music record collection'],
+  ["part of guitarist Blake Zuniga's collection", 'from the vinyl collection behind the Blake Zuniga guitar sound'],
+  ['from the folk blues vinyl vault of Blake Zuniga', 'in the folk blues record collection of Blake Zuniga'],
+];
+function vvNum(id) {
+  const n = parseInt(String(id), 10);
+  if (Number.isFinite(n) && n >= 0) return n;
+  let h = 0;
+  for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h;
+}
+export function coverFamily(id) {
+  return vvNum(id) % 6;
+}
+export function coverTail(id) {
+  const n = vvNum(id);
+  return VV_TAILS[n % 6][Math.floor(n / 6) % 2];
+}
+// "Jeff Beck – Wired (1976)"; the year is left out only when it is unknown (0)
+export function coverHead(r) {
+  return r.artist + ' – ' + r.album + (r.year ? ' (' + r.year + ')' : '');
+}
+export function coverAlt(r) {
+  return coverHead(r) + ' vinyl record cover, ' + coverTail(r.id);
+}
+// t479u-seo-end
 export function mountVinylVault(host, opts) {
   const o = opts || {};
   let dead = false;
@@ -280,7 +314,7 @@ export function mountVinylVault(host, opts) {
       const img = document.createElement('img');
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.alt = '';
+      img.alt = coverAlt(r);
       img.width = 300;
       img.height = 300;
       img.src = r.cover;
@@ -375,7 +409,7 @@ export function mountVinylVault(host, opts) {
       x.addEventListener('click', closePop);
       popImg = document.createElement('img');
       popImg.decoding = 'async';
-      popImg.alt = '';
+      // alt is set per record in show() (coverAlt), right after this build
       popTitle = el('h3', 'vv-t');
       popTitle.style.fontWeight = '400';
       popYear = el('p', 'vv-y');
@@ -420,7 +454,7 @@ export function mountVinylVault(host, opts) {
       cur = r;
       if (opener && !wasOpen) lastCell = opener === spinBtn ? lastCell : opener;
       popImg.src = r.cover;
-      popImg.alt = r.artist + ' — ' + r.album + ' cover';
+      popImg.alt = coverAlt(r);
       popTitle.textContent = r.artist + ' — ' + r.album;
       popYear.textContent = r.year ? String(r.year) : '';
       popYear.hidden = !r.year;

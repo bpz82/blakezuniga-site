@@ -1,0 +1,1595 @@
+{
+ "@context": "https://schema.org",
+ "@type": "Collection",
+ "@id": "https://blakezuniga.com/#vinyl-vault",
+ "name": "Blake Zuniga's Vinyl Vault",
+ "url": "https://blakezuniga.com/",
+ "creator": {
+  "@id": "https://blakezuniga.com/#blake"
+ },
+ "collectionSize": 113,
+ "hasPart": [
+  {
+   "@type": "MusicAlbum",
+   "name": "The Original Recordings 1963–1968",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Yardbirds"
+   },
+   "datePublished": "1981",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/001-the-yardbirds-the-original-recordings-1963-1968.jpg",
+   "description": "The Yardbirds – The Original Recordings 1963–1968 (1981) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Wired",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jeff Beck"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/002-jeff-beck-wired.jpg",
+   "description": "Jeff Beck – Wired (1976) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Troubadour",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "J.J. Cale"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/003-j-j-cale-troubadour.jpg",
+   "description": "J.J. Cale – Troubadour (1976) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Led Zeppelin II",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Led Zeppelin"
+   },
+   "datePublished": "1969",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/004-led-zeppelin-led-zeppelin-ii.jpg",
+   "description": "Led Zeppelin – Led Zeppelin II (1969) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Shades",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "J.J. Cale"
+   },
+   "datePublished": "1980",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/005-j-j-cale-shades.jpg",
+   "description": "J.J. Cale – Shades (1980) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Grasshopper",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "J.J. Cale"
+   },
+   "datePublished": "1982",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/006-j-j-cale-grasshopper.jpg",
+   "description": "J.J. Cale – Grasshopper (1982) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Imagine",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "John Lennon"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/007-john-lennon-imagine.jpg",
+   "description": "John Lennon – Imagine (1971) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Rubber Soul",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1965",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/008-the-beatles-rubber-soul.jpg",
+   "description": "The Beatles – Rubber Soul (1965) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Okie",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "J.J. Cale"
+   },
+   "datePublished": "1974",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/009-j-j-cale-okie.jpg",
+   "description": "J.J. Cale – Okie (1974) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Naturally",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "J.J. Cale"
+   },
+   "datePublished": "1972",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/010-j-j-cale-naturally.jpg",
+   "description": "J.J. Cale – Naturally (1972) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Five Years Gone",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jerry Jeff Walker"
+   },
+   "datePublished": "1969",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/011-jerry-jeff-walker-five-years-gone.jpg",
+   "description": "Jerry Jeff Walker – Five Years Gone (1969) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "A Day at the Races",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Queen"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/012-queen-a-day-at-the-races.jpg",
+   "description": "Queen – A Day at the Races (1976) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Game",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Queen"
+   },
+   "datePublished": "1980",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/013-queen-the-game.jpg",
+   "description": "Queen – The Game (1980) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "I Got a Name",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jim Croce"
+   },
+   "datePublished": "1973",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/014-jim-croce-i-got-a-name.jpg",
+   "description": "Jim Croce – I Got a Name (1973) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Illuminations",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Devadip Carlos Santana & Alice Coltrane"
+   },
+   "datePublished": "1974",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/015-devadip-carlos-santana-alice-coltrane-illuminations.jpg",
+   "description": "Devadip Carlos Santana & Alice Coltrane – Illuminations (1974) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Lady Soul",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Aretha Franklin"
+   },
+   "datePublished": "1968",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/016-aretha-franklin-lady-soul.jpg",
+   "description": "Aretha Franklin – Lady Soul (1968) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Abbey Road",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1969",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/017-the-beatles-abbey-road.jpg",
+   "description": "The Beatles – Abbey Road (1969) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Wings Greatest",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Wings"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/018-wings-wings-greatest.jpg",
+   "description": "Wings – Wings Greatest (1978) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "A Love Supreme: The Complete Masters",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "John Coltrane"
+   },
+   "datePublished": "1965",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/019-john-coltrane-a-love-supreme-the-complete-masters.jpg",
+   "description": "John Coltrane – A Love Supreme: The Complete Masters (1965) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Rush",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Rush"
+   },
+   "datePublished": "1974",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/020-rush-rush.jpg",
+   "description": "Rush – Rush (1974) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Led Zeppelin",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Led Zeppelin"
+   },
+   "datePublished": "1969",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/021-led-zeppelin-led-zeppelin.jpg",
+   "description": "Led Zeppelin – Led Zeppelin (1969) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Best of the Rest",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Lynyrd Skynyrd"
+   },
+   "datePublished": "1987",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/022-lynyrd-skynyrd-best-of-the-rest.jpg",
+   "description": "Lynyrd Skynyrd – Best of the Rest (1987) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Street Survivors",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Lynyrd Skynyrd"
+   },
+   "datePublished": "1977",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/023-lynyrd-skynyrd-street-survivors.jpg",
+   "description": "Lynyrd Skynyrd – Street Survivors (1977) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Oneness: Silver Dreams Golden Reality",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Carlos Santana"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/024-carlos-santana-oneness-silver-dreams-golden-reality.jpg",
+   "description": "Carlos Santana – Oneness: Silver Dreams Golden Reality (1979) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Physical Graffiti",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Led Zeppelin"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/025-led-zeppelin-physical-graffiti.jpg",
+   "description": "Led Zeppelin – Physical Graffiti (1975) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Brothers and Sisters",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Allman Brothers Band"
+   },
+   "datePublished": "1973",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/026-the-allman-brothers-band-brothers-and-sisters.jpg",
+   "description": "The Allman Brothers Band – Brothers and Sisters (1973) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Making Movies",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Dire Straits"
+   },
+   "datePublished": "1980",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/027-dire-straits-making-movies.jpg",
+   "description": "Dire Straits – Making Movies (1980) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Desperado",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Eagles"
+   },
+   "datePublished": "1973",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/028-eagles-desperado.jpg",
+   "description": "Eagles – Desperado (1973) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Song Remains the Same",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Led Zeppelin"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/029-led-zeppelin-the-song-remains-the-same.jpg",
+   "description": "Led Zeppelin – The Song Remains the Same (1976) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Essential Jimi Hendrix",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jimi Hendrix"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/030-jimi-hendrix-the-essential-jimi-hendrix.jpg",
+   "description": "Jimi Hendrix – The Essential Jimi Hendrix (1978) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Fragile",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Yes"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/031-yes-fragile.jpg",
+   "description": "Yes – Fragile (1971) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Their Greatest Hits 1971–1975",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Eagles"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/032-eagles-their-greatest-hits-1971-1975.jpg",
+   "description": "Eagles – Their Greatest Hits 1971–1975 (1976) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "We Sold Our Soul for Rock 'n' Roll",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Black Sabbath"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/033-black-sabbath-we-sold-our-soul-for-rock-n-roll.jpg",
+   "description": "Black Sabbath – We Sold Our Soul for Rock 'n' Roll (1975) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Roy Buchanan",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Roy Buchanan"
+   },
+   "datePublished": "1972",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/034-roy-buchanan-roy-buchanan.jpg",
+   "description": "Roy Buchanan – Roy Buchanan (1972) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Early Years Vol. 2",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Tom Waits"
+   },
+   "datePublished": "1993",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/035-tom-waits-the-early-years-vol-2.jpg",
+   "description": "Tom Waits – The Early Years Vol. 2 (1993) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "A Night at the Opera",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Queen"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/036-queen-a-night-at-the-opera.jpg",
+   "description": "Queen – A Night at the Opera (1975) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "You Don't Mess Around with Jim",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jim Croce"
+   },
+   "datePublished": "1972",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/037-jim-croce-you-don-t-mess-around-with-jim.jpg",
+   "description": "Jim Croce – You Don't Mess Around with Jim (1972) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Getz/Gilberto",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Stan Getz & João Gilberto"
+   },
+   "datePublished": "1964",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/038-stan-getz-joao-gilberto-getz-gilberto.jpg",
+   "description": "Stan Getz & João Gilberto – Getz/Gilberto (1964) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Songs in the Key of Life",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Stevie Wonder"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/039-stevie-wonder-songs-in-the-key-of-life.jpg",
+   "description": "Stevie Wonder – Songs in the Key of Life (1976) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "News of the World",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Queen"
+   },
+   "datePublished": "1977",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/040-queen-news-of-the-world.jpg",
+   "description": "Queen – News of the World (1977) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Yellow Submarine",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1969",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/041-the-beatles-yellow-submarine.jpg",
+   "description": "The Beatles – Yellow Submarine (1969) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Magical Mystery Tour",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1967",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/042-the-beatles-magical-mystery-tour.jpg",
+   "description": "The Beatles – Magical Mystery Tour (1967) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Let It Be",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1970",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/043-the-beatles-let-it-be.jpg",
+   "description": "The Beatles – Let It Be (1970) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Jazz",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Queen"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/044-queen-jazz.jpg",
+   "description": "Queen – Jazz (1978) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Led Zeppelin IV",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Led Zeppelin"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/045-led-zeppelin-led-zeppelin-iv.jpg",
+   "description": "Led Zeppelin – Led Zeppelin IV (1971) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Back in Black",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "AC/DC"
+   },
+   "datePublished": "1980",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/046-ac-dc-back-in-black.jpg",
+   "description": "AC/DC – Back in Black (1980) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "A Hard Road",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "John Mayall & the Bluesbreakers"
+   },
+   "datePublished": "1967",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/047-john-mayall-the-bluesbreakers-a-hard-road.jpg",
+   "description": "John Mayall & the Bluesbreakers – A Hard Road (1967) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Eagles",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Eagles"
+   },
+   "datePublished": "1972",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/048-eagles-eagles.jpg",
+   "description": "Eagles – Eagles (1972) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Strangers in the Night",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Frank Sinatra"
+   },
+   "datePublished": "1966",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/049-frank-sinatra-strangers-in-the-night.jpg",
+   "description": "Frank Sinatra – Strangers in the Night (1966) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "In Through the Out Door",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Led Zeppelin"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/050-led-zeppelin-in-through-the-out-door.jpg",
+   "description": "Led Zeppelin – In Through the Out Door (1979) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Bob Dylan's Greatest Hits",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Bob Dylan"
+   },
+   "datePublished": "1967",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/051-bob-dylan-bob-dylan-s-greatest-hits.jpg",
+   "description": "Bob Dylan – Bob Dylan's Greatest Hits (1967) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Meddle",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Pink Floyd"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/052-pink-floyd-meddle.jpg",
+   "description": "Pink Floyd – Meddle (1971) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Hemispheres",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Rush"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/053-rush-hemispheres.jpg",
+   "description": "Rush – Hemispheres (1978) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The White Album",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1968",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/054-the-beatles-the-white-album.jpg",
+   "description": "The Beatles – The White Album (1968) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Sleeper Catcher",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Little River Band"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/055-little-river-band-sleeper-catcher.jpg",
+   "description": "Little River Band – Sleeper Catcher (1978) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Bridge Over Troubled Water",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Simon & Garfunkel"
+   },
+   "datePublished": "1970",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/056-simon-garfunkel-bridge-over-troubled-water.jpg",
+   "description": "Simon & Garfunkel – Bridge Over Troubled Water (1970) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Crash Landing",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jimi Hendrix"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/057-jimi-hendrix-crash-landing.jpg",
+   "description": "Jimi Hendrix – Crash Landing (1975) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Can't Buy a Thrill",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Steely Dan"
+   },
+   "datePublished": "1972",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/058-steely-dan-can-t-buy-a-thrill.jpg",
+   "description": "Steely Dan – Can't Buy a Thrill (1972) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Trouble (25th Anniversary)",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Ray LaMontagne"
+   },
+   "datePublished": "2004",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/059-ray-lamontagne-trouble-25th-anniversary.jpg",
+   "description": "Ray LaMontagne – Trouble (25th Anniversary) (2004) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Solar Power",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Lorde"
+   },
+   "datePublished": "2021",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/060-lorde-solar-power.jpg",
+   "description": "Lorde – Solar Power (2021) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Dark Side of the Moon",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Pink Floyd"
+   },
+   "datePublished": "1973",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/061-pink-floyd-the-dark-side-of-the-moon.jpg",
+   "description": "Pink Floyd – The Dark Side of the Moon (1973) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Highway to Hell",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "AC/DC"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/062-ac-dc-highway-to-hell.jpg",
+   "description": "AC/DC – Highway to Hell (1979) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Straight Shooter",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Bad Company"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/063-bad-company-straight-shooter.jpg",
+   "description": "Bad Company – Straight Shooter (1975) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "All Things Must Pass",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "George Harrison"
+   },
+   "datePublished": "1970",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/064-george-harrison-all-things-must-pass.jpg",
+   "description": "George Harrison – All Things Must Pass (1970) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "History: America's Greatest Hits",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "America"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/065-america-history-america-s-greatest-hits.jpg",
+   "description": "America – History: America's Greatest Hits (1975) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Nilsson Schmilsson",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Nilsson"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/066-nilsson-nilsson-schmilsson.jpg",
+   "description": "Nilsson – Nilsson Schmilsson (1971) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "In the Dark",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Grateful Dead"
+   },
+   "datePublished": "1987",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/067-grateful-dead-in-the-dark.jpg",
+   "description": "Grateful Dead – In the Dark (1987) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Against the Grain",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Rory Gallagher"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/068-rory-gallagher-against-the-grain.jpg",
+   "description": "Rory Gallagher – Against the Grain (1975) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Wings at the Speed of Sound",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Wings"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/069-wings-wings-at-the-speed-of-sound.jpg",
+   "description": "Wings – Wings at the Speed of Sound (1976) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Me and Bobby McGee",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Kris Kristofferson"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/070-kris-kristofferson-me-and-bobby-mcgee.jpg",
+   "description": "Kris Kristofferson – Me and Bobby McGee (1971) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Concert for Bangladesh",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Various Artists"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/071-various-artists-the-concert-for-bangladesh.jpg",
+   "description": "Various Artists – The Concert for Bangladesh (1971) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Mud Slide Slim and the Blue Horizon",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "James Taylor"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/072-james-taylor-mud-slide-slim-and-the-blue-horizon.jpg",
+   "description": "James Taylor – Mud Slide Slim and the Blue Horizon (1971) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Grand Illusion",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Styx"
+   },
+   "datePublished": "1977",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/073-styx-the-grand-illusion.jpg",
+   "description": "Styx – The Grand Illusion (1977) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Feliciano!",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "José Feliciano"
+   },
+   "datePublished": "1968",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/074-jose-feliciano-feliciano.jpg",
+   "description": "José Feliciano – Feliciano! (1968) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Live Killers",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Queen"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/075-queen-live-killers.jpg",
+   "description": "Queen – Live Killers (1979) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "With the Beatles",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1963",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/076-the-beatles-with-the-beatles.jpg",
+   "description": "The Beatles – With the Beatles (1963) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Beatles for Sale",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1964",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/077-the-beatles-beatles-for-sale.jpg",
+   "description": "The Beatles – Beatles for Sale (1964) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Revolver",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1966",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/078-the-beatles-revolver.jpg",
+   "description": "The Beatles – Revolver (1966) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Double Fantasy",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "John Lennon & Yoko Ono"
+   },
+   "datePublished": "1980",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/079-john-lennon-yoko-ono-double-fantasy.jpg",
+   "description": "John Lennon & Yoko Ono – Double Fantasy (1980) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Help!",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1965",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/080-the-beatles-help.jpg",
+   "description": "The Beatles – Help! (1965) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Two for the Show",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Kansas"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/081-kansas-two-for-the-show.jpg",
+   "description": "Kansas – Two for the Show (1978) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Please Please Me",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1963",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/082-the-beatles-please-please-me.jpg",
+   "description": "The Beatles – Please Please Me (1963) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "A Hard Day's Night",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Beatles"
+   },
+   "datePublished": "1964",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/083-the-beatles-a-hard-day-s-night.jpg",
+   "description": "The Beatles – A Hard Day's Night (1964) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "A Little Bit More",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Dr. Hook"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/084-dr-hook-a-little-bit-more.jpg",
+   "description": "Dr. Hook – A Little Bit More (1976) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Eliminator",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "ZZ Top"
+   },
+   "datePublished": "1983",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/085-zz-top-eliminator.jpg",
+   "description": "ZZ Top – Eliminator (1983) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Rumours",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Fleetwood Mac"
+   },
+   "datePublished": "1977",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/086-fleetwood-mac-rumours.jpg",
+   "description": "Fleetwood Mac – Rumours (1977) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Band on the Run",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Paul McCartney & Wings"
+   },
+   "datePublished": "1986",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/087-paul-mccartney-wings-band-on-the-run.jpg",
+   "description": "Paul McCartney & Wings – Band on the Run (1986) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "More Songs About Buildings and Food",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Talking Heads"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/088-talking-heads-more-songs-about-buildings-and-food.jpg",
+   "description": "Talking Heads – More Songs About Buildings and Food (1978) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Born in the U.S.A.",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Bruce Springsteen"
+   },
+   "datePublished": "1984",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/089-bruce-springsteen-born-in-the-u-s-a.jpg",
+   "description": "Bruce Springsteen – Born in the U.S.A. (1984) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Greatest Hits",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Steely Dan"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/090-steely-dan-greatest-hits.jpg",
+   "description": "Steely Dan – Greatest Hits (1978) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Walking Man",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "James Taylor"
+   },
+   "datePublished": "1974",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/091-james-taylor-walking-man.jpg",
+   "description": "James Taylor – Walking Man (1974) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Sweet Baby James",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "James Taylor"
+   },
+   "datePublished": "1970",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/092-james-taylor-sweet-baby-james.jpg",
+   "description": "James Taylor – Sweet Baby James (1970) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Toto IV",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Toto"
+   },
+   "datePublished": "1982",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/093-toto-toto-iv.jpg",
+   "description": "Toto – Toto IV (1982) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Joe's Garage",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Frank Zappa"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/094-frank-zappa-joe-s-garage.jpg",
+   "description": "Frank Zappa – Joe's Garage (1979) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Who's Next",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "The Who"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/095-the-who-who-s-next.jpg",
+   "description": "The Who – Who's Next (1971) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Aqualung",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Jethro Tull"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/096-jethro-tull-aqualung.jpg",
+   "description": "Jethro Tull – Aqualung (1971) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Damn the Torpedoes",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Tom Petty & the Heartbreakers"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/097-tom-petty-the-heartbreakers-tom-petty-the-heartbreakers.jpg",
+   "description": "Tom Petty & the Heartbreakers – Damn the Torpedoes (1979) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "One Size Fits All",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Frank Zappa & the Mothers of Invention"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/098-frank-zappa-the-mothers-of-invention-one-size-fits-all.jpg",
+   "description": "Frank Zappa & the Mothers of Invention – One Size Fits All (1975) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Attention! Black Sabbath Volume One",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Black Sabbath"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/099-black-sabbath-attention-black-sabbath-volume-one.jpg",
+   "description": "Black Sabbath – Attention! Black Sabbath Volume One (1975) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Summer Breeze",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Seals & Crofts"
+   },
+   "datePublished": "1972",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/100-seals-crofts-summer-breeze.jpg",
+   "description": "Seals & Crofts – Summer Breeze (1972) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Wall",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Pink Floyd"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/101-pink-floyd-the-wall.jpg",
+   "description": "Pink Floyd – The Wall (1979) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Bad Company",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Bad Company"
+   },
+   "datePublished": "1974",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/102-bad-company-bad-company.jpg",
+   "description": "Bad Company – Bad Company (1974) vinyl record cover, from Blake Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Ram",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Paul McCartney"
+   },
+   "datePublished": "1971",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/103-paul-mccartney-ram.jpg",
+   "description": "Paul McCartney – Ram (1971) vinyl record cover, from the Blake Z Music vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Give My Regards to Broad Street",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Paul McCartney"
+   },
+   "datePublished": "1984",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/104-paul-mccartney-give-my-regards-to-broad-street.jpg",
+   "description": "Paul McCartney – Give My Regards to Broad Street (1984) vinyl record cover, in Zuniga's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Breakfast in America",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Supertramp"
+   },
+   "datePublished": "1979",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/105-supertramp-breakfast-in-america.jpg",
+   "description": "Supertramp – Breakfast in America (1979) vinyl record cover, in the Zuniga Music record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Pieces of Eight",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Styx"
+   },
+   "datePublished": "1978",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/106-styx-renegade.jpg",
+   "description": "Styx – Pieces of Eight (1978) vinyl record cover, from the vinyl collection behind the Blake Zuniga guitar sound",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Fleetwood Mac",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Fleetwood Mac"
+   },
+   "datePublished": "1975",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/107-fleetwood-mac-fleetwood-mac.jpg",
+   "description": "Fleetwood Mac – Fleetwood Mac (1975) vinyl record cover, in the folk blues record collection of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "History of the Grateful Dead Vol. 1 (Bear's Choice)",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Grateful Dead"
+   },
+   "datePublished": "1973",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/108-grateful-dead-history-of-the-grateful-dead-vol-1-bear-s-choi.jpg",
+   "description": "Grateful Dead – History of the Grateful Dead Vol. 1 (Bear's Choice) (1973) vinyl record cover, part of Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Night Moves",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Bob Seger & the Silver Bullet Band"
+   },
+   "datePublished": "1976",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/109-bob-seger-the-silver-bullet-band-night-moves.jpg",
+   "description": "Bob Seger & the Silver Bullet Band – Night Moves (1976) vinyl record cover, in Blake Z Music's record collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Glass Houses",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Billy Joel"
+   },
+   "datePublished": "1980",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/110-billy-joel-glass-houses.jpg",
+   "description": "Billy Joel – Glass Houses (1980) vinyl record cover, from Zuniga's vinyl collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Live/1975–85",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Bruce Springsteen & the E Street Band"
+   },
+   "datePublished": "1986",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/111-bruce-springsteen-the-e-street-band-live-1975-85.jpg",
+   "description": "Bruce Springsteen & the E Street Band – Live/1975–85 (1986) vinyl record cover, from the Zuniga Music vinyl vault",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "Violent Femmes",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Violent Femmes"
+   },
+   "datePublished": "1983",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/112-violent-femmes-violent-femmes.jpg",
+   "description": "Violent Femmes – Violent Femmes (1983) vinyl record cover, part of guitarist Blake Zuniga's collection",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  },
+  {
+   "@type": "MusicAlbum",
+   "name": "The Stranger",
+   "byArtist": {
+    "@type": "MusicGroup",
+    "name": "Billy Joel"
+   },
+   "datePublished": "1977",
+   "image": "https://blakezuniga.com/apps/vinyl-vault/covers/113-billy-joel-the-stranger.jpg",
+   "description": "Billy Joel – The Stranger (1977) vinyl record cover, from the folk blues vinyl vault of Blake Zuniga",
+   "isPartOf": {
+    "@id": "https://blakezuniga.com/#vinyl-vault"
+   }
+  }
+ ]
+}

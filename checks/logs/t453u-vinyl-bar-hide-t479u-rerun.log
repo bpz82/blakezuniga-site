@@ -1,0 +1,15 @@
+ok   .vv-bar background is opaque #120c0e
+ok   .vv-bar--hidden class: translateY(-100%) + transition
+ok   toggles vv-bar--hidden
+ok   passive scroll listener
+ok   scroll listener calls nextBarHidden
+ok   focus guard (activeElement)
+ok   nextBarHidden exported
+ok   scroll down hides
+ok   scroll up shows
+ok   jitter down ignored (shown stays shown)
+ok   jitter up ignored (hidden stays hidden)
+ok   near top always shows
+ok   large down at top still shows
+PASS t453u-vinyl-bar-hide
+exit 0

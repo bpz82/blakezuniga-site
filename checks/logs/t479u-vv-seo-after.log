@@ -1,0 +1,54 @@
+ok   records.json has 113 records — 113
+ok   a. vinyl-vault.js exports pure coverAlt(record)
+ok   a. all 113 records get a non-empty alt — 113/113
+ok   b. every alt has artist, album, year and exactly one family (= id % 6) — 113/113
+     family counts [Blake Zuniga, Blake Z Music, Zuniga, Zuniga Music, Blake Zuniga guitar, folk blues] = [18,19,19,19,19,19]
+ok   c. six families equal (max - min <= 1)
+     example 002: Jeff Beck – Wired (1976) vinyl record cover, from Zuniga's vinyl collection
+ok   a. grid img.alt = coverAlt(r)
+ok   a. show() sets popImg.alt = coverAlt(r)
+ok   a. no empty alt assignments left (.alt = '')
+ok   a. no other alt wording left — 2 assignments
+ok   d. sitemap.xml: no bare & (well-formed entities)
+ok   d. sitemap.xml declares the image namespace
+ok   d. homepage <url> present
+ok   d. OG image entry still present
+ok   d. all 113 covers in the image sitemap with loc, title, caption (artist, album, year, family) — 113/113
+ok   d. sitemap image count = 113 covers + OG — 114
+ok   e. apps/vinyl-vault/collection.jsonld exists and parses
+ok   e. collection.jsonld: schema.org Collection #vinyl-vault, creator #blake
+ok   e. 113 MusicAlbum entries with name, byArtist, datePublished, image, isPartOf #vinyl-vault — 113/113
+ok   e. index.html JSON-LD parses
+ok   e. existing graph (WebSite, Person #blake, MusicGroup, ProfilePage) unchanged
+ok   e. index.html has one tiny Collection node linked to #blake (no inlined albums) — 175 bytes
+ok   f. harness.css byte-identical to baseline
+ok   f. harness.js byte-identical to baseline
+ok   f. widgets.js byte-identical to baseline
+ok   f. chrome.css byte-identical to baseline
+ok   f. chrome.js byte-identical to baseline
+ok   f. amp-chrome.css byte-identical to baseline
+ok   f. amp-chrome.js byte-identical to baseline
+ok   f. amp-transit.css byte-identical to baseline
+ok   f. widget-ids.js byte-identical to baseline
+ok   f. layout-runtime.js byte-identical to baseline
+ok   f. index.html identical to baseline outside the JSON-LD block
+ok   f. vinyl-vault.js identical to baseline except comments, alt assignments and the helper block
+ok   f. helper block is pure (no fetch / import / URL / src / DOM / style)
+ok   f. vinyl-vault.js network primitives unchanged (fetch, import(), new URL, .src, preload, img) — 1,0,5,2,0,2 -> 1,0,5,2,0,2
+ok   f. index.html does not reference collection.jsonld or the build script
+ok   f. widgets.js does not reference collection.jsonld or the build script
+ok   f. harness.js does not reference collection.jsonld or the build script
+ok   f. apps/vinyl-vault/vinyl-vault.js does not reference collection.jsonld or the build script
+ok   f. 404.html does not reference collection.jsonld or the build script
+     index.html raw 342096 -> 342272 (delta 176 B); gzip-6 106422 -> 106469 (delta 47 B); gzip-9 106211 -> 106257 (delta 46 B)
+ok   g. index.html gzip delta < 2048 B
+     records.json 420022 -> 420022 (delta 0 B)
+ok   g. records.json unchanged (delta 0, identical bytes)
+     first-paint URL references: before 61 (22 local modules) -> after 61 (22 local modules)
+ok   g. first-paint request references unchanged (same count, same set)
+ok   g. vinyl-vault.js not in the first-paint module set
+ok   h. robots.txt keeps Sitemap: https://blakezuniga.com/sitemap.xml
+ok   i. no Zuniga Philosophy / layout editor / photo manager files
+ok   i. no ?zp=1 / ?edit=1 hook in index.html
+PASS t479u-vv-seo
+exit 0
